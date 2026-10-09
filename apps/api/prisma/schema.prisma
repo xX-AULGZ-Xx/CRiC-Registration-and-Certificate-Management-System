@@ -1,0 +1,204 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  ORGANIZER
+}
+
+enum EventStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  COMPLETED
+  CANCELLED
+}
+
+enum QuestionType {
+  RATING_5
+  TEXT
+  RADIO
+  CHECKBOX
+}
+
+model User {
+  id            BigInt    @id @default(autoincrement())
+  username      String    @unique @db.VarChar(50)
+  password_hash String    @db.VarChar(255)
+  email         String?   @unique @db.VarChar(100)
+  full_name     String    @db.VarChar(150)
+  role          Role      @default(ORGANIZER)
+  position      String?   @db.VarChar(100)
+  organization  String?   @db.VarChar(150)
+  signature_img String?   @db.LongText
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @default(now()) @updatedAt
+
+  events        Event[]
+
+  @@map("users")
+}
+
+model Event {
+  id                  BigInt            @id @default(autoincrement())
+  event_code          String?           @unique @db.VarChar(50)
+  project_ref_code    String?           @db.VarChar(50)
+  title               String            @db.VarChar(255)
+  description         String?           @db.Text
+  organizer_id        BigInt
+  location            String?           @db.VarChar(255)
+  start_date          DateTime?
+  end_date            DateTime?
+  registration_start  DateTime?
+  registration_end    DateTime?
+  max_attendees       Int               @default(0)
+  status              EventStatus       @default(OPEN)
+  banner_url          String?           @db.Text
+  registration_config Json?             @default("{}")
+  certificate_config  Json?             @default("{}")
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @default(now()) @updatedAt
+
+  organizer           User              @relation(fields: [organizer_id], references: [id])
+  attendees           Attendee[]
+  evaluation_form     EvaluationForm?
+
+  @@map("events")
+}
+
+model Attendee {
+  id                      BigInt               @id @default(autoincrement())
+  event_id                BigInt
+  title_name              String?              @db.VarChar(50)
+  full_name               String               @db.VarChar(255)
+  position                String?              @db.VarChar(150)
+  organization            String?              @db.VarChar(255)
+  email                   String?              @db.VarChar(150)
+  phone                   String?              @db.VarChar(50)
+  citizen_id              String?              @db.VarChar(20)
+  status                  String               @default("registered") @db.VarChar(50)
+  checked_in_at           DateTime?
+  certificate_no          String?              @unique @db.VarChar(100)
+  certificate_url         String?              @db.VarChar(500)
+  certificate_issued_at   DateTime?
+  is_certificate_eligible Boolean              @default(false)
+  custom_data             Json?                @default("{}")
+  created_at              DateTime             @default(now())
+  updated_at              DateTime             @default(now()) @updatedAt
+
+  event                   Event                @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  evaluation_responses    EvaluationResponse[]
+
+  @@index([event_id, status])
+  @@index([event_id, full_name])
+  @@index([phone])
+  @@index([citizen_id])
+  @@index([certificate_no])
+  @@map("attendees")
+}
+
+model EvaluationForm {
+  id               BigInt                @id @default(autoincrement())
+  event_id         BigInt                @unique
+  title            String                @db.VarChar(255)
+  description      String?               @db.Text
+  theme_config     Json?                 @default("{}")
+  is_active        Boolean               @default(true)
+  target_responses Int                   @default(0)
+  created_at       DateTime              @default(now())
+  updated_at       DateTime              @default(now()) @updatedAt
+
+  event            Event                 @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  sections         EvaluationSection[]
+  responses        EvaluationResponse[]
+
+  @@map("evaluation_forms")
+}
+
+model EvaluationSection {
+  id          BigInt             @id @default(autoincrement())
+  form_id     BigInt
+  title       String             @db.VarChar(200)
+  description String?            @db.Text
+  order_index Int                @default(0)
+
+  form        EvaluationForm     @relation(fields: [form_id], references: [id], onDelete: Cascade)
+  questions   EvaluationQuestion[]
+
+  @@map("evaluation_sections")
+}
+
+model EvaluationQuestion {
+  id            BigInt             @id @default(autoincrement())
+  section_id    BigInt
+  question_text String             @db.VarChar(500)
+  question_type QuestionType       @default(RATING_5)
+  options       Json?
+  order_index   Int                @default(0)
+  is_required   Boolean            @default(true)
+
+  section       EvaluationSection  @relation(fields: [section_id], references: [id], onDelete: Cascade)
+  answers       EvaluationAnswer[]
+
+  @@map("evaluation_questions")
+}
+
+model EvaluationResponse {
+  id              BigInt             @id @default(autoincrement())
+  form_id         BigInt
+  attendee_id     BigInt?
+  respondent_meta Json?
+  submitted_at    DateTime           @default(now())
+
+  form            EvaluationForm     @relation(fields: [form_id], references: [id], onDelete: Cascade)
+  attendee        Attendee?          @relation(fields: [attendee_id], references: [id], onDelete: SetNull)
+  answers         EvaluationAnswer[]
+
+  @@map("evaluation_responses")
+}
+
+model EvaluationAnswer {
+  id          BigInt             @id @default(autoincrement())
+  response_id BigInt
+  question_id BigInt
+  score       Int?
+  text_value  String?            @db.Text
+
+  response    EvaluationResponse @relation(fields: [response_id], references: [id], onDelete: Cascade)
+  question    EvaluationQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@map("evaluation_answers")
+}
+
+model EvaluationTemplate {
+  id               Int      @id @default(autoincrement())
+  title            String   @db.VarChar(255)
+  description      String?  @db.Text
+  category         String?  @default("GENERAL") @db.VarChar(100)
+  target_responses Int      @default(50)
+  theme_config     Json?    @default("{}")
+  sections         Json     @default("[]")
+  is_default       Boolean  @default(false)
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+
+  @@map("evaluation_templates")
+}
+
+model SystemSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.Text
+  description String?  @db.VarChar(255)
+  updated_at  DateTime @default(now()) @updatedAt
+
+  @@map("system_settings")
+}

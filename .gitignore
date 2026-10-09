@@ -1,0 +1,13 @@
+node_modules
+.pnpm-store
+dist
+.next
+out
+storage/certificates/*
+!storage/certificates/.gitkeep
+storage/signatures/*
+!storage/signatures/.gitkeep
+.env
+.env.local
+*.log
+.DS_Store
