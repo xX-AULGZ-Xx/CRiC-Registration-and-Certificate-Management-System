@@ -89,12 +89,12 @@ export default function Navbar() {
           {/* Brand */}
           <Link href="/" className="flex items-center gap-3 group">
             {brandLogo ? (
-              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/90 p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition overflow-hidden shrink-0">
+              <div className="w-10 h-10 flex items-center justify-center group-hover:scale-105 transition shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={brandLogo}
                   alt={brandNameTh}
-                  className="max-h-full max-w-full object-contain"
+                  className="w-10 h-10 object-contain"
                   onError={() => setBrandLogo('')}
                 />
               </div>
