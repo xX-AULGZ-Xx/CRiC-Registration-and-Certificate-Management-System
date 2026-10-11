@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,6 +12,7 @@ import registrationRouter from './modules/registration/registration.controller';
 import evaluationRouter from './modules/evaluation/evaluation.controller';
 import certificateRouter from './modules/certificates/certificate.controller';
 import adminRouter from './modules/admin/admin.controller';
+import { prisma } from './lib/prisma';
 
 const app = express();
 const PORT = process.env.PORT || 5060;
@@ -41,6 +43,54 @@ app.get('/health', (req, res) => {
     system: 'Registration and Certificate Management System',
     timestamp: new Date().toISOString(),
   });
+});
+
+// Public system branding settings endpoint (for Navbar logo, Favicon, footer)
+app.get('/api/v1/system/public-settings', async (req, res) => {
+  try {
+    const settings = await prisma.systemSetting.findMany({
+      where: {
+        key: {
+          in: ['org_name_th', 'org_name_en', 'org_logo_url', 'org_website'],
+        },
+      },
+    });
+    const map: Record<string, string> = {};
+    for (const s of settings) {
+      map[s.key] = s.value;
+    }
+    return res.json({
+      success: true,
+      data: {
+        org_name_th: map['org_name_th'] || 'วิทยาลัยอาชีวศึกษาเชียงราย',
+        org_name_en: map['org_name_en'] || 'Chiang Rai Vocational College',
+        org_logo_url: map['org_logo_url'] || '',
+        org_website: map['org_website'] || 'https://www.crvc.ac.th',
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Dynamic Favicon serving endpoint (serves the uploaded organization logo)
+app.get('/api/v1/system/favicon.ico', async (req, res) => {
+  try {
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: 'org_logo_url' },
+    });
+    if (setting?.value) {
+      const relativePath = setting.value.replace(/^\/storage\//, '');
+      const filePath = path.resolve(STORAGE_DIR, relativePath);
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        return res.sendFile(filePath);
+      }
+    }
+    return res.status(204).end();
+  } catch {
+    return res.status(204).end();
+  }
 });
 
 // API Routes

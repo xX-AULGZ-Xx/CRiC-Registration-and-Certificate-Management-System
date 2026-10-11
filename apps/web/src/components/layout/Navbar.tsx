@@ -4,14 +4,49 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Award, Calendar, Search, ShieldCheck, User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { fetchApi } from '@/lib/api';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [brandLogo, setBrandLogo] = useState<string>('');
+  const [brandNameTh, setBrandNameTh] = useState<string>('ระบบลงทะเบียนและออกเกียรติบัตร');
+  const [brandNameEn, setBrandNameEn] = useState<string>('Registration & Certificate Management System');
 
   if (pathname?.startsWith('/surveys')) {
     return null;
   }
+
+  const updateFavicon = (url: string) => {
+    if (!url) return;
+    try {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = url;
+    } catch {
+      // ignore
+    }
+  };
+
+  const loadBrandSettings = async () => {
+    try {
+      const res = await fetchApi('/api/v1/system/public-settings');
+      if (res.success && res.data) {
+        if (res.data.org_logo_url) {
+          setBrandLogo(res.data.org_logo_url);
+          updateFavicon(res.data.org_logo_url);
+        }
+        if (res.data.org_name_th) setBrandNameTh(res.data.org_name_th);
+        if (res.data.org_name_en) setBrandNameEn(res.data.org_name_en);
+      }
+    } catch (err) {
+      console.warn('Failed to load brand settings:', err);
+    }
+  };
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -22,6 +57,22 @@ export default function Navbar() {
         // ignore
       }
     }
+
+    loadBrandSettings();
+
+    const handleBrandUpdate = (e: any) => {
+      if (e.detail) {
+        setBrandLogo(e.detail);
+        updateFavicon(e.detail);
+      } else {
+        loadBrandSettings();
+      }
+    };
+
+    window.addEventListener('system-brand-updated', handleBrandUpdate);
+    return () => {
+      window.removeEventListener('system-brand-updated', handleBrandUpdate);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -37,15 +88,27 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition">
-              <Award className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="font-bold text-slate-900 text-base sm:text-lg leading-tight tracking-tight">
-                ระบบลงทะเบียนและออกเกียรติบัตร
+            {brandLogo ? (
+              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/90 p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition overflow-hidden shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={brandLogo}
+                  alt={brandNameTh}
+                  className="max-h-full max-w-full object-contain"
+                  onError={() => setBrandLogo('')}
+                />
               </div>
-              <div className="text-[11px] text-slate-500 font-medium">
-                Registration & Certificate Management System
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition shrink-0">
+                <Award className="w-6 h-6" />
+              </div>
+            )}
+            <div>
+              <div className="font-bold text-slate-900 text-base sm:text-lg leading-tight tracking-tight line-clamp-1">
+                {brandNameTh}
+              </div>
+              <div className="text-[11px] text-slate-500 font-medium line-clamp-1">
+                {brandNameEn}
               </div>
             </div>
           </Link>

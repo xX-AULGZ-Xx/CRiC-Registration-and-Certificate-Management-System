@@ -6,6 +6,11 @@ import Footer from '@/components/layout/Footer';
 export const metadata: Metadata = {
   title: 'ระบบลงทะเบียน ออกเกียรติบัตร และประเมินความพึงพอใจ',
   description: 'Registration, Certificate & Evaluation Management System',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

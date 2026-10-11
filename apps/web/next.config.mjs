@@ -11,6 +11,10 @@ const nextConfig = {
         destination: `${apiUrl}/api/v1/:path*`,
       },
       {
+        source: '/favicon.ico',
+        destination: `${apiUrl}/api/v1/system/favicon.ico`,
+      },
+      {
         source: '/storage/:path*',
         destination: `${apiUrl}/storage/:path*`,
       },

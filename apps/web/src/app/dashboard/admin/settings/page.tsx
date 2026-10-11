@@ -215,6 +215,9 @@ export default function AdminSettingsPage() {
 
       if (res.success) {
         showToast('success', 'บันทึกการตั้งค่าระบบเรียบร้อยแล้ว');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('system-brand-updated', { detail: settings.org_logo_url }));
+        }
       }
     } catch (err: any) {
       showToast('error', err.message || 'เกิดข้อผิดพลาดในการบันทึกการตั้งค่า');
@@ -240,6 +243,9 @@ export default function AdminSettingsPage() {
       if (res.success && res.data?.file_url) {
         setSettings((prev) => ({ ...prev, org_logo_url: res.data.file_url }));
         showToast('success', 'อัปโหลดไฟล์โลโก้องค์กรสำเร็จ');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('system-brand-updated', { detail: res.data.file_url }));
+        }
       }
     } catch (err: any) {
       showToast('error', err.message || 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์โลโก้');
