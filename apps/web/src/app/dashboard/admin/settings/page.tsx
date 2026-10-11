@@ -25,6 +25,7 @@ import {
   Sparkles,
   HelpCircle,
   RefreshCw,
+  Settings,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
@@ -573,7 +574,8 @@ export default function AdminSettingsPage() {
             <span>Admin Control Panel</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <span>⚙️ การตั้งค่าระบบส่วนกลาง</span>
+            <Settings className="w-7 h-7 text-blue-600" />
+            <span>การตั้งค่าระบบส่วนกลาง</span>
           </h1>
           <p className="text-slate-500 text-sm mt-1">
             กำหนดค่ามาตรฐานของสถาบัน จัดการบัญชีผู้จัดโครงการ และคลังแม่แบบแบบประเมินกลาง

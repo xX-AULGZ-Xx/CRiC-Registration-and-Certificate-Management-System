@@ -139,7 +139,7 @@ export default function DashboardPage() {
               title="ตั้งค่าระบบส่วนกลาง"
             >
               <Settings className="w-4 h-4 text-blue-600" />
-              <span>⚙️ ตั้งค่าระบบ (Admin)</span>
+              <span>ตั้งค่าระบบ (Admin)</span>
             </Link>
           )}
           <button
