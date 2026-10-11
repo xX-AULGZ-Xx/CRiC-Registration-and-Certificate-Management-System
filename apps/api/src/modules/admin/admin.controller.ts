@@ -1,9 +1,67 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import path from 'path';
+import fs from 'fs';
+import multer from 'multer';
 import { prisma } from '../../lib/prisma';
 import { authenticate, requireAdmin, AuthRequest } from '../../middlewares/auth';
 
 const router = Router();
+
+// Ensure upload directories exist
+const LOGOS_DIR = path.resolve(process.env.STORAGE_DIR || '../../storage', 'logos');
+if (!fs.existsSync(LOGOS_DIR)) {
+  fs.mkdirSync(LOGOS_DIR, { recursive: true });
+}
+
+const SIGNATURES_DIR = path.resolve(process.env.STORAGE_DIR || '../../storage', 'signatures');
+if (!fs.existsSync(SIGNATURES_DIR)) {
+  fs.mkdirSync(SIGNATURES_DIR, { recursive: true });
+}
+
+const logoStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, LOGOS_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.png';
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `logo-${uniqueSuffix}${ext}`);
+  },
+});
+
+const uploadLogo = multer({
+  storage: logoStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP, SVG) เท่านั้น'));
+    }
+  },
+});
+
+const sigStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, SIGNATURES_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.png';
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `default-sig-${uniqueSuffix}${ext}`);
+  },
+});
+
+const uploadDefaultSig = multer({
+  storage: sigStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น'));
+    }
+  },
+});
 
 // Helper for BigInt serialization
 function serializeBigInt(obj: any): any {
@@ -15,6 +73,56 @@ function serializeBigInt(obj: any): any {
 // All endpoints in this controller require ADMIN
 router.use(authenticate);
 router.use(requireAdmin);
+
+// POST /api/v1/admin/upload-logo - Upload Organization Logo
+router.post('/upload-logo', uploadLogo.single('logo'), async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'ไม่พบไฟล์รูปภาพโลโก้' });
+    }
+
+    const logoUrl = `/storage/logos/${req.file.filename}`;
+
+    await prisma.systemSetting.upsert({
+      where: { key: 'org_logo_url' },
+      update: { value: logoUrl },
+      create: { key: 'org_logo_url', value: logoUrl, description: 'Organization Logo URL' },
+    });
+
+    return res.json({
+      success: true,
+      message: 'อัปโหลดโลโก้สำเร็จ',
+      data: { file_url: logoUrl },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปโหลดโลโก้', error: error.message });
+  }
+});
+
+// POST /api/v1/admin/upload-signature - Upload Default Certificate Signature
+router.post('/upload-signature', uploadDefaultSig.single('signature'), async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'ไม่พบไฟล์รูปภาพลายเซ็น' });
+    }
+
+    const sigUrl = `/storage/signatures/${req.file.filename}`;
+
+    await prisma.systemSetting.upsert({
+      where: { key: 'default_signature_img' },
+      update: { value: sigUrl },
+      create: { key: 'default_signature_img', value: sigUrl, description: 'Default Certificate Signature' },
+    });
+
+    return res.json({
+      success: true,
+      message: 'อัปโหลดรูปลายเซ็นสำเร็จ',
+      data: { file_url: sigUrl },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปโหลดลายเซ็น', error: error.message });
+  }
+});
 
 // ==========================================
 // 1. SYSTEM SETTINGS (Key-Value)

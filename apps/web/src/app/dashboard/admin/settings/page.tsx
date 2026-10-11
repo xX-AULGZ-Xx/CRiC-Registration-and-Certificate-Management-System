@@ -26,6 +26,8 @@ import {
   HelpCircle,
   RefreshCw,
   Settings,
+  Upload,
+  ImageIcon,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
@@ -36,6 +38,12 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // File Upload States & Refs
+  const logoInputRef = React.useRef<HTMLInputElement>(null);
+  const sigInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingSig, setUploadingSig] = useState(false);
 
   // --- TAB 1 & 2: System Settings State ---
   const [settings, setSettings] = useState<Record<string, string>>({
@@ -212,6 +220,57 @@ export default function AdminSettingsPage() {
       showToast('error', err.message || 'เกิดข้อผิดพลาดในการบันทึกการตั้งค่า');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // --- FILE UPLOAD HANDLERS ---
+  const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    setUploadingLogo(true);
+    try {
+      const res = await fetchApi('/api/v1/admin/upload-logo', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.success && res.data?.file_url) {
+        setSettings((prev) => ({ ...prev, org_logo_url: res.data.file_url }));
+        showToast('success', 'อัปโหลดไฟล์โลโก้องค์กรสำเร็จ');
+      }
+    } catch (err: any) {
+      showToast('error', err.message || 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์โลโก้');
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleSigFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('signature', file);
+
+    setUploadingSig(true);
+    try {
+      const res = await fetchApi('/api/v1/admin/upload-signature', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.success && res.data?.file_url) {
+        setSettings((prev) => ({ ...prev, default_signature_img: res.data.file_url }));
+        showToast('success', 'อัปโหลดไฟล์ลายเซ็นดิจิทัลสำเร็จ');
+      }
+    } catch (err: any) {
+      showToast('error', err.message || 'เกิดข้อผิดพลาดในการอัปโหลดลายเซ็น');
+    } finally {
+      setUploadingSig(false);
+      if (sigInputRef.current) sigInputRef.current.value = '';
     }
   };
 
@@ -745,31 +804,90 @@ export default function AdminSettingsPage() {
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  ลิงก์รูปภาพโลโก้สถาบัน (Logo URL)
+              <div className="md:col-span-2 space-y-3">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  โลโก้สถาบัน / องค์กร (Organization Logo)
                 </label>
-                <div className="flex gap-4 items-center">
-                  <input
-                    type="text"
-                    value={settings.org_logo_url || ''}
-                    onChange={(e) => setSettings({ ...settings, org_logo_url: e.target.value })}
-                    placeholder="https://example.com/logo.png หรือ /images/logo.png"
-                    className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm font-medium"
-                  />
-                  {settings.org_logo_url && (
-                    <div className="w-12 h-12 rounded-xl border border-slate-200 p-1 flex items-center justify-center shrink-0 bg-slate-50">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={settings.org_logo_url}
-                        alt="Logo Preview"
-                        className="max-h-full max-w-full object-contain"
-                        onError={(e) => {
-                          (e.target as any).style.display = 'none';
-                        }}
+
+                <input
+                  type="file"
+                  ref={logoInputRef}
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  onChange={handleLogoFileUpload}
+                  className="hidden"
+                />
+
+                <div className="flex flex-col sm:flex-row gap-4 items-start bg-slate-50/70 p-4 rounded-2xl border border-slate-200">
+                  {/* Preview Box */}
+                  <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-200 bg-white flex items-center justify-center p-2 shrink-0 overflow-hidden relative group shadow-xs">
+                    {settings.org_logo_url ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={settings.org_logo_url}
+                          alt="Logo Preview"
+                          className="max-h-full max-w-full object-contain"
+                          onError={(e) => {
+                            (e.target as any).style.display = 'none';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setSettings({ ...settings, org_logo_url: '' })}
+                          className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-bold transition rounded-xl cursor-pointer"
+                          title="ลบโลโก้"
+                        >
+                          <Trash2 className="w-4 h-4 mb-1 text-rose-400" />
+                          <span>ลบออก</span>
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-center text-slate-400">
+                        <ImageIcon className="w-7 h-7 mx-auto mb-1 stroke-1 text-slate-300" />
+                        <span className="text-[10px] font-bold block">ไม่มีโลโก้</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload Controls & URL */}
+                  <div className="flex-1 space-y-2.5 w-full">
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={uploadingLogo}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="w-4 h-4" />
+                        <span>{uploadingLogo ? 'กำลังอัปโหลด...' : 'อัปโหลดไฟล์โลโก้ (PNG, JPG, WEBP, SVG)'}</span>
+                      </button>
+
+                      {settings.org_logo_url && (
+                        <button
+                          type="button"
+                          onClick={() => setSettings({ ...settings, org_logo_url: '' })}
+                          className="px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-semibold transition cursor-pointer"
+                        >
+                          ลบรูปโลโก้
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">ที่อยู่ไฟล์ (URL):</span>
+                      <input
+                        type="text"
+                        value={settings.org_logo_url || ''}
+                        onChange={(e) => setSettings({ ...settings, org_logo_url: e.target.value })}
+                        placeholder="https://... หรือ /storage/logos/..."
+                        className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs font-mono"
                       />
                     </div>
-                  )}
+
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      💡 แนะนำไฟล์ PNG หรือ SVG พื้นหลังโปร่งใส (Transparent) ขนาดไม่เกิน 10MB
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -866,31 +984,90 @@ export default function AdminSettingsPage() {
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  ลิงก์รูปภาพลายเซ็นดิจิทัลเริ่มต้น (Signature URL/Base64)
+              <div className="md:col-span-2 space-y-3">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  รูปลายเซ็นดิจิทัลเริ่มต้น (Default Digital Signature)
                 </label>
-                <div className="flex gap-4 items-center">
-                  <input
-                    type="text"
-                    value={settings.default_signature_img || ''}
-                    onChange={(e) => setSettings({ ...settings, default_signature_img: e.target.value })}
-                    placeholder="https://... หรือ data:image/png;base64,..."
-                    className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm font-medium"
-                  />
-                  {settings.default_signature_img && (
-                    <div className="h-14 px-3 rounded-xl border border-slate-200 flex items-center justify-center shrink-0 bg-slate-50">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={settings.default_signature_img}
-                        alt="Signature Preview"
-                        className="max-h-10 object-contain"
-                        onError={(e) => {
-                          (e.target as any).style.display = 'none';
-                        }}
+
+                <input
+                  type="file"
+                  ref={sigInputRef}
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleSigFileUpload}
+                  className="hidden"
+                />
+
+                <div className="flex flex-col sm:flex-row gap-4 items-start bg-slate-50/70 p-4 rounded-2xl border border-slate-200">
+                  {/* Signature Preview Box */}
+                  <div className="w-36 h-20 rounded-2xl border-2 border-dashed border-slate-200 bg-white flex items-center justify-center p-2 shrink-0 overflow-hidden relative group shadow-xs">
+                    {settings.default_signature_img ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={settings.default_signature_img}
+                          alt="Signature Preview"
+                          className="max-h-full max-w-full object-contain"
+                          onError={(e) => {
+                            (e.target as any).style.display = 'none';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setSettings({ ...settings, default_signature_img: '' })}
+                          className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-bold transition rounded-xl cursor-pointer"
+                          title="ลบลายเซ็น"
+                        >
+                          <Trash2 className="w-4 h-4 mb-1 text-rose-400" />
+                          <span>ลบออก</span>
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-center text-slate-400">
+                        <Award className="w-6 h-6 mx-auto mb-1 stroke-1 text-slate-300" />
+                        <span className="text-[10px] font-bold block">ไม่มีลายเซ็น</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload Controls & URL */}
+                  <div className="flex-1 space-y-2.5 w-full">
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <button
+                        type="button"
+                        onClick={() => sigInputRef.current?.click()}
+                        disabled={uploadingSig}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="w-4 h-4" />
+                        <span>{uploadingSig ? 'กำลังอัปโหลด...' : 'อัปโหลดรูปลายเซ็น (PNG, JPG, WEBP)'}</span>
+                      </button>
+
+                      {settings.default_signature_img && (
+                        <button
+                          type="button"
+                          onClick={() => setSettings({ ...settings, default_signature_img: '' })}
+                          className="px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-semibold transition cursor-pointer"
+                        >
+                          ลบลายเซ็น
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">ที่อยู่ไฟล์ (URL / Base64):</span>
+                      <input
+                        type="text"
+                        value={settings.default_signature_img || ''}
+                        onChange={(e) => setSettings({ ...settings, default_signature_img: e.target.value })}
+                        placeholder="https://... หรือ /storage/signatures/..."
+                        className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-teal-600 text-xs font-mono"
                       />
                     </div>
-                  )}
+
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      💡 แนะนำไฟล์ PNG ลายเซ็นพื้นหลังโปร่งใส (Transparent) ขนาดไม่เกิน 5MB
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
