@@ -32,12 +32,22 @@ export default function DashboardPage() {
   const [maxAttendees, setMaxAttendees] = useState('100');
   const [certPrefix, setCertPrefix] = useState('วอศ.ชร-2569');
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
   useEffect(() => {
     // Check auth
     const token = localStorage.getItem('token');
     if (!token) {
       window.location.href = '/login';
       return;
+    }
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        setCurrentUser(JSON.parse(userStr));
+      } catch {
+        // ignore
+      }
     }
     loadEvents();
   }, []);
@@ -121,14 +131,26 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>สร้างกิจกรรมใหม่</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {currentUser?.role === 'ADMIN' && (
+            <Link
+              href="/dashboard/admin/settings"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm shadow-xs transition active:scale-95 cursor-pointer shrink-0"
+              title="ตั้งค่าระบบส่วนกลาง"
+            >
+              <Settings className="w-4 h-4 text-blue-600" />
+              <span>⚙️ ตั้งค่าระบบ (Admin)</span>
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>สร้างกิจกรรมใหม่</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Award, Calendar, Search, ShieldCheck, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Award, Calendar, Search, ShieldCheck, User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -75,8 +75,18 @@ export default function Navbar() {
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition"
                 >
                   <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">จัดการระบบ</span>
+                  <span className="hidden sm:inline">แดชบอร์ด</span>
                 </Link>
+                {currentUser.role === 'ADMIN' && (
+                  <Link
+                    href="/dashboard/admin/settings"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition"
+                    title="ตั้งค่าระบบส่วนกลาง (Admin Settings)"
+                  >
+                    <Settings className="w-4 h-4 text-blue-600" />
+                    <span className="hidden sm:inline">ตั้งค่าระบบ</span>
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={handleLogout}
