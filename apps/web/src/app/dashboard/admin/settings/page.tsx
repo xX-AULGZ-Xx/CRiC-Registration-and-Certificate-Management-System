@@ -1369,26 +1369,50 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            <div className="space-y-6 max-w-2xl">
-              {/* Enable / Disable */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <div>
-                  <div className="text-sm font-bold text-slate-900">เปิดใช้งานการเข้าสู่ระบบด้วย Google</div>
-                  <div className="text-xs text-slate-500">
-                    แสดงปุ่ม &quot;เข้าสู่ระบบด้วย Google&quot; ในหน้า Login
+            <div className="space-y-6 w-full">
+              {/* Toggles Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Enable / Disable */}
+                <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="pr-4">
+                    <div className="text-sm font-bold text-slate-900">เปิดใช้งานการเข้าสู่ระบบด้วย Google</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      แสดงปุ่ม &quot;เข้าสู่ระบบด้วย Google&quot; ในหน้า Login
+                    </div>
                   </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={settings.google_login_enabled !== 'false'}
+                      onChange={(e) =>
+                        setSettings({ ...settings, google_login_enabled: e.target.checked ? 'true' : 'false' })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.google_login_enabled !== 'false'}
-                    onChange={(e) =>
-                      setSettings({ ...settings, google_login_enabled: e.target.checked ? 'true' : 'false' })
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+
+                {/* Auto Register */}
+                <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="pr-4">
+                    <div className="text-sm font-bold text-slate-900">ลงทะเบียนผู้จัดใหม่อัตโนมัติ (Auto Register)</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      สร้างบัญชีผู้จัด (ORGANIZER) ให้อัตโนมัติเมื่อผู้ใช้ล็อกอินด้วย Google ครั้งแรก
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={settings.google_auto_register !== 'false'}
+                      onChange={(e) =>
+                        setSettings({ ...settings, google_auto_register: e.target.checked ? 'true' : 'false' })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
               </div>
 
               {/* Client ID Input */}
@@ -1406,27 +1430,6 @@ export default function AdminSettingsPage() {
                 <p className="text-[11px] text-slate-400">
                   Client ID ที่ได้จากการสร้าง Credentials ใน Google Cloud Console
                 </p>
-              </div>
-
-              {/* Auto Register */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <div>
-                  <div className="text-sm font-bold text-slate-900">ลงทะเบียนผู้จัดใหม่อัตโนมัติ (Auto Register)</div>
-                  <div className="text-xs text-slate-500">
-                    เมื่อผู้ใช้ล็อกอินด้วย Google ครั้งแรก และยังไม่มีอีเมลในระบบ ระบบจะสร้างบัญชีผู้จัด (ORGANIZER) ให้อัตโนมัติ
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.google_auto_register !== 'false'}
-                    onChange={(e) =>
-                      setSettings({ ...settings, google_auto_register: e.target.checked ? 'true' : 'false' })
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
               </div>
 
               {/* Instructions Box */}
