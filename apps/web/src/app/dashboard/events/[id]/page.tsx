@@ -300,93 +300,97 @@ export default function EventManagePage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Back and Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-700 transition mb-2"
           >
             <ArrowLeft className="w-4 h-4" /> กลับสู่แดชบอร์ด
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-800">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 shrink-0">
               {event.event_code}
             </span>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 line-clamp-1">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 truncate max-w-full">
               {event.title}
             </h1>
           </div>
         </div>
 
         {/* Status Toggle & Public Link */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/events/${eventId}`}
             target="_blank"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition"
           >
-            <ExternalLink className="w-4 h-4 text-slate-400" />
+            <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span>หน้าลงทะเบียน</span>
           </Link>
 
           <Link
             href={`/surveys/${eventId}`}
             target="_blank"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition"
           >
-            <FileText className="w-4 h-4 text-indigo-500" />
+            <FileText className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
             <span>หน้าแบบประเมิน</span>
           </Link>
         </div>
       </div>
 
       {/* Tabs Bar */}
-      <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-px">
+      <div className="flex items-center gap-1 sm:gap-2 border-b border-slate-200 overflow-x-auto no-scrollbar scroll-smooth pb-px -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+          className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === 'overview'
               ? 'border-blue-700 text-blue-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Settings className="w-4 h-4" /> ภาพรวม & ลิงก์
+          <Settings className="w-4 h-4 shrink-0" />
+          <span>ภาพรวม & ลิงก์</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('attendees')}
-          className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+          className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === 'attendees'
               ? 'border-blue-700 text-blue-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Users className="w-4 h-4" /> ผู้ลงทะเบียน & เช็คชื่อ ({attendees.length})
+          <Users className="w-4 h-4 shrink-0" />
+          <span>ผู้ลงทะเบียน ({attendees.length})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('certificate')}
-          className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+          className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === 'certificate'
               ? 'border-blue-700 text-blue-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Award className="w-4 h-4" /> ออกแบบเกียรติบัตร
+          <Award className="w-4 h-4 shrink-0" />
+          <span>ออกแบบเกียรติบัตร</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('evaluation')}
-          className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+          className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === 'evaluation'
               ? 'border-blue-700 text-blue-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <BarChart2 className="w-4 h-4" /> แบบประเมิน & สถิติ
+          <BarChart2 className="w-4 h-4 shrink-0" />
+          <span>แบบประเมิน & สถิติ</span>
         </button>
       </div>
 
@@ -491,10 +495,10 @@ export default function EventManagePage() {
         <div className="space-y-6">
           {/* Quick Check-in Box */}
           <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div>
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-blue-600" />
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-blue-600 shrink-0" />
                   <span>จุดเช็คชื่อผู้เข้าร่วมหน้างาน (Quick Check-in)</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -506,24 +510,24 @@ export default function EventManagePage() {
               <button
                 type="button"
                 onClick={handleIssueAll}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer w-full sm:w-auto shrink-0"
               >
                 <Award className="w-4 h-4" />
                 <span>ออกเกียรติบัตรทุกคนที่เช็คชื่อแล้ว</span>
               </button>
             </div>
 
-            <form onSubmit={handleQuickCheckIn} className="flex gap-2 max-w-lg">
+            <form onSubmit={handleQuickCheckIn} className="flex flex-col sm:flex-row gap-2 max-w-lg">
               <input
                 type="text"
                 value={checkInInput}
                 onChange={(e) => setCheckInInput(e.target.value)}
                 placeholder="กรอกเบอร์โทร / เลขบัตร 13 หลัก / ID..."
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-sm transition cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-sm transition cursor-pointer shrink-0"
               >
                 เช็คชื่อทันที
               </button>
@@ -828,34 +832,34 @@ export default function EventManagePage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2.5 w-full md:w-auto">
               <button
                 type="button"
                 onClick={() => setShowFormEditor(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all cursor-pointer"
               >
-                <Sliders className="w-4 h-4" />
-                ตั้งค่าแบบประเมิน (Form Builder)
+                <Sliders className="w-4 h-4 shrink-0" />
+                <span>ตั้งค่าแบบประเมิน (Form Builder)</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleExportCsv}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
                 title="ส่งออกผลการประเมินรายคนเป็นไฟล์ CSV / Excel พร้อมภาษาไทยสมบูรณ์"
               >
-                <Download className="w-4 h-4 text-slate-600" />
-                ส่งออก CSV / Excel
+                <Download className="w-4 h-4 text-slate-600 shrink-0" />
+                <span>ส่งออก CSV / Excel</span>
               </button>
 
               <button
                 type="button"
                 onClick={handlePrintReport}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all cursor-pointer"
                 title="พิมพ์หน้ารายงานสรุปผลสถิติเป็นเอกสารสรุปโครงการ PDF"
               >
-                <Printer className="w-4 h-4" />
-                พิมพ์รายงานสรุปผล
+                <Printer className="w-4 h-4 shrink-0" />
+                <span>พิมพ์รายงานสรุปผล</span>
               </button>
             </div>
           </div>
