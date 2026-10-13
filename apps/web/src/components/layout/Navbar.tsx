@@ -196,8 +196,18 @@ export default function Navbar() {
                       <div className="text-xs text-slate-500 truncate mt-0.5">
                         {currentUser.email || currentUser.username}
                       </div>
-                      <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">
-                        {currentUser.role === 'ADMIN' ? '🛡️ ผู้ดูแลระบบ (Admin)' : '👤 ผู้จัดกิจกรรม (Organizer)'}
+                      <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">
+                        {currentUser.role === 'ADMIN' ? (
+                          <>
+                            <ShieldCheck className="w-3 h-3 text-blue-600 shrink-0" />
+                            <span>ผู้ดูแลระบบ (Admin)</span>
+                          </>
+                        ) : (
+                          <>
+                            <User className="w-3 h-3 text-blue-600 shrink-0" />
+                            <span>ผู้จัดกิจกรรม (Organizer)</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
