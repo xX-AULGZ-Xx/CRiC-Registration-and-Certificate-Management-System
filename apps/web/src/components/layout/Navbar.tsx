@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Award, Calendar, Search, ShieldCheck, User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { Award, Calendar, Search, ShieldCheck, User, LogOut, LayoutDashboard, Settings, ChevronDown } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [brandLogo, setBrandLogo] = useState<string>('');
   const [brandNameTh, setBrandNameTh] = useState<string>('ระบบลงทะเบียนและออกเกียรติบัตร');
   const [brandNameEn, setBrandNameEn] = useState<string>('Registration & Certificate Management System');
@@ -75,6 +77,24 @@ export default function Navbar() {
     };
   }, []);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Close dropdown on navigation
+  useEffect(() => {
+    setDropdownOpen(false);
+  }, [pathname]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -132,29 +152,18 @@ export default function Navbar() {
             </Link>
 
             {currentUser ? (
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-                <Link
-                  href="/dashboard"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">แดชบอร์ด</span>
-                </Link>
-                {currentUser.role === 'ADMIN' && (
-                  <Link
-                    href="/dashboard/admin/settings"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition"
-                    title="ตั้งค่าระบบส่วนกลาง (Admin Settings)"
-                  >
-                    <Settings className="w-4 h-4 text-blue-600" />
-                    <span className="hidden sm:inline">ตั้งค่าระบบ</span>
-                  </Link>
-                )}
-
-                {/* Profile Pill */}
-                <div
-                  className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100/80 border border-slate-200/70 text-slate-700"
-                  title={`เข้าสู่ระบบในชื่อ: ${currentUser.full_name || currentUser.username}`}
+              <div className="relative pl-2 border-l border-slate-200" ref={dropdownRef}>
+                {/* Profile Trigger Button */}
+                <button
+                  type="button"
+                  onClick={() => setDropdownOpen((prev) => !prev)}
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-slate-700 transition cursor-pointer select-none ${
+                    dropdownOpen
+                      ? 'bg-blue-50/80 border-blue-200 ring-2 ring-blue-500/20 shadow-xs'
+                      : 'bg-slate-100/80 hover:bg-slate-200/70 border-slate-200/70'
+                  }`}
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="true"
                 >
                   <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-teal-500 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
                     {currentUser.full_name
@@ -169,16 +178,68 @@ export default function Navbar() {
                       {currentUser.role === 'ADMIN' ? 'ผู้ดูแลระบบ' : (currentUser.position || 'ผู้จัดกิจกรรม')}
                     </span>
                   </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  title="ออกจากระบบ"
-                  className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                >
-                  <LogOut className="w-4 h-4" />
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${
+                      dropdownOpen ? 'rotate-180 text-blue-600' : ''
+                    }`}
+                  />
                 </button>
+
+                {/* Dropdown Menu Popup */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200/80 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {/* User Info Header in Dropdown */}
+                    <div className="px-4 py-2.5 border-b border-slate-100">
+                      <div className="font-bold text-sm text-slate-900 truncate">
+                        {currentUser.full_name || currentUser.username}
+                      </div>
+                      <div className="text-xs text-slate-500 truncate mt-0.5">
+                        {currentUser.email || currentUser.username}
+                      </div>
+                      <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">
+                        {currentUser.role === 'ADMIN' ? '🛡️ ผู้ดูแลระบบ (Admin)' : '👤 ผู้จัดกิจกรรม (Organizer)'}
+                      </div>
+                    </div>
+
+                    {/* Navigation Items */}
+                    <div className="p-1.5 space-y-0.5">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:text-indigo-700 hover:bg-indigo-50/80 transition"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-indigo-600" />
+                        <span>แดชบอร์ด</span>
+                      </Link>
+
+                      {currentUser.role === 'ADMIN' && (
+                        <Link
+                          href="/dashboard/admin/settings"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/80 transition"
+                        >
+                          <Settings className="w-4 h-4 text-blue-600" />
+                          <span>ตั้งค่าระบบส่วนกลาง</span>
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* Sign out */}
+                    <div className="pt-1.5 mt-1 border-t border-slate-100 p-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-rose-600 hover:bg-rose-50 transition"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>ออกจากระบบ</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="pl-2 border-l border-slate-200">
