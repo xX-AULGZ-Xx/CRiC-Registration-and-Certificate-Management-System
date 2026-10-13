@@ -133,6 +133,26 @@ export default function Navbar() {
 
             {currentUser ? (
               <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                {/* Profile Pill */}
+                <div
+                  className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100/80 border border-slate-200/70 text-slate-700"
+                  title={`เข้าสู่ระบบในชื่อ: ${currentUser.full_name || currentUser.username}`}
+                >
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-teal-500 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                    {currentUser.full_name
+                      ? currentUser.full_name.trim().charAt(0).toUpperCase()
+                      : <User className="w-3.5 h-3.5" />}
+                  </div>
+                  <div className="hidden sm:flex flex-col text-left leading-none py-0.5">
+                    <span className="text-xs font-bold text-slate-800 line-clamp-1 max-w-[130px]">
+                      {currentUser.full_name || currentUser.username}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                      {currentUser.role === 'ADMIN' ? 'ผู้ดูแลระบบ' : (currentUser.position || 'ผู้จัดกิจกรรม')}
+                    </span>
+                  </div>
+                </div>
+
                 <Link
                   href="/dashboard"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition"

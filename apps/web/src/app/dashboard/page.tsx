@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Sparkles,
   Search,
+  User,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
@@ -123,9 +124,20 @@ export default function DashboardPage() {
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-            ระบบจัดการกิจกรรมและเกียรติบัตร
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+              ระบบจัดการกิจกรรมและเกียรติบัตร
+            </h1>
+            {currentUser && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-xs">
+                <User className="w-3.5 h-3.5" />
+                <span>{currentUser.full_name || currentUser.username}</span>
+                <span className="text-[10px] text-blue-500 font-medium">
+                  ({currentUser.role === 'ADMIN' ? 'ผู้ดูแลระบบ' : 'ผู้จัด'})
+                </span>
+              </span>
+            )}
+          </div>
           <p className="text-slate-500 text-sm mt-1">
             สร้างกิจกรรม จัดการผู้ลงทะเบียน เช็คชื่อหน้างาน และออกแบบเกียรติบัตร
           </p>

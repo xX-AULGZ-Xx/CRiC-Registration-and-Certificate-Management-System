@@ -637,9 +637,14 @@ export default function AdminSettingsPage() {
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full w-fit mb-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full w-fit mb-2 border border-blue-200/60">
             <Shield className="w-3.5 h-3.5" />
             <span>Admin Control Panel</span>
+            {currentUser && (
+              <span className="text-slate-500 font-medium pl-1 border-l border-blue-200">
+                ผู้ดูแล: <strong className="text-blue-900 font-bold">{currentUser.full_name || currentUser.username}</strong>
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
             <Settings className="w-7 h-7 text-blue-600" />
