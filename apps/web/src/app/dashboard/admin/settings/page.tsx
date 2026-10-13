@@ -635,7 +635,7 @@ export default function AdminSettingsPage() {
       )}
 
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full w-fit mb-2 border border-blue-200/60">
             <Shield className="w-3.5 h-3.5" />
@@ -646,62 +646,62 @@ export default function AdminSettingsPage() {
               </span>
             )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <Settings className="w-7 h-7 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5 sm:gap-3">
+            <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 shrink-0" />
             <span>การตั้งค่าระบบส่วนกลาง</span>
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-slate-500 text-xs sm:text-sm mt-1">
             กำหนดค่ามาตรฐานของสถาบัน จัดการบัญชีผู้จัดโครงการ และคลังแม่แบบแบบประเมินกลาง
           </p>
         </div>
 
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:text-slate-900 transition shadow-xs self-start md:self-center"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-50 hover:text-slate-900 transition shadow-xs w-full sm:w-auto shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>กลับไปยังแดชบอร์ด</span>
         </Link>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+      {/* Navigation Tabs (Mobile Horizontal Scrollable) */}
+      <div className="flex gap-1.5 sm:gap-2 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === 'profile'
               ? 'bg-blue-700 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Building2 className="w-4 h-4" />
+          <Building2 className="w-4 h-4 shrink-0" />
           <span>ข้อมูลสถาบัน/องค์กร</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('certificates')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === 'certificates'
               ? 'bg-blue-700 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Award className="w-4 h-4" />
+          <Award className="w-4 h-4 shrink-0" />
           <span>ค่าเริ่มต้นเกียรติบัตร</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('users')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === 'users'
               ? 'bg-blue-700 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Users className="w-4 h-4" />
+          <Users className="w-4 h-4 shrink-0" />
           <span>จัดการผู้ใช้งาน</span>
           <span
             className={`text-xs px-2 py-0.5 rounded-full ${
@@ -715,13 +715,13 @@ export default function AdminSettingsPage() {
         <button
           type="button"
           onClick={() => setActiveTab('surveys')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === 'surveys'
               ? 'bg-blue-700 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <ClipboardList className="w-4 h-4" />
+          <ClipboardList className="w-4 h-4 shrink-0" />
           <span>คลังแม่แบบแบบประเมิน</span>
           <span
             className={`text-xs px-2 py-0.5 rounded-full ${
@@ -735,13 +735,13 @@ export default function AdminSettingsPage() {
         <button
           type="button"
           onClick={() => setActiveTab('auth')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === 'auth'
               ? 'bg-blue-700 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Key className="w-4 h-4" />
+          <Key className="w-4 h-4 shrink-0" />
           <span>ระบบ Google SSO</span>
         </button>
       </div>
@@ -924,7 +924,7 @@ export default function AdminSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50 w-full sm:w-auto"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูลองค์กร'}</span>
@@ -1104,7 +1104,7 @@ export default function AdminSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50 w-full sm:w-auto"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'กำลังบันทึก...' : 'บันทึกค่าเริ่มต้นเกียรติบัตร'}</span>
@@ -1119,22 +1119,22 @@ export default function AdminSettingsPage() {
       {activeTab === 'users' && (
         <div className="space-y-6">
           {/* Top Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="relative flex-1 w-full sm:max-w-md">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 placeholder="ค้นหาชื่อผู้ใช้, ชื่อ-นามสกุล, อีเมล..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs"
               />
             </div>
 
             <button
               type="button"
               onClick={openCreateUserModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md transition active:scale-95 cursor-pointer self-start sm:self-auto shrink-0"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-95 cursor-pointer w-full sm:w-auto shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>เพิ่มผู้ใช้งานใหม่</span>
@@ -1260,7 +1260,7 @@ export default function AdminSettingsPage() {
             <button
               type="button"
               onClick={openCreateTemplateModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md transition active:scale-95 cursor-pointer self-start sm:self-auto shrink-0"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-95 cursor-pointer w-full sm:w-auto shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>สร้างแม่แบบใหม่</span>
@@ -1474,7 +1474,7 @@ export default function AdminSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50 w-full sm:w-auto"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า Google SSO'}</span>
