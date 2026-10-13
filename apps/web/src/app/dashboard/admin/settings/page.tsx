@@ -34,7 +34,7 @@ import { fetchApi } from '@/lib/api';
 export default function AdminSettingsPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'certificates' | 'users' | 'surveys'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'certificates' | 'users' | 'surveys' | 'auth'>('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -58,6 +58,9 @@ export default function AdminSettingsPage() {
     default_signatory_title: '',
     default_signature_img: '',
     default_font_family: 'sarabun',
+    google_client_id: '',
+    google_login_enabled: 'true',
+    google_auto_register: 'true',
   });
 
   // --- TAB 3: User Management State ---
@@ -723,6 +726,19 @@ export default function AdminSettingsPage() {
             {templates.length}
           </span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('auth')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition cursor-pointer ${
+            activeTab === 'auth'
+              ? 'bg-blue-700 text-white shadow-md shadow-blue-500/20'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Key className="w-4 h-4" />
+          <span>ระบบ Google SSO</span>
+        </button>
       </div>
 
       {/* ======================================================== */}
@@ -1333,6 +1349,130 @@ export default function AdminSettingsPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: GOOGLE SSO & AUTHENTICATION                      */}
+      {/* ======================================================== */}
+      {activeTab === 'auth' && (
+        <form onSubmit={handleSaveSettings} className="space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                <Key className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">การตั้งค่า Google SSO (Single Sign-On)</h2>
+                <p className="text-xs text-slate-500">
+                  กำหนดค่าการเข้าสู่ระบบด้วยบัญชี Google เพื่อให้ผู้จัดกิจกรรมสามารถล็อกอินได้อย่างสะดวกรวดเร็ว
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-6 max-w-2xl">
+              {/* Enable / Disable */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <div>
+                  <div className="text-sm font-bold text-slate-900">เปิดใช้งานการเข้าสู่ระบบด้วย Google</div>
+                  <div className="text-xs text-slate-500">
+                    แสดงปุ่ม &quot;เข้าสู่ระบบด้วย Google&quot; ในหน้า Login
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.google_login_enabled !== 'false'}
+                    onChange={(e) =>
+                      setSettings({ ...settings, google_login_enabled: e.target.checked ? 'true' : 'false' })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {/* Client ID Input */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Google OAuth 2.0 Client ID (Web Application)
+                </label>
+                <input
+                  type="text"
+                  value={settings.google_client_id || ''}
+                  onChange={(e) => setSettings({ ...settings, google_client_id: e.target.value.trim() })}
+                  placeholder="เช่น 1234567890-abcdefg123456.apps.googleusercontent.com"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm font-mono"
+                />
+                <p className="text-[11px] text-slate-400">
+                  Client ID ที่ได้จากการสร้าง Credentials ใน Google Cloud Console
+                </p>
+              </div>
+
+              {/* Auto Register */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <div>
+                  <div className="text-sm font-bold text-slate-900">ลงทะเบียนผู้จัดใหม่อัตโนมัติ (Auto Register)</div>
+                  <div className="text-xs text-slate-500">
+                    เมื่อผู้ใช้ล็อกอินด้วย Google ครั้งแรก และยังไม่มีอีเมลในระบบ ระบบจะสร้างบัญชีผู้จัด (ORGANIZER) ให้อัตโนมัติ
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.google_auto_register !== 'false'}
+                    onChange={(e) =>
+                      setSettings({ ...settings, google_auto_register: e.target.checked ? 'true' : 'false' })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {/* Instructions Box */}
+              <div className="p-5 rounded-2xl bg-blue-50/60 border border-blue-200/80 text-xs text-slate-700 space-y-2.5">
+                <div className="font-bold text-blue-900 flex items-center gap-1.5 text-sm">
+                  <Shield className="w-4 h-4 text-blue-700" />
+                  <span>คำแนะนำการสร้าง Google Client ID:</span>
+                </div>
+                <ol className="list-decimal list-inside space-y-1.5 text-slate-600 pl-1 leading-relaxed">
+                  <li>
+                    เข้าไปที่{' '}
+                    <a
+                      href="https://console.cloud.google.com/apis/credentials"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-700 font-semibold underline inline-flex items-center gap-0.5"
+                    >
+                      Google Cloud Console - Credentials <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </li>
+                  <li>คลิก <strong>+ CREATE CREDENTIALS</strong> &gt; <strong>OAuth client ID</strong></li>
+                  <li>เลือก Application type เป็น <strong>Web application</strong></li>
+                  <li>
+                    ในส่วน <strong>Authorized JavaScript origins</strong> ให้เพิ่ม:
+                    <div className="mt-1 font-mono text-[11px] bg-white p-2 rounded-lg border border-blue-200 text-blue-800 space-y-1">
+                      <div>http://localhost:3006</div>
+                      <div>http://127.0.0.1:3006</div>
+                    </div>
+                  </li>
+                  <li>กด <strong>CREATE</strong> แล้วคัดลอก <strong>Client ID</strong> มาวางในช่องด้านบน</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า Google SSO'}</span>
+            </button>
+          </div>
+        </form>
       )}
 
       {/* ======================================================== */}

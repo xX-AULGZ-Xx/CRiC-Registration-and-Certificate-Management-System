@@ -51,7 +51,7 @@ app.get('/api/v1/system/public-settings', async (req, res) => {
     const settings = await prisma.systemSetting.findMany({
       where: {
         key: {
-          in: ['org_name_th', 'org_name_en', 'org_logo_url', 'org_website'],
+          in: ['org_name_th', 'org_name_en', 'org_logo_url', 'org_website', 'google_client_id', 'google_login_enabled'],
         },
       },
     });
@@ -66,6 +66,8 @@ app.get('/api/v1/system/public-settings', async (req, res) => {
         org_name_en: map['org_name_en'] || 'Chiang Rai Vocational College',
         org_logo_url: map['org_logo_url'] || '',
         org_website: map['org_website'] || 'https://www.crvc.ac.th',
+        google_client_id: map['google_client_id'] || process.env.GOOGLE_CLIENT_ID || '',
+        google_login_enabled: map['google_login_enabled'] !== 'false',
       },
     });
   } catch (error: any) {

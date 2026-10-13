@@ -99,6 +99,129 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/v1/auth/google (Google SSO Login & Auto-registration)
+router.post('/google', async (req: Request, res: Response) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ success: false, message: 'ไม่พบข้อมูล Google Credential' });
+    }
+
+    // 1. Verify Google token with Google's tokeninfo API
+    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+    if (!googleRes.ok) {
+      return res.status(401).json({
+        success: false,
+        message: 'การตรวจสอบข้อมูลกับ Google ล้มเหลว กรุณาลองใหม่อีกครั้ง',
+      });
+    }
+
+    const payload: any = await googleRes.json();
+    const { email, email_verified, name } = payload;
+
+    if (!email || (email_verified !== 'true' && email_verified !== true)) {
+      return res.status(400).json({ success: false, message: 'อีเมล Google บัญชีนี้ยังไม่ได้รับการยืนยันความถูกต้อง' });
+    }
+
+    // 2. Fetch System Settings for Google SSO
+    const settings = await prisma.systemSetting.findMany({
+      where: {
+        key: { in: ['google_login_enabled', 'google_client_id', 'google_auto_register'] },
+      },
+    });
+    const settingsMap: Record<string, string> = {};
+    for (const s of settings) {
+      settingsMap[s.key] = s.value;
+    }
+
+    if (settingsMap.google_login_enabled === 'false') {
+      return res.status(403).json({ success: false, message: 'ระบบปิดการเข้าสู่ระบบด้วย Google ชั่วคราว' });
+    }
+
+    // 3. Find user by email or username
+    const normalizedEmail = email.toLowerCase().trim();
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: normalizedEmail }, { username: normalizedEmail }],
+      },
+    });
+
+    if (!user) {
+      // Check if auto register is enabled (defaults to true)
+      const autoRegister = settingsMap.google_auto_register !== 'false';
+      if (!autoRegister) {
+        return res.status(403).json({
+          success: false,
+          message: `ไม่พบบัญชีผู้ใช้ที่ผูกกับอีเมล ${normalizedEmail} ในระบบ กรุณาติดต่อผู้ดูแลระบบ`,
+        });
+      }
+
+      // Generate a clean unique username
+      const baseUsername = normalizedEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 30);
+      let usernameCandidate = baseUsername;
+      let counter = 1;
+      while (await prisma.user.findUnique({ where: { username: usernameCandidate } })) {
+        usernameCandidate = `${baseUsername.slice(0, 24)}_${counter}`;
+        counter++;
+      }
+
+      // Random secure password hash
+      const randomSecret = Math.random().toString(36).slice(-8) + Date.now().toString(36);
+      const randomPasswordHash = await bcrypt.hash(randomSecret, 10);
+
+      user = await prisma.user.create({
+        data: {
+          username: usernameCandidate,
+          password_hash: randomPasswordHash,
+          email: normalizedEmail,
+          full_name: name || normalizedEmail.split('@')[0],
+          role: 'ORGANIZER',
+          organization: 'วิทยาลัยอาชีวศึกษาเชียงราย',
+          position: 'ผู้จัดกิจกรรม',
+          is_active: true,
+        },
+      });
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({ success: false, message: 'บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ' });
+    }
+
+    // 4. Generate JWT
+    const token = jwt.sign(
+      {
+        id: user.id.toString(),
+        username: user.username,
+        role: user.role,
+        full_name: user.full_name,
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'เข้าสู่ระบบด้วย Google สำเร็จ',
+      data: {
+        token,
+        user: serializeBigInt({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          full_name: user.full_name,
+          role: user.role,
+          position: user.position,
+          organization: user.organization,
+          signature_img: user.signature_img,
+        }),
+      },
+    });
+  } catch (error: any) {
+    console.error('Google SSO error:', error);
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการประมวลผล Google SSO', error: error.message });
+  }
+});
+
 // POST /api/v1/auth/register (First Admin setup or Admin creates new Organizer)
 router.post('/register', async (req: Request, res: Response) => {
   try {

@@ -150,6 +150,9 @@ router.get('/settings', async (req: AuthRequest, res: Response) => {
       default_signatory_title: 'ผู้อำนวยการวิทยาลัยอาชีวศึกษาเชียงราย',
       default_signature_img: '',
       default_font_family: 'sarabun',
+      google_client_id: '',
+      google_login_enabled: 'true',
+      google_auto_register: 'true',
     };
 
     return res.json({
