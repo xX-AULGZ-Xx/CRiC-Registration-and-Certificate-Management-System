@@ -641,8 +641,17 @@ export default function AdminSettingsPage() {
             <Shield className="w-3.5 h-3.5" />
             <span>Admin Control Panel</span>
             {currentUser && (
-              <span className="text-slate-500 font-medium pl-1 border-l border-blue-200">
-                ผู้ดูแล: <strong className="text-blue-900 font-bold">{currentUser.full_name || currentUser.username}</strong>
+              <span className="text-slate-500 font-medium pl-1 border-l border-blue-200 inline-flex items-center gap-1.5">
+                {currentUser.avatar_url ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={currentUser.avatar_url}
+                    alt={currentUser.full_name || currentUser.username}
+                    className="w-3.5 h-3.5 rounded-full object-cover shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : null}
+                <span>ผู้ดูแล: <strong className="text-blue-900 font-bold">{currentUser.full_name || currentUser.username}</strong></span>
               </span>
             )}
           </div>

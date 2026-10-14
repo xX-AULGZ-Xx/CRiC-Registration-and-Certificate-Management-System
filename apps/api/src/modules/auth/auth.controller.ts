@@ -117,7 +117,7 @@ router.post('/google', async (req: Request, res: Response) => {
     }
 
     const payload: any = await googleRes.json();
-    const { email, email_verified, name } = payload;
+    const { email, email_verified, name, picture } = payload;
 
     if (!email || (email_verified !== 'true' && email_verified !== true)) {
       return res.status(400).json({ success: false, message: 'อีเมล Google บัญชีนี้ยังไม่ได้รับการยืนยันความถูกต้อง' });
@@ -194,6 +194,7 @@ router.post('/google', async (req: Request, res: Response) => {
         username: user.username,
         role: user.role,
         full_name: user.full_name,
+        avatar_url: picture || null,
       },
       JWT_SECRET,
       { expiresIn: '7d' }
@@ -213,6 +214,7 @@ router.post('/google', async (req: Request, res: Response) => {
           position: user.position,
           organization: user.organization,
           signature_img: user.signature_img,
+          avatar_url: picture || null,
         }),
       },
     });

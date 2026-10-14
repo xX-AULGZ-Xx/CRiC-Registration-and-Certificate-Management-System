@@ -95,14 +95,30 @@ export default function LoginPage() {
     setGoogleLoading(true);
     setErrorMsg('');
     try {
+      // Decode picture from Google JWT credential directly as an instant fallback
+      let clientPicture: string | null = null;
+      try {
+        const parts = response.credential.split('.');
+        if (parts.length === 3) {
+          const payloadJson = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          if (payloadJson.picture) clientPicture = payloadJson.picture;
+        }
+      } catch {
+        // ignore decode error
+      }
+
       const res = await fetchApi('/api/v1/auth/google', {
         method: 'POST',
         body: JSON.stringify({ credential: response.credential }),
       });
 
       if (res.success && res.data?.token) {
+        const userData = {
+          ...res.data.user,
+          avatar_url: res.data.user?.avatar_url || clientPicture || null,
+        };
         localStorage.setItem('token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('user', JSON.stringify(userData));
         window.location.href = '/dashboard';
       } else {
         setErrorMsg(res.message || 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ');

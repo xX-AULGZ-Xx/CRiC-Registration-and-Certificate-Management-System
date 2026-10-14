@@ -130,7 +130,17 @@ export default function DashboardPage() {
             </h1>
             {currentUser && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-xs">
-                <User className="w-3.5 h-3.5" />
+                {currentUser.avatar_url ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={currentUser.avatar_url}
+                    alt={currentUser.full_name || currentUser.username}
+                    className="w-4 h-4 rounded-full object-cover shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <User className="w-3.5 h-3.5" />
+                )}
                 <span>{currentUser.full_name || currentUser.username}</span>
                 <span className="text-[10px] text-blue-500 font-medium">
                   ({currentUser.role === 'ADMIN' ? 'ผู้ดูแลระบบ' : 'ผู้จัด'})
