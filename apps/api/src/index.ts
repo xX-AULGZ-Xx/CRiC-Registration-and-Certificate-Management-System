@@ -12,6 +12,7 @@ import registrationRouter from './modules/registration/registration.controller';
 import evaluationRouter from './modules/evaluation/evaluation.controller';
 import certificateRouter from './modules/certificates/certificate.controller';
 import adminRouter from './modules/admin/admin.controller';
+import installRouter from './modules/install/install.controller';
 import { prisma } from './lib/prisma';
 
 const app = express();
@@ -102,6 +103,7 @@ app.use('/api/v1/registration', registrationRouter);
 app.use('/api/v1/evaluation', evaluationRouter);
 app.use('/api/v1/certificates', certificateRouter);
 app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/install', installRouter);
 
 // Global 404 handler
 app.use((req, res) => {

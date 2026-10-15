@@ -7,7 +7,7 @@ import { Award, ShieldCheck } from 'lucide-react';
 export default function Footer() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/surveys')) {
+  if (pathname?.startsWith('/surveys') || pathname === '/install') {
     return null;
   }
   return (

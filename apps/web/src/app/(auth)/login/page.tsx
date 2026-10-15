@@ -309,11 +309,17 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Demo Credentials Footer */}
-        <div className="pt-4 border-t border-slate-100 text-center">
+        {/* Demo Credentials & Install Wizard Footer */}
+        <div className="pt-4 border-t border-slate-100 text-center space-y-2">
           <div className="text-xs text-slate-400">
             บัญชีทดสอบเริ่มต้น: <span className="font-mono text-slate-600 font-bold">admin / admin1234</span> หรือ{' '}
             <span className="font-mono text-slate-600 font-bold">organizer / password1234</span>
+          </div>
+          <div className="text-[11px] text-slate-400">
+            ติดตั้งระบบใหม่ครั้งแรก?{' '}
+            <Link href="/install" className="text-blue-600 hover:underline font-bold">
+              เปิดหน้าวิซาร์ดติดตั้งระบบ (Install Wizard)
+            </Link>
           </div>
         </div>
       </div>
