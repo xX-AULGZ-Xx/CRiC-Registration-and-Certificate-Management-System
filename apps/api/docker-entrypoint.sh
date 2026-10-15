@@ -15,7 +15,7 @@ MAX_TRIES=20
 COUNT=0
 
 while [ $COUNT -lt $MAX_TRIES ]; do
-  if $PRISMA_CLI db push --schema="$PRISMA_SCHEMA" --skip-generate --accept-data-loss; then
+  if $PRISMA_CLI db push --schema="$PRISMA_SCHEMA" --accept-data-loss; then
     echo "✅ [Docker Entrypoint] Database schema pushed successfully!"
     break
   fi
@@ -23,6 +23,9 @@ while [ $COUNT -lt $MAX_TRIES ]; do
   echo "⚠️ [Docker Entrypoint] Database not ready yet (attempt $COUNT/$MAX_TRIES). Waiting 3 seconds..."
   sleep 3
 done
+
+echo "⚙️ [Docker Entrypoint] Ensuring Prisma Client is generated for the current platform..."
+$PRISMA_CLI generate --schema="$PRISMA_SCHEMA" || echo "⚠️ prisma generate completed with warnings."
 
 if [ $COUNT -eq $MAX_TRIES ]; then
   echo "❌ [Docker Entrypoint] Warning: Could not push Prisma schema after $MAX_TRIES attempts."
