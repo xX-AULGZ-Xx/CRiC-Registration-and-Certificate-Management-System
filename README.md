@@ -68,9 +68,40 @@ pnpm dev
 
 ---
 
+## 🐳 การใช้งานด้วย Docker & Docker Compose
+
+ระบบรองรับการรันแบบ Containerization ด้วย Docker Compose เต็มรูปแบบ พร้อม MySQL, Express Backend API, และ Next.js Frontend โดยมีการ Migrate และ Seed ข้อมูลให้อัตโนมัติ
+
+### 1. คัดลอกไฟล์ Environment
+```bash
+cp .env.example .env
+```
+
+### 2. สั่งเริ่มระบบด้วย Docker Compose
+```bash
+docker compose up -d --build
+```
+
+### 3. ตรวจสอบสถานะการทำงานของ Containers
+```bash
+docker compose ps
+```
+
+- **Frontend (Web App)**: [http://localhost:3006](http://localhost:3006)
+- **Backend (API)**: [http://localhost:5060](http://localhost:5060)
+- **Database (MySQL 8.0)**: `localhost:3308` (User: `plan_user`, Password: `plan_password`, Database: `registration_certificate_db`)
+
+### 4. การหยุดการทำงาน
+```bash
+docker compose down
+```
+
+---
+
 ## 🔑 บัญชีผู้ใช้เริ่มต้น (Default Seed Accounts)
 
 | บัญชี | Username | Password | บทบาท (Role) |
 |---|---|---|---|
 | **ผู้ดูแลระบบ (Admin)** | `admin` | `admin1234` | ดูแลระบบทั้งหมด |
 | **ผู้จัดกิจกรรม (Organizer)** | `organizer` | `password1234` | สร้างและจัดการกิจกรรม |
+
