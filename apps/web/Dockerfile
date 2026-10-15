@@ -24,6 +24,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/apps/web/node_modules ./apps/web/node_modules
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web ./apps/web
+RUN mkdir -p apps/web/public
 
 # Set environment variables for build
 ARG INTERNAL_API_URL=http://api:5060
