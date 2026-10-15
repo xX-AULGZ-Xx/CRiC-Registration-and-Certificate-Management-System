@@ -33,18 +33,14 @@ RUN pnpm --filter api build
 
 # Stage 4: Production Runner
 FROM node:20-alpine AS runner
-RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=5060
+ENV PATH="/app/apps/api/node_modules/.bin:/app/node_modules/.bin:$PATH"
 
-# Install OpenSSL for Prisma engine compatibility on Alpine
-RUN apk add --no-cache openssl libc6-compat
-
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 backend
+# Install OpenSSL for Prisma engine compatibility on Alpine and curl for healthcheck
+RUN apk add --no-cache openssl libc6-compat curl
 
 # Copy necessary files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -55,13 +51,11 @@ COPY --from=dependencies /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY apps/api/docker-entrypoint.sh ./apps/api/docker-entrypoint.sh
 
-# Ensure storage directory exists and has correct permissions
-RUN mkdir -p /app/storage/certificates /app/storage/signatures /app/storage/logos && \
+# Ensure clean LF line endings and execution permissions
+RUN sed -i 's/\r$//' /app/apps/api/docker-entrypoint.sh && \
     chmod +x /app/apps/api/docker-entrypoint.sh && \
-    chown -R backend:nodejs /app
-
-USER backend
+    mkdir -p /app/storage/certificates /app/storage/signatures /app/storage/logos
 
 EXPOSE 5060
 
-ENTRYPOINT ["/app/apps/api/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/app/apps/api/docker-entrypoint.sh"]
