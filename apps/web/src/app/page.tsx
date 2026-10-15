@@ -22,8 +22,20 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    checkInstallStatus();
     loadEvents();
   }, []);
+
+  const checkInstallStatus = async () => {
+    try {
+      const res = await fetchApi('/api/v1/install/status');
+      if (res.success && res.data?.is_installed === false) {
+        window.location.href = '/install';
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const loadEvents = async () => {
     try {

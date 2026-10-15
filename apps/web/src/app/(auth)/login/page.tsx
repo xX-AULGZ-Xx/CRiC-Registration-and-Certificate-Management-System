@@ -30,6 +30,18 @@ export default function LoginPage() {
 
   // Load public system settings on mount
   useEffect(() => {
+    const checkInstall = async () => {
+      try {
+        const res = await fetchApi('/api/v1/install/status');
+        if (res.success && res.data?.is_installed === false) {
+          router.replace('/install');
+        }
+      } catch {
+        // ignore
+      }
+    };
+    checkInstall();
+
     const loadPublicSettings = async () => {
       try {
         const res = await fetchApi('/api/v1/system/public-settings');
@@ -44,7 +56,7 @@ export default function LoginPage() {
       }
     };
     loadPublicSettings();
-  }, []);
+  }, [router]);
 
   // Initialize Google Identity Services when Client ID is available
   useEffect(() => {
