@@ -129,7 +129,7 @@ router.get('/suggestions', async (req: Request, res: Response) => {
           { location: { contains: q } },
         ],
       },
-      take: 5,
+      take: 10,
       select: {
         id: true,
         title: true,
@@ -139,9 +139,30 @@ router.get('/suggestions', async (req: Request, res: Response) => {
         end_time: true,
         location: true,
         status: true,
+        registration_config: true,
+        certificate_config: true,
+        evaluation_form: {
+          select: { id: true },
+        },
       },
       orderBy: { created_at: 'desc' },
     });
+
+    // Filter events by mode
+    let filteredEvents = events;
+    if (mode === 'register') {
+      filteredEvents = events.filter((e) => {
+        const regCfg = (e.registration_config as any) || {};
+        return regCfg.is_evaluation_only !== true && regCfg.has_registration !== false;
+      });
+    } else if (mode === 'evaluation') {
+      filteredEvents = events.filter((e) => {
+        const certCfg = (e.certificate_config as any) || {};
+        return !!e.evaluation_form || certCfg.require_evaluation === true;
+      });
+    }
+
+    filteredEvents = filteredEvents.slice(0, 5);
 
     // 2. Search matching certificates (only when mode is NOT evaluation)
     let certificates: any[] = [];
@@ -177,7 +198,7 @@ router.get('/suggestions', async (req: Request, res: Response) => {
     return res.json({
       success: true,
       data: {
-        events: serializeBigInt(events),
+        events: serializeBigInt(filteredEvents),
         certificates: serializeBigInt(certificates),
       },
     });

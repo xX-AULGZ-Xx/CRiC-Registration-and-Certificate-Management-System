@@ -35,6 +35,15 @@ router.get('/public', async (req: Request, res: Response) => {
         max_attendees: true,
         status: true,
         banner_url: true,
+        registration_config: true,
+        certificate_config: true,
+        evaluation_form: {
+          select: {
+            id: true,
+            title: true,
+            is_active: true,
+          },
+        },
         organizer: {
           select: {
             full_name: true,
@@ -49,7 +58,22 @@ router.get('/public', async (req: Request, res: Response) => {
       },
     });
 
-    return res.json({ success: true, data: serializeBigInt(events) });
+    const mode = req.query.mode as string | undefined;
+    let resultEvents = events;
+
+    if (mode === 'register') {
+      resultEvents = events.filter((e) => {
+        const regCfg = (e.registration_config as any) || {};
+        return regCfg.is_evaluation_only !== true && regCfg.has_registration !== false;
+      });
+    } else if (mode === 'evaluation') {
+      resultEvents = events.filter((e) => {
+        const certCfg = (e.certificate_config as any) || {};
+        return !!e.evaluation_form || certCfg.require_evaluation === true;
+      });
+    }
+
+    return res.json({ success: true, data: serializeBigInt(resultEvents) });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการโหลดกิจกรรม', error: error.message });
   }

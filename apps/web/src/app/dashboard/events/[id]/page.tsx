@@ -81,6 +81,8 @@ export default function EventManagePage() {
   const [editMaxAttendees, setEditMaxAttendees] = useState('');
   const [editStatus, setEditStatus] = useState('OPEN');
   const [editCertPrefix, setEditCertPrefix] = useState('');
+  const [editHasRegistration, setEditHasRegistration] = useState(true);
+  const [editHasEvaluation, setEditHasEvaluation] = useState(true);
 
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return '';
@@ -119,6 +121,14 @@ export default function EventManagePage() {
     setEditMaxAttendees(String(event.max_attendees || 0));
     setEditStatus(event.status || 'OPEN');
     setEditCertPrefix(certConfig.certificate_no_prefix || 'วอศ.ชร-2569');
+
+    const regCfg = event.registration_config || {};
+    const isEvalOnly = regCfg.is_evaluation_only === true || regCfg.has_registration === false;
+    setEditHasRegistration(!isEvalOnly);
+    const certCfg = event.certificate_config || {};
+    const hasEval = certCfg.require_evaluation === true || !!event.evaluation_form || regCfg.has_evaluation === true;
+    setEditHasEvaluation(hasEval);
+
     setShowEditModal(true);
   };
 
@@ -126,8 +136,27 @@ export default function EventManagePage() {
     e.preventDefault();
     if (!editTitle.trim()) return;
 
+    if (!editHasRegistration && !editHasEvaluation) {
+      alert('กรุณาเลือกเปิดใช้งานอย่างน้อย 1 ระบบ (ระบบลงทะเบียน หรือ ระบบแบบประเมินความพึงพอใจ)');
+      return;
+    }
+
     try {
       setSavingEdit(true);
+      const currentRegConfig = event.registration_config || {};
+      const updatedRegConfig = {
+        ...currentRegConfig,
+        has_registration: editHasRegistration,
+        is_evaluation_only: !editHasRegistration,
+        has_evaluation: editHasEvaluation,
+      };
+
+      const updatedCertConfig = {
+        ...certConfig,
+        certificate_no_prefix: editCertPrefix.trim() || 'วอศ.ชร-2569',
+        require_evaluation: editHasEvaluation,
+      };
+
       const res = await fetchApi(`/api/v1/events/${eventId}`, {
         method: 'PUT',
         body: JSON.stringify({
@@ -143,10 +172,8 @@ export default function EventManagePage() {
           registration_end: editRegEnd ? new Date(editRegEnd).toISOString() : null,
           max_attendees: parseInt(editMaxAttendees) || 0,
           status: editStatus,
-          certificate_config: {
-            ...certConfig,
-            certificate_no_prefix: editCertPrefix.trim() || 'วอศ.ชร-2569',
-          },
+          registration_config: updatedRegConfig,
+          certificate_config: updatedCertConfig,
         }),
       });
 
@@ -165,13 +192,12 @@ export default function EventManagePage() {
           registration_end: editRegEnd ? new Date(editRegEnd).toISOString() : null,
           max_attendees: parseInt(editMaxAttendees) || 0,
           status: editStatus,
+          registration_config: updatedRegConfig,
+          certificate_config: updatedCertConfig,
         }));
-        setCertConfig((prev) => ({
-          ...prev,
-          certificate_no_prefix: editCertPrefix.trim() || 'วอศ.ชร-2569',
-        }));
+        setCertConfig(updatedCertConfig);
         setShowEditModal(false);
-        alert('บันทึกการแก้ไขข้อมูลและการตั้งค่าเวลาสำเร็จ');
+        alert('บันทึกการแก้ไขข้อมูลและการตั้งค่าระบบสำเร็จ');
       } else {
         alert(res.message || 'ไม่สามารถบันทึกข้อมูลได้');
       }
@@ -1398,6 +1424,51 @@ export default function EventManagePage() {
                   onChange={(e) => setEditCertPrefix(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
+              </div>
+
+              {/* Module & Portal Visibility Settings */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <div className="text-xs font-bold text-slate-900">
+                  โมดูลที่เปิดใช้งานและการแสดงผลในระบบ
+                </div>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editHasRegistration}
+                      onChange={(e) => setEditHasRegistration(e.target.checked)}
+                      className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">
+                        เปิดใช้งานระบบลงทะเบียนเข้าร่วมกิจกรรม
+                      </div>
+                      <div className="text-[11px] text-slate-500">
+                        แสดงในแท็บลงทะเบียน และเปิดให้ผู้เข้าร่วมลงทะเบียนหน้าเว็บได้
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editHasEvaluation}
+                      onChange={(e) => setEditHasEvaluation(e.target.checked)}
+                      className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">
+                        เปิดใช้งานระบบแบบประเมินความพึงพอใจ
+                      </div>
+                      <div className="text-[11px] text-slate-500">
+                        แสดงในแท็บประเมิน และเปิดให้ผู้เข้าร่วมตอบแบบสอบถามได้
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                <p className="text-[10px] text-slate-500 bg-white p-2 rounded-lg border border-slate-200">
+                  หมายเหตุ: หากเลือกเปิดใช้งานทั้ง 2 ระบบ รายการนี้จะแสดงทั้งในแท็บลงทะเบียนและแท็บประเมินความพึงพอใจ
+                </p>
               </div>
 
               <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">

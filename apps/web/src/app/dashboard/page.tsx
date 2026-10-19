@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const [regEnd, setRegEnd] = useState('');
   const [maxAttendees, setMaxAttendees] = useState('100');
   const [certPrefix, setCertPrefix] = useState('วอศ.ชร-2569');
+  const [enableEvaluationInEvent, setEnableEvaluationInEvent] = useState(true);
 
   // New Survey Form (Evaluation Mode only)
   const [surveyTitle, setSurveyTitle] = useState('');
@@ -138,10 +139,15 @@ export default function DashboardPage() {
           registration_start: regStart ? new Date(regStart).toISOString() : undefined,
           registration_end: regEnd ? new Date(regEnd).toISOString() : undefined,
           max_attendees: parseInt(maxAttendees) || 0,
+          registration_config: {
+            has_registration: true,
+            is_evaluation_only: false,
+            has_evaluation: enableEvaluationInEvent,
+          },
           certificate_config: {
             certificate_no_prefix: certPrefix.trim() || 'CERT-2569',
             require_check_in: true,
-            require_evaluation: true,
+            require_evaluation: enableEvaluationInEvent,
           },
         }),
       });
@@ -182,6 +188,11 @@ export default function DashboardPage() {
           start_date: surveyStartDate ? new Date(surveyStartDate).toISOString() : undefined,
           end_date: surveyEndDate ? new Date(surveyEndDate).toISOString() : undefined,
           max_attendees: 0,
+          registration_config: {
+            has_registration: false,
+            is_evaluation_only: true,
+            has_evaluation: true,
+          },
           certificate_config: {
             require_check_in: false,
             require_evaluation: true,
@@ -310,10 +321,25 @@ export default function DashboardPage() {
     }
   };
 
+  // Filter events based on portal mode
+  const displayedEvents = events.filter((evt) => {
+    const regCfg = evt.registration_config || {};
+    const certCfg = evt.certificate_config || {};
+    const isEvalOnly = regCfg.is_evaluation_only === true || regCfg.has_registration === false;
+    const hasReg = !isEvalOnly;
+    const hasEval = !!evt.evaluation_form || certCfg.require_evaluation === true || regCfg.has_evaluation === true;
+
+    if (portalMode === 'evaluation') {
+      return hasEval;
+    } else {
+      return hasReg;
+    }
+  });
+
   // Stats calculation
-  const totalEvents = events.length;
-  const totalAttendees = events.reduce((sum, e) => sum + (e._count?.attendees || 0), 0);
-  const totalSurveyResponses = events.reduce(
+  const totalEvents = displayedEvents.length;
+  const totalAttendees = displayedEvents.reduce((sum, e) => sum + (e._count?.attendees || 0), 0);
+  const totalSurveyResponses = displayedEvents.reduce(
     (sum, e) => sum + (e.evaluation_form?._count?.responses || 0),
     0
   );
@@ -466,7 +492,7 @@ export default function DashboardPage() {
             {portalMode === 'evaluation' ? 'รายการแบบสอบถามของคุณ' : 'รายการกิจกรรมของคุณ'}
           </h2>
           <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-            {events.length} {portalMode === 'evaluation' ? 'แบบสอบถาม' : 'กิจกรรม'}
+            {displayedEvents.length} {portalMode === 'evaluation' ? 'แบบสอบถาม' : 'กิจกรรม'}
           </span>
         </div>
 
@@ -474,7 +500,7 @@ export default function DashboardPage() {
           <div className="p-12 text-center text-slate-400">
             {portalMode === 'evaluation' ? 'กำลังโหลดรายการแบบสอบถาม...' : 'กำลังโหลดรายการกิจกรรม...'}
           </div>
-        ) : events.length === 0 ? (
+        ) : displayedEvents.length === 0 ? (
           <div className="p-12 text-center space-y-3">
             {portalMode === 'evaluation' ? (
               <>
@@ -492,135 +518,149 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {events.map((evt) => (
-              <div
-                key={evt.id}
-                className="p-6 hover:bg-slate-50/70 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
-              >
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`px-2.5 py-0.5 rounded-full font-mono text-xs font-bold ${
-                      portalMode === 'evaluation'
-                        ? 'bg-indigo-100 text-indigo-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {evt.event_code}
-                    </span>
-                    {evt.project_ref_code && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
-                        โครงการ: {evt.project_ref_code}
-                      </span>
-                    )}
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+            {displayedEvents.map((evt) => {
+              const regCfg = evt.registration_config || {};
+              const certCfg = evt.certificate_config || {};
+              const isEvalOnly = regCfg.is_evaluation_only === true || regCfg.has_registration === false;
+              const hasReg = !isEvalOnly;
+              const hasEval = !!evt.evaluation_form || certCfg.require_evaluation === true || regCfg.has_evaluation === true;
+              const hasBoth = hasReg && hasEval;
+
+              return (
+                <div
+                  key={evt.id}
+                  className="p-6 hover:bg-slate-50/70 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-2.5 py-0.5 rounded-full font-mono text-xs font-bold ${
                         portalMode === 'evaluation'
                           ? 'bg-indigo-100 text-indigo-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {evt.event_code}
+                      </span>
+                      {evt.project_ref_code && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                          โครงการ: {evt.project_ref_code}
+                        </span>
+                      )}
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          portalMode === 'evaluation'
+                            ? 'bg-indigo-100 text-indigo-800'
+                            : evt.status === 'OPEN'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {portalMode === 'evaluation'
+                          ? 'เปิดรับคำตอบ'
                           : evt.status === 'OPEN'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      {portalMode === 'evaluation'
-                        ? 'เปิดรับคำตอบ'
-                        : evt.status === 'OPEN'
-                        ? 'เปิดรับลงทะเบียน'
-                        : 'ปิดรับสมัคร'}
-                    </span>
+                          ? 'เปิดรับลงทะเบียน'
+                          : 'ปิดรับสมัคร'}
+                      </span>
+                      {hasBoth && (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          มีทั้งลงทะเบียนและประเมิน
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="text-base font-bold text-slate-900">
+                      <Link
+                        href={portalMode === 'evaluation' ? `/dashboard/events/${evt.id}?tab=evaluation` : `/dashboard/events/${evt.id}`}
+                        className={`transition ${portalMode === 'evaluation' ? 'hover:text-indigo-700' : 'hover:text-blue-700'}`}
+                      >
+                        {evt.title}
+                      </Link>
+                    </h3>
+
+                    <div className="text-xs text-slate-500 flex flex-wrap items-center gap-y-1.5 gap-x-4">
+                      {portalMode === 'evaluation' ? (
+                        <>
+                          <span className="flex items-center gap-1 text-indigo-700 font-semibold">
+                            <BarChart2 className="w-3.5 h-3.5" />
+                            ผู้ตอบแบบสอบถาม: {evt.evaluation_form?._count?.responses || 0} คน
+                          </span>
+                          {evt.start_date && (
+                            <span className="flex items-center gap-1 text-slate-700 font-medium">
+                              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                              {new Date(evt.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              {evt.end_date && ` - ${new Date(evt.end_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}`}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {evt.start_date && (
+                            <span className="flex items-center gap-1 text-slate-700 font-medium">
+                              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                              {new Date(evt.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              {evt.end_date && ` - ${new Date(evt.end_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}`}
+                            </span>
+                          )}
+                          {evt.start_time && (
+                            <span className="flex items-center gap-1 text-slate-700 font-medium">
+                              <Clock className="w-3.5 h-3.5 text-amber-600" />
+                              {evt.start_time}{evt.end_time ? ` - ${evt.end_time}` : ''} น.
+                            </span>
+                          )}
+                          {evt.location && (
+                            <span className="flex items-center gap-1 text-slate-600">
+                              <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                              {evt.location}
+                            </span>
+                          )}
+                          <span>ผู้ลงทะเบียน: {evt._count?.attendees || 0} คน</span>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <h3 className="text-base font-bold text-slate-900">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                      href={portalMode === 'evaluation' || isEvalOnly ? `/surveys/${evt.id}` : `/events/${evt.id}`}
+                      target="_blank"
+                      className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition"
+                      title={portalMode === 'evaluation' || isEvalOnly ? 'เปิดหน้าแบบประเมินสาธารณะ' : 'เปิดหน้าลงทะเบียนสาธารณะ'}
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Link>
+
                     <Link
                       href={portalMode === 'evaluation' ? `/dashboard/events/${evt.id}?tab=evaluation` : `/dashboard/events/${evt.id}`}
-                      className={`transition ${portalMode === 'evaluation' ? 'hover:text-indigo-700' : 'hover:text-blue-700'}`}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs transition ${
+                        portalMode === 'evaluation'
+                          ? 'bg-indigo-600 hover:bg-indigo-700'
+                          : 'bg-blue-700 hover:bg-blue-800'
+                      }`}
                     >
-                      {evt.title}
+                      {portalMode === 'evaluation' ? (
+                        <>
+                          <ClipboardList className="w-4 h-4" />
+                          <span>ออกแบบคำถาม</span>
+                        </>
+                      ) : (
+                        <>
+                          <Settings className="w-4 h-4" />
+                          <span>จัดการกิจกรรม</span>
+                        </>
+                      )}
                     </Link>
-                  </h3>
 
-                  <div className="text-xs text-slate-500 flex flex-wrap items-center gap-y-1.5 gap-x-4">
-                    {portalMode === 'evaluation' ? (
-                      <>
-                        <span className="flex items-center gap-1 text-indigo-700 font-semibold">
-                          <BarChart2 className="w-3.5 h-3.5" />
-                          ผู้ตอบแบบสอบถาม: {evt.evaluation_form?._count?.responses || 0} คน
-                        </span>
-                        {evt.start_date && (
-                          <span className="flex items-center gap-1 text-slate-700 font-medium">
-                            <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                            {new Date(evt.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
-                            {evt.end_date && ` - ${new Date(evt.end_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}`}
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {evt.start_date && (
-                          <span className="flex items-center gap-1 text-slate-700 font-medium">
-                            <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                            {new Date(evt.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
-                            {evt.end_date && ` - ${new Date(evt.end_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}`}
-                          </span>
-                        )}
-                        {evt.start_time && (
-                          <span className="flex items-center gap-1 text-slate-700 font-medium">
-                            <Clock className="w-3.5 h-3.5 text-amber-600" />
-                            {evt.start_time}{evt.end_time ? ` - ${evt.end_time}` : ''} น.
-                          </span>
-                        )}
-                        {evt.location && (
-                          <span className="flex items-center gap-1 text-slate-600">
-                            <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                            {evt.location}
-                          </span>
-                        )}
-                        <span>ผู้ลงทะเบียน: {evt._count?.attendees || 0} คน</span>
-                      </>
-                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteEvent(evt.id, e)}
+                      className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition"
+                      title="ลบรายการ"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    href={portalMode === 'evaluation' ? `/surveys/${evt.id}` : `/events/${evt.id}`}
-                    target="_blank"
-                    className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition"
-                    title={portalMode === 'evaluation' ? 'เปิดหน้าแบบประเมินสาธารณะ' : 'เปิดหน้าลงทะเบียนสาธารณะ'}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
-
-                  <Link
-                    href={portalMode === 'evaluation' ? `/dashboard/events/${evt.id}?tab=evaluation` : `/dashboard/events/${evt.id}`}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs transition ${
-                      portalMode === 'evaluation'
-                        ? 'bg-indigo-600 hover:bg-indigo-700'
-                        : 'bg-blue-700 hover:bg-blue-800'
-                    }`}
-                  >
-                    {portalMode === 'evaluation' ? (
-                      <>
-                        <ClipboardList className="w-4 h-4" />
-                        <span>ออกแบบคำถาม</span>
-                      </>
-                    ) : (
-                      <>
-                        <Settings className="w-4 h-4" />
-                        <span>จัดการกิจกรรม</span>
-                      </>
-                    )}
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeleteEvent(evt.id, e)}
-                    className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition"
-                    title="ลบรายการ"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -956,6 +996,26 @@ export default function DashboardPage() {
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* Evaluation System Toggle */}
+                <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100/80 space-y-2">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enableEvaluationInEvent}
+                      onChange={(e) => setEnableEvaluationInEvent(e.target.checked)}
+                      className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">
+                        เปิดใช้งานระบบแบบประเมินความพึงพอใจสำหรับกิจกรรมนี้
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        หากเปิดใช้งาน รายการนี้จะมีทั้งระบบลงทะเบียนและแบบประเมิน และจะแสดงทั้งในแท็บลงทะเบียนและแท็บประเมิน
+                      </div>
+                    </div>
+                  </label>
                 </div>
 
                 <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">

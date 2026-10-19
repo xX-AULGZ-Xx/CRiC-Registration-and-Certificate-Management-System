@@ -48,19 +48,27 @@ export default function HomePage() {
       const modeParam = searchParams.get('mode');
       if (modeParam === 'evaluation') {
         setPortalMode('evaluation');
+        loadEvents('evaluation');
       } else if (modeParam === 'register') {
         setPortalMode('register');
+        loadEvents('register');
       } else {
         const saved = localStorage.getItem('portal_mode');
         if (saved === 'evaluation' || saved === 'register') {
           setPortalMode(saved);
+          loadEvents(saved);
+        } else {
+          loadEvents('register');
         }
       }
+    } else {
+      loadEvents();
     }
 
     const handleModeChange = (e: any) => {
       if (e.detail && (e.detail === 'register' || e.detail === 'evaluation')) {
         setPortalMode(e.detail);
+        loadEvents(e.detail);
       }
     };
     window.addEventListener('portal-mode-changed', handleModeChange);
@@ -115,10 +123,11 @@ export default function HomePage() {
     }
   };
 
-  const loadEvents = async () => {
+  const loadEvents = async (targetMode?: string) => {
     try {
       setLoading(true);
-      const res = await fetchApi('/api/v1/events/public');
+      const m = targetMode || portalMode;
+      const res = await fetchApi(`/api/v1/events/public?mode=${m}`);
       if (res.success) {
         setEvents(res.data);
       }
@@ -128,6 +137,20 @@ export default function HomePage() {
       setLoading(false);
     }
   };
+
+  const displayedEvents = events.filter((evt) => {
+    const regCfg = evt.registration_config || {};
+    const certCfg = evt.certificate_config || {};
+    const isEvalOnly = regCfg.is_evaluation_only === true || regCfg.has_registration === false;
+    const hasReg = !isEvalOnly;
+    const hasEval = !!evt.evaluation_form || certCfg.require_evaluation === true || regCfg.has_evaluation === true;
+
+    if (portalMode === 'evaluation') {
+      return hasEval;
+    } else {
+      return hasReg;
+    }
+  });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -480,15 +503,25 @@ export default function HomePage() {
               <div key={n} className="h-64 rounded-2xl bg-slate-200 animate-pulse" />
             ))}
           </div>
-        ) : events.length === 0 ? (
+        ) : displayedEvents.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 shadow-xs">
             <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-slate-700">ยังไม่มีกิจกรรมที่เปิดรับในขณะนี้</h3>
+            <h3 className="text-lg font-bold text-slate-700">
+              {portalMode === 'evaluation' ? 'ยังไม่มีแบบประเมินที่เปิดรับในขณะนี้' : 'ยังไม่มีกิจกรรมที่เปิดรับในขณะนี้'}
+            </h3>
             <p className="text-slate-400 text-sm mt-1">กรุณากลับมาตรวจสอบใหม่อีกครั้งในภายหลัง</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((evt) => (
+            {displayedEvents.map((evt) => {
+              const regCfg = evt.registration_config || {};
+              const certCfg = evt.certificate_config || {};
+              const isEvalOnly = regCfg.is_evaluation_only === true || regCfg.has_registration === false;
+              const hasReg = !isEvalOnly;
+              const hasEval = !!evt.evaluation_form || certCfg.require_evaluation === true || regCfg.has_evaluation === true;
+              const hasBoth = hasReg && hasEval;
+
+              return (
               <div
                 key={evt.id}
                 className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col overflow-hidden group"
@@ -501,25 +534,32 @@ export default function HomePage() {
                       : 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-1 flex-wrap">
                     <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold">
                       {evt.event_code || 'EVENT'}
                     </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        portalMode === 'evaluation'
-                          ? 'bg-purple-500/90 text-white'
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {hasBoth && (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-white/25 text-white backdrop-blur-xs">
+                          มีทั้งลงทะเบียนและประเมิน
+                        </span>
+                      )}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          portalMode === 'evaluation'
+                            ? 'bg-purple-500/90 text-white'
+                            : evt.status === 'OPEN'
+                            ? 'bg-emerald-500/90 text-white'
+                            : 'bg-slate-700/80 text-slate-200'
+                        }`}
+                      >
+                        {portalMode === 'evaluation'
+                          ? 'เปิดรับแบบประเมิน'
                           : evt.status === 'OPEN'
-                          ? 'bg-emerald-500/90 text-white'
-                          : 'bg-slate-700/80 text-slate-200'
-                      }`}
-                    >
-                      {portalMode === 'evaluation'
-                        ? 'เปิดรับแบบประเมิน'
-                        : evt.status === 'OPEN'
-                        ? 'เปิดรับลงทะเบียน'
-                        : 'ปิดรับสมัคร'}
-                    </span>
+                          ? 'เปิดรับลงทะเบียน'
+                          : 'ปิดรับสมัคร'}
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-blue-100 font-medium line-clamp-1">
@@ -597,7 +637,8 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         )}
       </section>
