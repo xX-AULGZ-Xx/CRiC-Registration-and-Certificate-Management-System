@@ -3,7 +3,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Award, Calendar, Search, ShieldCheck, User, LogOut, LayoutDashboard, Settings, ChevronDown } from 'lucide-react';
+import {
+  Award,
+  Calendar,
+  Search,
+  ShieldCheck,
+  User,
+  LogOut,
+  LayoutDashboard,
+  Settings,
+  ChevronDown,
+  ClipboardList,
+  Star,
+} from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
 export default function Navbar() {
@@ -14,6 +26,48 @@ export default function Navbar() {
   const [brandLogo, setBrandLogo] = useState<string>('');
   const [brandNameTh, setBrandNameTh] = useState<string>('ระบบลงทะเบียนและออกเกียรติบัตร');
   const [brandNameEn, setBrandNameEn] = useState<string>('Registration & Certificate Management System');
+
+  // Mode Switch State: 'register' | 'evaluation'
+  const [portalMode, setPortalMode] = useState<'register' | 'evaluation'>('register');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const modeParam = searchParams.get('mode');
+      if (modeParam === 'evaluation') {
+        setPortalMode('evaluation');
+      } else if (modeParam === 'register') {
+        setPortalMode('register');
+      } else {
+        const saved = localStorage.getItem('portal_mode');
+        if (saved === 'evaluation' || saved === 'register') {
+          setPortalMode(saved);
+        }
+      }
+    }
+
+    const handleModeChange = (e: any) => {
+      if (e.detail && (e.detail === 'register' || e.detail === 'evaluation')) {
+        setPortalMode(e.detail);
+      }
+    };
+    window.addEventListener('portal-mode-changed', handleModeChange);
+    return () => window.removeEventListener('portal-mode-changed', handleModeChange);
+  }, []);
+
+  const handleSwitchMode = (mode: 'register' | 'evaluation') => {
+    setPortalMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('portal_mode', mode);
+      window.dispatchEvent(new CustomEvent('portal-mode-changed', { detail: mode }));
+      if (pathname === '/') {
+        const newUrl = mode === 'evaluation' ? '/?mode=evaluation' : '/';
+        window.history.pushState(null, '', newUrl);
+      } else {
+        window.location.href = mode === 'evaluation' ? '/?mode=evaluation' : '/';
+      }
+    }
+  };
 
 
   const updateFavicon = (url: string) => {
@@ -107,32 +161,66 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand */}
-          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink min-w-0">
-            {brandLogo ? (
-              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center group-hover:scale-105 transition shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={brandLogo}
-                  alt={brandNameTh}
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                  onError={() => setBrandLogo('')}
-                />
+          {/* Brand & Mode Switch */}
+          <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5 min-w-0 shrink">
+            <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink min-w-0">
+              {brandLogo ? (
+                <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center group-hover:scale-105 transition shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={brandLogo}
+                    alt={brandNameTh}
+                    className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                    onError={() => setBrandLogo('')}
+                  />
+                </div>
+              ) : (
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition shrink-0">
+                  <Award className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <div className="font-bold text-slate-900 text-sm sm:text-base lg:text-lg leading-tight tracking-tight truncate max-w-[130px] xs:max-w-[160px] sm:max-w-[220px] md:max-w-none">
+                  {brandNameTh}
+                </div>
+                <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[130px] xs:max-w-[160px] sm:max-w-[220px] md:max-w-none hidden xs:block">
+                  {brandNameEn}
+                </div>
               </div>
-            ) : (
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition shrink-0">
-                <Award className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-            )}
-            <div className="min-w-0">
-              <div className="font-bold text-slate-900 text-sm sm:text-base lg:text-lg leading-tight tracking-tight truncate max-w-[150px] xs:max-w-[190px] sm:max-w-[280px] md:max-w-none">
-                {brandNameTh}
-              </div>
-              <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[150px] xs:max-w-[190px] sm:max-w-[280px] md:max-w-none hidden xs:block">
-                {brandNameEn}
-              </div>
+            </Link>
+
+            {/* Mode Switch: ลงทะเบียน vs ประเมินความพึงพอใจ */}
+            <div className="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl border border-slate-200/90 shadow-2xs shrink-0">
+              <button
+                type="button"
+                onClick={() => handleSwitchMode('register')}
+                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  portalMode === 'register'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+                title="โหมดลงทะเบียนเข้าร่วมกิจกรรม"
+              >
+                <ClipboardList className="w-3.5 h-3.5 shrink-0" />
+                <span>ลงทะเบียน</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSwitchMode('evaluation')}
+                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  portalMode === 'evaluation'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+                title="โหมดทำแบบประเมินความพึงพอใจ"
+              >
+                <Star className="w-3.5 h-3.5 shrink-0 text-amber-300" />
+                <span className="hidden xs:inline">ประเมินความพึงพอใจ</span>
+                <span className="xs:hidden">ประเมิน</span>
+              </button>
             </div>
-          </Link>
+          </div>
 
           {/* Navigation Links */}
           <nav className="flex items-center gap-1 sm:gap-2 shrink-0">

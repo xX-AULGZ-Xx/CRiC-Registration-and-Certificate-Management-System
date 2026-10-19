@@ -18,6 +18,7 @@ import {
   User,
   X,
   Loader2,
+  Star,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
@@ -25,6 +26,9 @@ export default function HomePage() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Portal Mode: 'register' | 'evaluation'
+  const [portalMode, setPortalMode] = useState<'register' | 'evaluation'>('register');
 
   // Search suggestion state
   const [suggestions, setSuggestions] = useState<{ events: any[]; certificates: any[] }>({
@@ -38,6 +42,29 @@ export default function HomePage() {
   useEffect(() => {
     checkInstallStatus();
     loadEvents();
+
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const modeParam = searchParams.get('mode');
+      if (modeParam === 'evaluation') {
+        setPortalMode('evaluation');
+      } else if (modeParam === 'register') {
+        setPortalMode('register');
+      } else {
+        const saved = localStorage.getItem('portal_mode');
+        if (saved === 'evaluation' || saved === 'register') {
+          setPortalMode(saved);
+        }
+      }
+    }
+
+    const handleModeChange = (e: any) => {
+      if (e.detail && (e.detail === 'register' || e.detail === 'evaluation')) {
+        setPortalMode(e.detail);
+      }
+    };
+    window.addEventListener('portal-mode-changed', handleModeChange);
+    return () => window.removeEventListener('portal-mode-changed', handleModeChange);
   }, []);
 
   // Debounced search suggestions
@@ -127,18 +154,35 @@ export default function HomePage() {
         <div className="relative max-w-5xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-blue-200 text-xs sm:text-sm font-medium">
             <Sparkles className="w-4 h-4 text-amber-300" />
-            ระบบลงทะเบียน ประเมินผล และออกเกียรติบัตรออนไลน์ครบวงจร
+            <span>
+              {portalMode === 'evaluation'
+                ? 'ระบบทำแบบประเมินความพึงพอใจและรับเกียรติบัตรออนไลน์'
+                : 'ระบบลงทะเบียน ประเมินผล และออกเกียรติบัตรออนไลน์ครบวงจร'}
+            </span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-            ลงทะเบียนร่วมกิจกรรม & <br className="hidden sm:inline" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400">
-              รับเกียรติบัตรออนไลน์ทันที
-            </span>
+            {portalMode === 'evaluation' ? (
+              <>
+                ทำแบบประเมินความพึงพอใจ & <br className="hidden sm:inline" />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-indigo-300 to-teal-300">
+                  รับเกียรติบัตรทันใจ
+                </span>
+              </>
+            ) : (
+              <>
+                ลงทะเบียนร่วมกิจกรรม & <br className="hidden sm:inline" />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400">
+                  รับเกียรติบัตรออนไลน์ทันที
+                </span>
+              </>
+            )}
           </h1>
 
           <p className="max-w-2xl mx-auto text-slate-300 text-sm sm:text-base leading-relaxed">
-            สะดวกรวดเร็ว เข้าร่วมกิจกรรม เช็คชื่อด้วย QR Code ประเมินความพึงพอใจ พร้อมดาวน์โหลดเกียรติบัตรฉบับดิจิทัลที่มีระบบตรวจสอบความถูกต้องได้ตลอด 24 ชั่วโมง
+            {portalMode === 'evaluation'
+              ? 'ตอบแบบประเมินความพึงพอใจโครงการที่คุณได้เข้าร่วม เพื่อดาวน์โหลดเกียรติบัตรฉบับดิจิทัลที่มีระบบตรวจสอบความถูกต้องได้ทันที'
+              : 'สะดวกรวดเร็ว เข้าร่วมกิจกรรม เช็คชื่อด้วย QR Code ประเมินความพึงพอใจ พร้อมดาวน์โหลดเกียรติบัตรฉบับดิจิทัลที่มีระบบตรวจสอบความถูกต้องได้ตลอด 24 ชั่วโมง'}
           </p>
 
           {/* Search Box with Autocomplete Suggestions */}
@@ -355,11 +399,23 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-              กิจกรรมและการอบรมที่เปิดรับ
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+              {portalMode === 'evaluation' ? (
+                <>
+                  <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
+                  <span>แบบประเมินความพึงพอใจโครงการ</span>
+                </>
+              ) : (
+                <>
+                  <Calendar className="w-6 h-6 text-blue-600" />
+                  <span>กิจกรรมและการอบรมที่เปิดรับลงทะเบียน</span>
+                </>
+              )}
             </h2>
             <p className="text-slate-500 text-sm mt-1">
-              เลือกกิจกรรมที่ต้องการเพื่อลงทะเบียนหรือทำแบบประเมินความพึงพอใจ
+              {portalMode === 'evaluation'
+                ? 'เลือกโครงการที่คุณเข้าร่วมเพื่อตอบแบบประเมินและรับเกียรติบัตรออนไลน์'
+                : 'เลือกกิจกรรมที่ต้องการเพื่อกรอกข้อมูลลงทะเบียนเข้าร่วมงาน'}
             </p>
           </div>
         </div>
@@ -391,12 +447,18 @@ export default function HomePage() {
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        evt.status === 'OPEN'
+                        portalMode === 'evaluation'
+                          ? 'bg-indigo-500/90 text-white'
+                          : evt.status === 'OPEN'
                           ? 'bg-emerald-500/90 text-white'
                           : 'bg-slate-700/80 text-slate-200'
                       }`}
                     >
-                      {evt.status === 'OPEN' ? 'เปิดรับลงทะเบียน' : 'ปิดรับสมัคร'}
+                      {portalMode === 'evaluation'
+                        ? 'เปิดให้ทำแบบประเมิน'
+                        : evt.status === 'OPEN'
+                        ? 'เปิดรับลงทะเบียน'
+                        : 'ปิดรับสมัคร'}
                     </span>
                   </div>
                   <div>
@@ -453,13 +515,23 @@ export default function HomePage() {
 
                   {/* Actions */}
                   <div className="pt-2">
-                    <Link
-                      href={`/events/${evt.id}`}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-50 text-blue-700 hover:bg-blue-700 hover:text-white transition group-hover:bg-blue-700 group-hover:text-white"
-                    >
-                      <span>รายละเอียด & ลงทะเบียน</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
+                    {portalMode === 'evaluation' ? (
+                      <Link
+                        href={`/surveys/${evt.id}`}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-md transition active:scale-98"
+                      >
+                        <Star className="w-4 h-4 text-amber-300 fill-amber-300" />
+                        <span>ทำแบบประเมินความพึงพอใจ</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/events/${evt.id}`}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-50 text-blue-700 hover:bg-blue-700 hover:text-white transition group-hover:bg-blue-700 group-hover:text-white"
+                      >
+                        <span>รายละเอียด & ลงทะเบียน</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
