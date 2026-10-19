@@ -43,6 +43,7 @@ export default function EventManagePage() {
   const eventId = params.id as string;
 
   const [activeTab, setActiveTab] = useState<'overview' | 'attendees' | 'certificate' | 'evaluation'>('overview');
+  const [portalMode, setPortalMode] = useState<'register' | 'evaluation'>('register');
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -200,14 +201,35 @@ export default function EventManagePage() {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
+      const modeParam = searchParams.get('mode');
       const savedMode = localStorage.getItem('portal_mode');
-      if (tabParam === 'evaluation' || (!tabParam && savedMode === 'evaluation')) {
+      const currentMode =
+        modeParam === 'evaluation' || (!modeParam && savedMode === 'evaluation')
+          ? 'evaluation'
+          : 'register';
+
+      setPortalMode(currentMode);
+
+      if (currentMode === 'evaluation' || tabParam === 'evaluation') {
         setActiveTab('evaluation');
       }
     }
+
+    const handleModeChange = (e: any) => {
+      if (e.detail && (e.detail === 'register' || e.detail === 'evaluation')) {
+        setPortalMode(e.detail);
+        if (e.detail === 'evaluation') {
+          setActiveTab('evaluation');
+        }
+      }
+    };
+    window.addEventListener('portal-mode-changed', handleModeChange);
+
     if (eventId) {
       loadEventData();
     }
+
+    return () => window.removeEventListener('portal-mode-changed', handleModeChange);
   }, [eventId]);
 
   const loadEventData = async () => {
@@ -428,13 +450,19 @@ export default function EventManagePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
           <Link
-            href="/dashboard"
+            href={portalMode === 'evaluation' ? '/dashboard?mode=evaluation' : '/dashboard'}
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-700 transition mb-2"
           >
             <ArrowLeft className="w-4 h-4" /> กลับสู่แดชบอร์ด
           </Link>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 shrink-0">
+            <span
+              className={`font-mono text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
+                portalMode === 'evaluation'
+                  ? 'bg-indigo-100 text-indigo-800'
+                  : 'bg-blue-100 text-blue-800'
+              }`}
+            >
               {event.event_code}
             </span>
             <h1 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 truncate max-w-full">
@@ -445,21 +473,27 @@ export default function EventManagePage() {
 
         {/* Status Toggle & Public Link */}
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={`/events/${eventId}`}
-            target="_blank"
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition"
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span>หน้าลงทะเบียน</span>
-          </Link>
+          {portalMode !== 'evaluation' && (
+            <Link
+              href={`/events/${eventId}`}
+              target="_blank"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span>หน้าลงทะเบียน</span>
+            </Link>
+          )}
 
           <Link
             href={`/surveys/${eventId}`}
             target="_blank"
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition"
+            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border font-semibold text-xs shadow-xs transition ${
+              portalMode === 'evaluation'
+                ? 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+            }`}
           >
-            <FileText className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <FileText className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
             <span>หน้าแบบประเมิน</span>
           </Link>
         </div>
@@ -467,51 +501,57 @@ export default function EventManagePage() {
 
       {/* Tabs Bar */}
       <div className="flex items-center gap-1 sm:gap-2 border-b border-slate-200 overflow-x-auto no-scrollbar scroll-smooth pb-px -mx-4 px-4 sm:mx-0 sm:px-0">
-        <button
-          type="button"
-          onClick={() => setActiveTab('overview')}
-          className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
-            activeTab === 'overview'
-              ? 'border-blue-700 text-blue-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Settings className="w-4 h-4 shrink-0" />
-          <span>ภาพรวม & ลิงก์</span>
-        </button>
+        {portalMode !== 'evaluation' && (
+          <>
+            <button
+              type="button"
+              onClick={() => setActiveTab('overview')}
+              className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
+                activeTab === 'overview'
+                  ? 'border-blue-700 text-blue-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>ภาพรวม & ลิงก์</span>
+            </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('attendees')}
-          className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
-            activeTab === 'attendees'
-              ? 'border-blue-700 text-blue-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Users className="w-4 h-4 shrink-0" />
-          <span>ผู้ลงทะเบียน ({attendees.length})</span>
-        </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('attendees')}
+              className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
+                activeTab === 'attendees'
+                  ? 'border-blue-700 text-blue-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Users className="w-4 h-4 shrink-0" />
+              <span>ผู้ลงทะเบียน ({attendees.length})</span>
+            </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('certificate')}
-          className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
-            activeTab === 'certificate'
-              ? 'border-blue-700 text-blue-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Award className="w-4 h-4 shrink-0" />
-          <span>ออกแบบเกียรติบัตร</span>
-        </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('certificate')}
+              className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
+                activeTab === 'certificate'
+                  ? 'border-blue-700 text-blue-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Award className="w-4 h-4 shrink-0" />
+              <span>ออกแบบเกียรติบัตร</span>
+            </button>
+          </>
+        )}
 
         <button
           type="button"
           onClick={() => setActiveTab('evaluation')}
           className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === 'evaluation'
-              ? 'border-blue-700 text-blue-700'
+              ? portalMode === 'evaluation'
+                ? 'border-indigo-700 text-indigo-700'
+                : 'border-blue-700 text-blue-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
