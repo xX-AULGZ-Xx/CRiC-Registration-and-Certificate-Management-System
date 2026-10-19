@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import {
   Calendar,
@@ -14,6 +14,10 @@ import {
   Sparkles,
   ClipboardCheck,
   ShieldCheck,
+  ChevronRight,
+  User,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
@@ -22,9 +26,55 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Search suggestion state
+  const [suggestions, setSuggestions] = useState<{ events: any[]; certificates: any[] }>({
+    events: [],
+    certificates: [],
+  });
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     checkInstallStatus();
     loadEvents();
+  }, []);
+
+  // Debounced search suggestions
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      setSuggestions({ events: [], certificates: [] });
+      setLoadingSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setLoadingSuggestions(true);
+        const res = await fetchApi(`/api/v1/certificates/suggestions?query=${encodeURIComponent(searchQuery.trim())}`);
+        if (res.success && res.data) {
+          setSuggestions(res.data);
+          setShowSuggestions(true);
+        }
+      } catch {
+        // ignore suggestion fetch error
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Click outside listener to dismiss suggestions
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const checkInstallStatus = async () => {
@@ -91,28 +141,180 @@ export default function HomePage() {
             สะดวกรวดเร็ว เข้าร่วมกิจกรรม เช็คชื่อด้วย QR Code ประเมินความพึงพอใจ พร้อมดาวน์โหลดเกียรติบัตรฉบับดิจิทัลที่มีระบบตรวจสอบความถูกต้องได้ตลอด 24 ชั่วโมง
           </p>
 
-          {/* Search Box */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="max-w-xl mx-auto flex items-center bg-white rounded-2xl p-1.5 shadow-2xl border border-white/20"
-          >
-            <div className="pl-3 text-slate-400">
-              <Search className="w-5 h-5" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาเกียรติบัตรด้วย เบอร์โทร หรือ เลขบัตรประชาชน..."
-              className="w-full px-3 py-2.5 text-sm sm:text-base text-slate-800 placeholder-slate-400 focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer"
+          {/* Search Box with Autocomplete Suggestions */}
+          <div ref={searchContainerRef} className="relative max-w-xl mx-auto">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex items-center bg-white rounded-2xl p-1.5 shadow-2xl border border-white/20 relative z-20"
             >
-              ค้นหา
-            </button>
-          </form>
+              <div className="pl-3 text-slate-400">
+                {loadingSuggestions ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                ) : (
+                  <Search className="w-5 h-5" />
+                )}
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (!showSuggestions && e.target.value.trim().length >= 2) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onFocus={() => {
+                  if (searchQuery.trim().length >= 2) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setShowSuggestions(false);
+                  }
+                }}
+                placeholder="ค้นหาเกียรติบัตรด้วย เบอร์โทร หรือ เลขบัตรประชาชน..."
+                className="w-full px-3 py-2.5 text-sm sm:text-base text-slate-800 placeholder-slate-400 focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSuggestions({ events: [], certificates: [] });
+                    setShowSuggestions(false);
+                  }}
+                  className="p-1 text-slate-400 hover:text-slate-600 mr-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer"
+              >
+                ค้นหา
+              </button>
+            </form>
+
+            {/* Suggestions Dropdown Panel */}
+            {showSuggestions && searchQuery.trim().length >= 2 && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden z-30 text-left max-h-[440px] overflow-y-auto divide-y divide-slate-100">
+                {/* Events Suggestions */}
+                {suggestions.events && suggestions.events.length > 0 && (
+                  <div className="p-2">
+                    <div className="px-3 py-1.5 text-[11px] font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                      <span>กิจกรรมที่เกี่ยวข้อง ({suggestions.events.length})</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {suggestions.events.map((evt: any) => (
+                        <Link
+                          key={evt.id}
+                          href={`/events/${evt.id}`}
+                          onClick={() => setShowSuggestions(false)}
+                          className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50/70 transition group text-slate-800"
+                        >
+                          <div className="min-w-0 pr-3">
+                            <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 truncate">
+                              {evt.title}
+                            </div>
+                            <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                              <span className="font-mono text-slate-400 font-medium">{evt.event_code}</span>
+                              {evt.start_date && (
+                                <>
+                                  <span>•</span>
+                                  <span>{formatDate(evt.start_date)}</span>
+                                </>
+                              )}
+                              {evt.location && (
+                                <>
+                                  <span>•</span>
+                                  <span className="truncate">{evt.location}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="shrink-0 flex items-center gap-1 text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition">
+                            <span>ดูข้อมูล</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Certificates Suggestions */}
+                {suggestions.certificates && suggestions.certificates.length > 0 && (
+                  <div className="p-2">
+                    <div className="px-3 py-1.5 text-[11px] font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+                      <Award className="w-3.5 h-3.5 text-amber-500" />
+                      <span>เกียรติบัตรที่พบ ({suggestions.certificates.length})</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {suggestions.certificates.map((cert: any) => (
+                        <Link
+                          key={cert.id}
+                          href={`/certificates/${cert.id}/view`}
+                          onClick={() => setShowSuggestions(false)}
+                          className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-50/70 transition group text-slate-800"
+                        >
+                          <div className="min-w-0 pr-3">
+                            <div className="text-sm font-bold text-slate-900 group-hover:text-amber-800 truncate flex items-center gap-1.5">
+                              <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>{cert.title_name || ''}{cert.full_name}</span>
+                              {cert.organization && (
+                                <span className="text-xs font-normal text-slate-400 truncate">({cert.organization})</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                              <span className="font-mono text-amber-700 font-semibold">{cert.certificate_no}</span>
+                              {cert.event?.title && (
+                                <>
+                                  <span>•</span>
+                                  <span className="truncate max-w-[220px] text-slate-400">{cert.event.title}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="shrink-0 flex items-center gap-1 text-xs font-semibold text-amber-700 opacity-0 group-hover:opacity-100 transition">
+                            <span>เปิดเกียรติบัตร</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State / Search Fallback */}
+                {suggestions.events?.length === 0 && suggestions.certificates?.length === 0 && !loadingSuggestions && (
+                  <div className="p-4 text-center text-xs text-slate-500">
+                    ไม่พบคำแนะนำตรงตัวสำหรับ <span className="font-semibold text-slate-800">&quot;{searchQuery}&quot;</span>
+                  </div>
+                )}
+
+                {/* Action: Search all certificates */}
+                <div className="p-2 bg-slate-50/90">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSuggestions(false);
+                      window.location.href = `/certificates/search?q=${encodeURIComponent(searchQuery.trim())}`;
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-blue-700 hover:bg-blue-100/60 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Search className="w-3.5 h-3.5" />
+                      <span>ค้นหาเกียรติบัตรทั้งหมดด้วย: &quot;{searchQuery}&quot;</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Feature Highlights */}
           <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">

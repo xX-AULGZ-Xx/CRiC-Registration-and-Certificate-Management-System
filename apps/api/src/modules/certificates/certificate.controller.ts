@@ -108,6 +108,81 @@ router.get('/verify/:certificateNo', async (req: Request, res: Response) => {
   }
 });
 
+// 1.5 PUBLIC: GET /api/v1/certificates/suggestions - Autocomplete & Instant Suggestions
+router.get('/suggestions', async (req: Request, res: Response) => {
+  try {
+    const { query } = req.query;
+    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+      return res.json({ success: true, data: { events: [], certificates: [] } });
+    }
+
+    const q = query.trim();
+    const cleanQ = q.replace(/-/g, '');
+
+    // 1. Search matching events (title, event_code, project_ref_code, location)
+    const events = await prisma.event.findMany({
+      where: {
+        OR: [
+          { title: { contains: q } },
+          { event_code: { contains: q } },
+          { project_ref_code: { contains: q } },
+          { location: { contains: q } },
+        ],
+      },
+      take: 4,
+      select: {
+        id: true,
+        title: true,
+        event_code: true,
+        start_date: true,
+        start_time: true,
+        end_time: true,
+        location: true,
+        status: true,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    // 2. Search matching certificates / attendees who have certificate_no
+    const certificates = await prisma.attendee.findMany({
+      where: {
+        certificate_no: { not: null },
+        OR: [
+          { full_name: { contains: q } },
+          { phone: { contains: cleanQ } },
+          { citizen_id: { contains: cleanQ } },
+          { certificate_no: { contains: q } },
+        ],
+      },
+      take: 4,
+      select: {
+        id: true,
+        full_name: true,
+        title_name: true,
+        certificate_no: true,
+        organization: true,
+        event: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        events: serializeBigInt(events),
+        certificates: serializeBigInt(certificates),
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการค้นหาคำแนะนำ', error: error.message });
+  }
+});
+
 // 2. PUBLIC: GET /api/v1/certificates/search - Public Certificate Search Portal
 router.get('/search', async (req: Request, res: Response) => {
   try {
