@@ -266,13 +266,13 @@ export default function EventManagePage() {
       });
 
       if (res.success) {
-        setCheckInFeedback(`✅ เช็คชื่อสำเร็จ: ${res.data.full_name}`);
+        setCheckInFeedback(`เช็คชื่อสำเร็จ: ${res.data.full_name}`);
         setCheckInInput('');
         loadAttendees();
         setTimeout(() => setCheckInFeedback(null), 4000);
       }
     } catch (err: any) {
-      setCheckInFeedback(`❌ ${err.message || 'ไม่พบข้อมูลผู้ลงทะเบียน'}`);
+      setCheckInFeedback(err.message || 'ไม่พบข้อมูลผู้ลงทะเบียน');
       setTimeout(() => setCheckInFeedback(null), 4000);
     }
   };

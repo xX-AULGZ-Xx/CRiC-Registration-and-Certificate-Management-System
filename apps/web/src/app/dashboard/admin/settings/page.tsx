@@ -921,7 +921,7 @@ export default function AdminSettingsPage() {
                     </div>
 
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      💡 แนะนำไฟล์ PNG หรือ SVG พื้นหลังโปร่งใส (Transparent) ขนาดไม่เกิน 10MB
+                      คำแนะนำ: ไฟล์ PNG หรือ SVG พื้นหลังโปร่งใส (Transparent) ขนาดไม่เกิน 10MB
                     </p>
                   </div>
                 </div>
@@ -1101,7 +1101,7 @@ export default function AdminSettingsPage() {
                     </div>
 
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      💡 แนะนำไฟล์ PNG ลายเซ็นพื้นหลังโปร่งใส (Transparent) ขนาดไม่เกิน 5MB
+                      คำแนะนำ: ไฟล์ PNG ลายเซ็นพื้นหลังโปร่งใส (Transparent) ขนาดไม่เกิน 5MB
                     </p>
                   </div>
                 </div>
