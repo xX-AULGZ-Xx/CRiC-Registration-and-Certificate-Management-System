@@ -360,13 +360,13 @@ export default function EventDetailPage() {
           )}
         </div>
 
-        {/* Sidebar: Evaluation & Certificate Flow Guide */}
+        {/* Sidebar: Registration & Certificate Guide */}
         <div className="space-y-6">
           {/* Workflow Guide Card */}
           <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 space-y-4">
             <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
               <Award className="w-5 h-5 text-amber-500" />
-              <span>ขั้นตอนการรับเกียรติบัตร</span>
+              <span>ขั้นตอนการเข้าร่วมและรับเกียรติบัตร</span>
             </h3>
 
             <div className="space-y-3.5 text-xs text-slate-600">
@@ -386,45 +386,36 @@ export default function EventDetailPage() {
                 </div>
                 <div>
                   <div className="font-bold text-slate-800">เช็คชื่อหน้างาน</div>
-                  <div className="text-slate-500 mt-0.5">แสดง QR Code ให้ผู้จัดสแกนเช็คชื่อ</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold shrink-0">
-                  3
-                </div>
-                <div>
-                  <div className="font-bold text-slate-800">ทำแบบประเมินความพึงพอใจ</div>
-                  <div className="text-slate-500 mt-0.5">ตอบแบบประเมินโครงการหลังจบกิจกรรม</div>
+                  <div className="text-slate-500 mt-0.5">แสดง QR Code ให้ผู้จัดสแกนเช็คชื่อเข้าร่วม</div>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
-                  4
+                  3
                 </div>
                 <div>
-                  <div className="font-bold text-slate-800">ดาวน์โหลดเกียรติบัตรทันที</div>
-                  <div className="text-slate-500 mt-0.5">รับเกียรติบัตรดิจิทัลพร้อม QR ยืนยันเอกสารจริง</div>
+                  <div className="font-bold text-slate-800">รับเกียรติบัตรออนไลน์</div>
+                  <div className="text-slate-500 mt-0.5">ค้นหาและดาวน์โหลดเกียรติบัตรดิจิทัลฉบับสมบูรณ์</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Link to Evaluation Survey */}
-          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl border border-indigo-100 p-6 space-y-3">
-            <div className="font-bold text-indigo-950 text-sm">
-              เข้าร่วมกิจกรรมแล้วใช่หรือไม่?
+          {/* Quick Link to Certificate Search */}
+          <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-3xl border border-blue-100 p-6 space-y-3">
+            <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <Award className="w-4 h-4 text-blue-600" />
+              <span>ค้นหาและรับเกียรติบัตร</span>
             </div>
-            <p className="text-xs text-indigo-800 leading-relaxed">
-              สำหรับผู้ที่เช็คชื่อเข้าร่วมกิจกรรมแล้ว สามารถทำแบบประเมินความพึงพอใจเพื่อรับเกียรติบัตรได้ทันที
+            <p className="text-xs text-slate-600 leading-relaxed">
+              สำหรับผู้ที่เคยลงทะเบียนหรือเข้าร่วมกิจกรรมเรียบร้อยแล้ว สามารถค้นหาเกียรติบัตรออนไลน์ด้วยเบอร์โทรศัพท์ได้ทันที
             </p>
             <Link
-              href={`/surveys/${eventData.id}`}
-              className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition"
+              href="/certificates/search"
+              className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-xs transition"
             >
-              <span>ไปยังหน้าแบบประเมินความพึงพอใจ</span>
+              <span>ค้นหาเกียรติบัตรของคุณ</span>
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>

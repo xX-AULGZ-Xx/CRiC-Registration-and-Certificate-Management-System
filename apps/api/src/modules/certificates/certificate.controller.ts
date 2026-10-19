@@ -111,7 +111,7 @@ router.get('/verify/:certificateNo', async (req: Request, res: Response) => {
 // 1.5 PUBLIC: GET /api/v1/certificates/suggestions - Autocomplete & Instant Suggestions
 router.get('/suggestions', async (req: Request, res: Response) => {
   try {
-    const { query } = req.query;
+    const { query, mode } = req.query;
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
       return res.json({ success: true, data: { events: [], certificates: [] } });
     }
@@ -129,7 +129,7 @@ router.get('/suggestions', async (req: Request, res: Response) => {
           { location: { contains: q } },
         ],
       },
-      take: 4,
+      take: 5,
       select: {
         id: true,
         title: true,
@@ -143,33 +143,36 @@ router.get('/suggestions', async (req: Request, res: Response) => {
       orderBy: { created_at: 'desc' },
     });
 
-    // 2. Search matching certificates / attendees who have certificate_no
-    const certificates = await prisma.attendee.findMany({
-      where: {
-        certificate_no: { not: null },
-        OR: [
-          { full_name: { contains: q } },
-          { phone: { contains: cleanQ } },
-          { citizen_id: { contains: cleanQ } },
-          { certificate_no: { contains: q } },
-        ],
-      },
-      take: 4,
-      select: {
-        id: true,
-        full_name: true,
-        title_name: true,
-        certificate_no: true,
-        organization: true,
-        event: {
-          select: {
-            id: true,
-            title: true,
+    // 2. Search matching certificates (only when mode is NOT evaluation)
+    let certificates: any[] = [];
+    if (mode !== 'evaluation') {
+      certificates = await prisma.attendee.findMany({
+        where: {
+          certificate_no: { not: null },
+          OR: [
+            { full_name: { contains: q } },
+            { phone: { contains: cleanQ } },
+            { citizen_id: { contains: cleanQ } },
+            { certificate_no: { contains: q } },
+          ],
+        },
+        take: 5,
+        select: {
+          id: true,
+          full_name: true,
+          title_name: true,
+          certificate_no: true,
+          organization: true,
+          event: {
+            select: {
+              id: true,
+              title: true,
+            },
           },
         },
-      },
-      orderBy: { created_at: 'desc' },
-    });
+        orderBy: { created_at: 'desc' },
+      });
+    }
 
     return res.json({
       success: true,

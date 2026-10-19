@@ -224,23 +224,36 @@ export default function Navbar() {
 
           {/* Navigation Links */}
           <nav className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/70 transition"
-              title="กิจกรรมทั้งหมด"
-            >
-              <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
-              <span className="hidden md:inline">กิจกรรมทั้งหมด</span>
-            </Link>
+            {portalMode === 'register' ? (
+              <>
+                <Link
+                  href="/?mode=register"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/70 transition"
+                  title="กิจกรรมลงทะเบียนทั้งหมด"
+                >
+                  <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span className="hidden md:inline">กิจกรรมทั้งหมด</span>
+                </Link>
 
-            <Link
-              href="/certificates/search"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-teal-700 hover:bg-teal-50/70 transition"
-              title="ค้นหาเกียรติบัตร"
-            >
-              <Search className="w-4 h-4 text-teal-600 shrink-0" />
-              <span className="hidden sm:inline">ค้นหาเกียรติบัตร</span>
-            </Link>
+                <Link
+                  href="/certificates/search"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-teal-700 hover:bg-teal-50/70 transition"
+                  title="ค้นหาเกียรติบัตร"
+                >
+                  <Search className="w-4 h-4 text-teal-600 shrink-0" />
+                  <span className="hidden sm:inline">ค้นหาเกียรติบัตร</span>
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/?mode=evaluation"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-indigo-700 hover:bg-indigo-50/70 transition"
+                title="แบบประเมินทั้งหมด"
+              >
+                <Star className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="hidden sm:inline">แบบประเมินทั้งหมด</span>
+              </Link>
+            )}
 
             {currentUser ? (
               <div className="relative pl-1.5 sm:pl-2 border-l border-slate-200" ref={dropdownRef}>

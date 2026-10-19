@@ -78,7 +78,7 @@ export default function HomePage() {
     const timer = setTimeout(async () => {
       try {
         setLoadingSuggestions(true);
-        const res = await fetchApi(`/api/v1/certificates/suggestions?query=${encodeURIComponent(searchQuery.trim())}`);
+        const res = await fetchApi(`/api/v1/certificates/suggestions?mode=${portalMode}&query=${encodeURIComponent(searchQuery.trim())}`);
         if (res.success && res.data) {
           setSuggestions(res.data);
           setShowSuggestions(true);
@@ -91,7 +91,7 @@ export default function HomePage() {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, portalMode]);
 
   // Click outside listener to dismiss suggestions
   useEffect(() => {
@@ -132,7 +132,11 @@ export default function HomePage() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/certificates/search?q=${encodeURIComponent(searchQuery.trim())}`;
+      if (portalMode === 'register') {
+        window.location.href = `/certificates/search?q=${encodeURIComponent(searchQuery.trim())}`;
+      } else {
+        setShowSuggestions(false);
+      }
     }
   };
 
@@ -156,17 +160,17 @@ export default function HomePage() {
             <Sparkles className="w-4 h-4 text-amber-300" />
             <span>
               {portalMode === 'evaluation'
-                ? 'ระบบทำแบบประเมินความพึงพอใจและรับเกียรติบัตรออนไลน์'
-                : 'ระบบลงทะเบียน ประเมินผล และออกเกียรติบัตรออนไลน์ครบวงจร'}
+                ? 'ระบบแบบประเมินความพึงพอใจโครงการออนไลน์'
+                : 'ระบบลงทะเบียนเข้าร่วมกิจกรรมและรับเกียรติบัตรออนไลน์'}
             </span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
             {portalMode === 'evaluation' ? (
               <>
-                ทำแบบประเมินความพึงพอใจ & <br className="hidden sm:inline" />
+                แบบประเมินความพึงพอใจโครงการ & <br className="hidden sm:inline" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-indigo-300 to-teal-300">
-                  รับเกียรติบัตรทันใจ
+                  ระบบประเมินออนไลน์
                 </span>
               </>
             ) : (
@@ -181,8 +185,8 @@ export default function HomePage() {
 
           <p className="max-w-2xl mx-auto text-slate-300 text-sm sm:text-base leading-relaxed">
             {portalMode === 'evaluation'
-              ? 'ตอบแบบประเมินความพึงพอใจโครงการที่คุณได้เข้าร่วม เพื่อดาวน์โหลดเกียรติบัตรฉบับดิจิทัลที่มีระบบตรวจสอบความถูกต้องได้ทันที'
-              : 'สะดวกรวดเร็ว เข้าร่วมกิจกรรม เช็คชื่อด้วย QR Code ประเมินความพึงพอใจ พร้อมดาวน์โหลดเกียรติบัตรฉบับดิจิทัลที่มีระบบตรวจสอบความถูกต้องได้ตลอด 24 ชั่วโมง'}
+              ? 'ตอบแบบประเมินความพึงพอใจโครงการและกิจกรรมออนไลน์ เพื่อนำข้อมูลและข้อเสนอแนะไปพัฒนาคุณภาพการจัดโครงการ'
+              : 'สะดวกรวดเร็ว เข้าร่วมกิจกรรม เช็คชื่อด้วย QR Code พร้อมค้นหาและดาวน์โหลดเกียรติบัตรฉบับดิจิทัลที่มีระบบตรวจสอบความถูกต้องตลอด 24 ชั่วโมง'}
           </p>
 
           {/* Search Box with Autocomplete Suggestions */}
@@ -217,7 +221,11 @@ export default function HomePage() {
                     setShowSuggestions(false);
                   }
                 }}
-                placeholder="ค้นหาเกียรติบัตรด้วย เบอร์โทร หรือ เลขบัตรประชาชน..."
+                placeholder={
+                  portalMode === 'evaluation'
+                    ? 'ค้นหาแบบประเมินด้วยชื่อกิจกรรม หรือ รหัสกิจกรรม...'
+                    : 'ค้นหาเกียรติบัตรด้วย เบอร์โทร หรือ เลขบัตรประชาชน...'
+                }
                 className="w-full px-3 py-2.5 text-sm sm:text-base text-slate-800 placeholder-slate-400 focus:outline-none"
               />
               {searchQuery && (
@@ -235,7 +243,11 @@ export default function HomePage() {
               )}
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer"
+                className={`px-5 py-2.5 rounded-xl text-white font-bold text-sm shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer ${
+                  portalMode === 'evaluation'
+                    ? 'bg-indigo-600 hover:bg-indigo-700'
+                    : 'bg-blue-700 hover:bg-blue-800'
+                }`}
               >
                 ค้นหา
               </button>
@@ -249,13 +261,17 @@ export default function HomePage() {
                   <div className="p-2">
                     <div className="px-3 py-1.5 text-[11px] font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                      <span>กิจกรรมที่เกี่ยวข้อง ({suggestions.events.length})</span>
+                      <span>
+                        {portalMode === 'evaluation'
+                          ? `แบบประเมินที่เกี่ยวข้อง (${suggestions.events.length})`
+                          : `กิจกรรมที่เกี่ยวข้อง (${suggestions.events.length})`}
+                      </span>
                     </div>
                     <div className="space-y-0.5">
                       {suggestions.events.map((evt: any) => (
                         <Link
                           key={evt.id}
-                          href={`/events/${evt.id}`}
+                          href={portalMode === 'evaluation' ? `/surveys/${evt.id}` : `/events/${evt.id}`}
                           onClick={() => setShowSuggestions(false)}
                           className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50/70 transition group text-slate-800"
                         >
@@ -280,7 +296,7 @@ export default function HomePage() {
                             </div>
                           </div>
                           <div className="shrink-0 flex items-center gap-1 text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition">
-                            <span>ดูข้อมูล</span>
+                            <span>{portalMode === 'evaluation' ? 'ทำแบบประเมิน' : 'ดูข้อมูล'}</span>
                             <ChevronRight className="w-4 h-4" />
                           </div>
                         </Link>
@@ -289,8 +305,8 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {/* Certificates Suggestions */}
-                {suggestions.certificates && suggestions.certificates.length > 0 && (
+                {/* Certificates Suggestions (Only for register mode) */}
+                {portalMode === 'register' && suggestions.certificates && suggestions.certificates.length > 0 && (
                   <div className="p-2">
                     <div className="px-3 py-1.5 text-[11px] font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
                       <Award className="w-3.5 h-3.5 text-amber-500" />
@@ -332,65 +348,103 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {/* Empty State / Search Fallback */}
-                {suggestions.events?.length === 0 && suggestions.certificates?.length === 0 && !loadingSuggestions && (
+                {/* Empty State */}
+                {suggestions.events?.length === 0 && (!suggestions.certificates || suggestions.certificates?.length === 0) && !loadingSuggestions && (
                   <div className="p-4 text-center text-xs text-slate-500">
-                    ไม่พบคำแนะนำตรงตัวสำหรับ <span className="font-semibold text-slate-800">&quot;{searchQuery}&quot;</span>
+                    ไม่พบข้อมูลที่ตรงกับ <span className="font-semibold text-slate-800">&quot;{searchQuery}&quot;</span>
                   </div>
                 )}
 
-                {/* Action: Search all certificates */}
-                <div className="p-2 bg-slate-50/90">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowSuggestions(false);
-                      window.location.href = `/certificates/search?q=${encodeURIComponent(searchQuery.trim())}`;
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-blue-700 hover:bg-blue-100/60 transition cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Search className="w-3.5 h-3.5" />
-                      <span>ค้นหาเกียรติบัตรทั้งหมดด้วย: &quot;{searchQuery}&quot;</span>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                {/* Action: Search all certificates (Register Mode Only) */}
+                {portalMode === 'register' && (
+                  <div className="p-2 bg-slate-50/90">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSuggestions(false);
+                        window.location.href = `/certificates/search?q=${encodeURIComponent(searchQuery.trim())}`;
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-blue-700 hover:bg-blue-100/60 transition cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Search className="w-3.5 h-3.5" />
+                        <span>ค้นหาเกียรติบัตรทั้งหมดด้วย: &quot;{searchQuery}&quot;</span>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Feature Highlights */}
           <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-              <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
-                <ClipboardCheck className="w-5 h-5" />
-              </div>
-              <div className="text-xs">
-                <div className="font-bold text-white">ลงทะเบียนง่าย</div>
-                <div className="text-slate-300">กรอกข้อมูลรับ QR ทันที</div>
-              </div>
-            </div>
+            {portalMode === 'evaluation' ? (
+              <>
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-300">
+                    <ClipboardCheck className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-bold text-white">ตอบแบบสอบถามง่าย</div>
+                    <div className="text-slate-300">รองรับทั้งมือถือและคอมพิวเตอร์</div>
+                  </div>
+                </div>
 
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-              <div className="p-2 rounded-lg bg-teal-500/20 text-teal-300">
-                <Award className="w-5 h-5" />
-              </div>
-              <div className="text-xs">
-                <div className="font-bold text-white">รับเกียรติบัตรทันใจ</div>
-                <div className="text-slate-300">ดาวน์โหลด PDF คมชัดสูง</div>
-              </div>
-            </div>
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-teal-500/20 text-teal-300">
+                    <Star className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-bold text-white">วัดผลครอบคลุม</div>
+                    <div className="text-slate-300">ประเมินตามเกณฑ์มาตรฐานโครงการ</div>
+                  </div>
+                </div>
 
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-              <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div className="text-xs">
-                <div className="font-bold text-white">ตรวจความถูกต้องได้</div>
-                <div className="text-slate-300">สแกน QR ยืนยันเอกสารจริง</div>
-              </div>
-            </div>
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-bold text-white">ประมวลผลแม่นยำ</div>
+                    <div className="text-slate-300">สรุปผลแบบทันใจและปลอดภัย</div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
+                    <ClipboardCheck className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-bold text-white">ลงทะเบียนง่าย</div>
+                    <div className="text-slate-300">กรอกข้อมูลรับ QR ทันที</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-teal-500/20 text-teal-300">
+                    <Award className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-bold text-white">รับเกียรติบัตรทันใจ</div>
+                    <div className="text-slate-300">ดาวน์โหลด PDF คมชัดสูง</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-bold text-white">ตรวจความถูกต้องได้</div>
+                    <div className="text-slate-300">สแกน QR ยืนยันเอกสารจริง</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -402,7 +456,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
               {portalMode === 'evaluation' ? (
                 <>
-                  <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
+                  <Star className="w-6 h-6 text-indigo-600 fill-indigo-600" />
                   <span>แบบประเมินความพึงพอใจโครงการ</span>
                 </>
               ) : (
@@ -414,7 +468,7 @@ export default function HomePage() {
             </h2>
             <p className="text-slate-500 text-sm mt-1">
               {portalMode === 'evaluation'
-                ? 'เลือกโครงการที่คุณเข้าร่วมเพื่อตอบแบบประเมินและรับเกียรติบัตรออนไลน์'
+                ? 'เลือกโครงการที่คุณเข้าร่วมเพื่อตอบแบบประเมินความพึงพอใจ'
                 : 'เลือกกิจกรรมที่ต้องการเพื่อกรอกข้อมูลลงทะเบียนเข้าร่วมงาน'}
             </p>
           </div>
@@ -440,7 +494,13 @@ export default function HomePage() {
                 className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col overflow-hidden group"
               >
                 {/* Banner or Header */}
-                <div className="h-36 bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 p-5 flex flex-col justify-between text-white relative">
+                <div
+                  className={`h-36 p-5 flex flex-col justify-between text-white relative transition-colors ${
+                    portalMode === 'evaluation'
+                      ? 'bg-gradient-to-tr from-indigo-800 via-purple-700 to-slate-800'
+                      : 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500'
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold">
                       {evt.event_code || 'EVENT'}
@@ -448,14 +508,14 @@ export default function HomePage() {
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold ${
                         portalMode === 'evaluation'
-                          ? 'bg-indigo-500/90 text-white'
+                          ? 'bg-purple-500/90 text-white'
                           : evt.status === 'OPEN'
                           ? 'bg-emerald-500/90 text-white'
                           : 'bg-slate-700/80 text-slate-200'
                       }`}
                     >
                       {portalMode === 'evaluation'
-                        ? 'เปิดให้ทำแบบประเมิน'
+                        ? 'เปิดรับแบบประเมิน'
                         : evt.status === 'OPEN'
                         ? 'เปิดรับลงทะเบียน'
                         : 'ปิดรับสมัคร'}
@@ -503,13 +563,15 @@ export default function HomePage() {
                           <span className="line-clamp-1">{evt.location}</span>
                         </div>
                       )}
-                      <div className="flex items-center gap-2">
-                        <Users className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                        <span>
-                          ผู้ลงทะเบียน: {evt._count?.attendees || 0}
-                          {evt.max_attendees > 0 ? ` / ${evt.max_attendees}` : ''} คน
-                        </span>
-                      </div>
+                      {portalMode === 'register' && (
+                        <div className="flex items-center gap-2">
+                          <Users className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          <span>
+                            ผู้ลงทะเบียน: {evt._count?.attendees || 0}
+                            {evt.max_attendees > 0 ? ` / ${evt.max_attendees}` : ''} คน
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -518,9 +580,9 @@ export default function HomePage() {
                     {portalMode === 'evaluation' ? (
                       <Link
                         href={`/surveys/${evt.id}`}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-md transition active:scale-98"
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md transition active:scale-98"
                       >
-                        <Star className="w-4 h-4 text-amber-300 fill-amber-300" />
+                        <ClipboardCheck className="w-4 h-4" />
                         <span>ทำแบบประเมินความพึงพอใจ</span>
                       </Link>
                     ) : (
