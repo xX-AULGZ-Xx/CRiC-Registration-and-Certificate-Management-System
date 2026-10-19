@@ -28,7 +28,10 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     headers,
   });
 
-  const data = await res.json().catch(() => ({ success: false, message: 'Invalid response from server' }));
+  const data = await res.json().catch(() => ({
+    success: false,
+    message: res.status >= 500 ? 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ API ได้ (Backend unavailable)' : 'Invalid response from server',
+  }));
   
   if (!res.ok) {
     if (res.status === 401 && typeof window !== 'undefined') {

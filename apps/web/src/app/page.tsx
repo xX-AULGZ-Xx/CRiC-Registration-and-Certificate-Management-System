@@ -96,7 +96,7 @@ export default function HomePage() {
         setEvents(res.data);
       }
     } catch (err) {
-      console.error(err);
+      console.warn('Could not load events:', err);
     } finally {
       setLoading(false);
     }
