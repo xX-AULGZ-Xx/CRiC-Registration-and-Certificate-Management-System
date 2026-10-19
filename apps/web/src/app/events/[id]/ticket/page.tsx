@@ -69,20 +69,36 @@ function TicketContent() {
   });
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-10 space-y-6">
-      {/* Success Banner */}
-      <div className="text-center space-y-2">
-        <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
-          <CheckCircle2 className="w-8 h-8" />
+    <div className="min-h-screen bg-slate-50/70 py-6 sm:py-10">
+      <div className="max-w-xl mx-auto px-4 space-y-6">
+        {/* Standalone Header */}
+        <div className="flex items-center justify-between pb-1 print:hidden">
+          <Link
+            href={`/events/${eventId}`}
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-500 hover:text-blue-700 transition"
+          >
+            <ArrowRight className="w-4 h-4 rotate-180" />
+            <span>กลับสู่หน้ารายละเอียดกิจกรรม</span>
+          </Link>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+            <Award className="w-3.5 h-3.5 text-blue-600" />
+            <span>บัตรลงทะเบียนอิเล็กทรอนิกส์</span>
+          </div>
         </div>
-        <h1 className="text-2xl font-black text-slate-900">ลงทะเบียนสำเร็จเรียบร้อย!</h1>
-        <p className="text-slate-500 text-xs sm:text-sm">
-          กรุณาบันทึกหรือแคปหน้าจอ QR Code นี้ เพื่อใช้ในการเช็คชื่อเข้าร่วมกิจกรรมหน้างาน
-        </p>
-      </div>
 
-      {/* Ticket Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden print:shadow-none print:border-slate-300">
+        {/* Success Banner */}
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-black text-slate-900">ลงทะเบียนสำเร็จเรียบร้อย!</h1>
+          <p className="text-slate-500 text-xs sm:text-sm">
+            กรุณาบันทึกหรือแคปหน้าจอ QR Code นี้ เพื่อใช้ในการเช็คชื่อเข้าร่วมกิจกรรมหน้างาน
+          </p>
+        </div>
+
+        {/* Ticket Card */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden print:shadow-none print:border-slate-300">
         <div className="bg-gradient-to-r from-blue-800 to-indigo-800 p-6 text-white text-center space-y-2">
           <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-md">
             บัตรประจำตัวผู้เข้าร่วมกิจกรรม
@@ -150,8 +166,14 @@ function TicketContent() {
           </Link>
         </div>
       </div>
+
+      {/* Standalone Simple Footer */}
+      <div className="pt-4 pb-2 text-center text-xs text-slate-400 print:hidden">
+        <p>© ระบบลงทะเบียนและออกเกียรติบัตรออนไลน์</p>
+      </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default function TicketPage() {

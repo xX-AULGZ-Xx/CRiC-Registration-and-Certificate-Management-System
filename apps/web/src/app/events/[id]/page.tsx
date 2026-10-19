@@ -128,17 +128,22 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Back button */}
-      <div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-700 transition"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>กลับสู่หน้ารวมกิจกรรม</span>
-        </Link>
-      </div>
+    <div className="min-h-screen bg-slate-50/70 py-6 sm:py-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Standalone Header */}
+        <div className="flex items-center justify-between pb-2">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-500 hover:text-blue-700 transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>กลับสู่หน้ารวมกิจกรรม</span>
+          </Link>
+          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+            <Award className="w-4 h-4 text-blue-600" />
+            <span className="hidden sm:inline">ระบบลงทะเบียนและออกเกียรติบัตรออนไลน์</span>
+          </div>
+        </div>
 
       {/* Event Header Banner Card */}
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-md overflow-hidden">
@@ -425,6 +430,12 @@ export default function EventDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Standalone Simple Footer */}
+      <div className="pt-6 pb-4 text-center text-xs text-slate-400 space-y-1">
+        <p>© ระบบลงทะเบียนและออกเกียรติบัตรออนไลน์ • ขับเคลื่อนด้วยระบบดิจิทัล</p>
+      </div>
     </div>
-  );
+  </div>
+);
 }

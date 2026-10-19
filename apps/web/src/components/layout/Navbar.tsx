@@ -15,7 +15,7 @@ export default function Navbar() {
   const [brandNameTh, setBrandNameTh] = useState<string>('ระบบลงทะเบียนและออกเกียรติบัตร');
   const [brandNameEn, setBrandNameEn] = useState<string>('Registration & Certificate Management System');
 
-  if (pathname?.startsWith('/surveys') || pathname === '/install') {
+  if (pathname?.startsWith('/surveys') || pathname === '/install' || pathname?.startsWith('/events')) {
     return null;
   }
 
