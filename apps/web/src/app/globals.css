@@ -1,21 +1,593 @@
-@import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Charm:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;500;600;700&family=Chakra+Petch:wght@300;400;500;600;700&family=Charm:wght@400;700&family=Charmonman:wght@400;700&family=Chonburi&family=Fahkwang:wght@300;400;500;600;700&family=Itim&family=K2D:wght@300;400;500;600;700&family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=KoHo:wght@300;400;500;600;700&family=Krub:wght@300;400;500;600;700&family=Mali:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Mitr:wght@300;400;500;600&family=Niramit:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Thai:wght@300;400;500;600;700;800;900&family=Noto+Serif+Thai:wght@300;400;500;600;700;800;900&family=Pattaya&family=Pridi:wght@300;400;500;600;700&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=Sriracha&family=Srisakdi:wght@400;700&family=Taviraj:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Trirong:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+.font-prompt { font-family: 'Prompt', var(--font-prompt), sans-serif; }
+.font-sarabun { font-family: 'Sarabun', var(--font-sarabun), 'TH SarabunIT๙', sans-serif; }
+.font-kanit { font-family: 'Kanit', sans-serif; }
+.font-mitr { font-family: 'Mitr', sans-serif; }
+.font-noto-thai { font-family: 'Noto Sans Thai', sans-serif; }
+.font-noto-serif-thai { font-family: 'Noto Serif Thai', serif; }
+.font-chakra { font-family: 'Chakra Petch', sans-serif; }
+.font-baijamjuree { font-family: 'Bai Jamjuree', sans-serif; }
+.font-k2d { font-family: 'K2D', sans-serif; }
+.font-chonburi { font-family: 'Chonburi', cursive; }
+.font-charm { font-family: 'Charm', cursive; }
+.font-charmonman { font-family: 'Charmonman', cursive; }
+.font-srisakdi { font-family: 'Srisakdi', cursive; }
+.font-trirong { font-family: 'Trirong', serif; }
+.font-taviraj { font-family: 'Taviraj', serif; }
+.font-pridi { font-family: 'Pridi', serif; }
+.font-niramit { font-family: 'Niramit', serif; }
+.font-krub { font-family: 'Krub', sans-serif; }
+.font-fahkwang { font-family: 'Fahkwang', sans-serif; }
+.font-sriracha { font-family: 'Sriracha', cursive; }
+.font-pattaya { font-family: 'Pattaya', cursive; }
+.font-mali { font-family: 'Mali', cursive; }
+.font-itim { font-family: 'Itim', cursive; }
+
+@font-face {
+  font-family: 'TH SarabunIT๙';
+  src: url('/fonts/TH_SarabunIT9-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TH SarabunIT๙';
+  src: url('/fonts/TH_SarabunIT9-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TH SarabunIT9';
+  src: url('/fonts/TH_SarabunIT9-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TH SarabunIT9';
+  src: url('/fonts/TH_SarabunIT9-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --font-prompt: 'Prompt', sans-serif;
+  --foreground-rgb: 15, 23, 42;
+  --background-start-rgb: 248, 250, 252;
+  --background-end-rgb: 241, 245, 249;
+
+  /* Global Theme CSS Variables */
+  --color-primary: #1e3a8a;
+  --color-primary-hover: #172554;
+  --color-accent: #0d9488;
+  --font-ui-family: 'Prompt', sans-serif;
+  --app-radius: 10px;
 }
 
 body {
-  font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #1e293b;
-  background-color: #f8fafc;
+  color: rgb(var(--foreground-rgb));
+  background: #f1f5f9;
+  font-family: var(--font-ui-family, 'Prompt'), var(--font-prompt), sans-serif;
+}
+
+input, button, select, textarea, optgroup {
+  font-family: inherit;
+}
+
+/* Dynamic Theme Helper Classes */
+::selection {
+  background-color: var(--color-primary, #1e3a8a);
+  color: #ffffff;
+}
+
+.bg-theme-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.bg-theme-primary-hover:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+.text-theme-primary {
+  color: var(--color-primary) !important;
+}
+
+.border-theme-primary {
+  border-color: var(--color-primary) !important;
+}
+
+.ring-theme-primary:focus {
+  --tw-ring-color: var(--color-primary) !important;
+}
+
+.bg-theme-primary-light {
+  background-color: color-mix(in srgb, var(--color-primary, #1e3a8a) 12%, transparent) !important;
+}
+
+.border-theme-primary-light {
+  border-color: color-mix(in srgb, var(--color-primary, #1e3a8a) 25%, transparent) !important;
+}
+
+.shadow-theme-primary {
+  box-shadow: 0 4px 14px 0 color-mix(in srgb, var(--color-primary, #1e3a8a) 28%, transparent) !important;
+}
+
+.focus-theme-primary:focus {
+  border-color: var(--color-primary) !important;
+  --tw-ring-color: color-mix(in srgb, var(--color-primary, #1e3a8a) 20%, transparent) !important;
+}
+
+.focus-within-theme-primary:focus-within {
+  border-color: var(--color-primary) !important;
+  --tw-ring-color: color-mix(in srgb, var(--color-primary, #1e3a8a) 20%, transparent) !important;
+}
+
+.bg-theme-accent {
+  background-color: var(--color-accent) !important;
+}
+
+.text-theme-accent {
+  color: var(--color-accent) !important;
+}
+
+.border-theme-accent {
+  border-color: var(--color-accent) !important;
+}
+
+.bg-theme-accent-light {
+  background-color: color-mix(in srgb, var(--color-accent, #0d9488) 12%, transparent) !important;
+}
+
+.bg-theme-gradient {
+  background: linear-gradient(135deg, var(--color-primary, #1e3a8a) 0%, color-mix(in srgb, var(--color-primary, #1e3a8a) 70%, #0f172a) 100%) !important;
+}
+
+.rounded-theme {
+  border-radius: var(--app-radius) !important;
+}
+
+/* A4 Document Simulation (210mm x 297mm) */
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding-top: 25mm;
+  padding-bottom: 20mm;
+  padding-left: 25mm;
+  padding-right: 15mm;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  color: #000;
+  line-height: 1.0;
+  font-family: 'TH SarabunIT๙', 'TH SarabunIT9', 'TH Sarabun New', 'TH SarabunPSK', Sarabun, sans-serif !important;
+}
+
+.a4-page *, .a4-page p, .a4-page span, .a4-page td, .a4-page th, .a4-page div {
+  font-family: 'TH SarabunIT๙', 'TH SarabunIT9', 'TH Sarabun New', 'TH SarabunPSK', Sarabun, sans-serif !important;
+}
+
+/* Thai Distributed (การกระจายแบบไทย 100%) */
+.thai-distributed,
+.a4-page p.thai-distributed {
+  text-align: justify !important;
+  text-justify: distribute !important;
+  text-align-last: left !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  line-break: strict !important;
+  letter-spacing: 0px !important;
+}
+
+/* docx-preview rendering styling */
+.docx-wrapper {
+  background: transparent !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 2rem !important;
+}
+
+.docx-wrapper > section.docx {
+  width: 210mm !important;
+  min-height: 297mm !important;
+  background: white !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #cbd5e1 !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+  font-family: 'TH SarabunIT๙', 'TH SarabunIT9', 'TH Sarabun New', 'TH SarabunPSK', Sarabun, sans-serif !important;
+}
+
+.docx-wrapper * {
+  font-family: 'TH SarabunIT๙', 'TH SarabunIT9', 'TH Sarabun New', 'TH SarabunPSK', Sarabun, sans-serif !important;
+}
+
+/* SweetAlert2 Dynamic Theme Styling & Responsive Fit-Height */
+.swal2-container:not(.swal2-toast-shown) {
+  z-index: 10000 !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  padding: 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Modal Spring In Animation */
+@keyframes swalModalSpringIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.88) translateY(12px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Modal Fade Out Animation */
+@keyframes swalModalFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+}
+
+/* Modal Popup Styling */
+.swal2-popup:not(.swal2-toast) {
+  border-radius: 1.5rem !important;
+  font-family: var(--font-ui-family, 'Prompt'), sans-serif !important;
+  max-height: calc(100dvh - 2rem) !important;
+  max-height: calc(100vh - 2rem) !important;
+  width: 100% !important;
+  max-width: 440px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  margin: auto !important;
+  padding: 1.75rem 1.5rem !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
+}
+
+.swal2-popup.swal2-show:not(.swal2-toast) {
+  animation: swalModalSpringIn 320ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+.swal2-popup.swal2-hide:not(.swal2-toast) {
+  animation: swalModalFadeOut 180ms cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+.swal2-container.swal2-backdrop-hide:not(.swal2-toast-shown) {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: all 180ms ease !important;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-header {
+  flex-shrink: 0 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-title {
+  flex-shrink: 0 !important;
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  text-align: center !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-html-container {
+  flex: 1 1 auto !important;
+  max-height: calc(100dvh - 12rem) !important;
+  max-height: calc(100vh - 12rem) !important;
+  overflow-y: auto !important;
+  word-break: break-word !important;
+  font-size: 0.875rem !important;
+  color: #475569 !important;
+  text-align: center !important;
+  line-height: 1.6 !important;
+  margin: 0.25rem 0.5rem 0 !important;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-actions {
+  flex-shrink: 0 !important;
+  margin-top: 1.5rem !important;
+  display: flex !important;
+  gap: 0.75rem !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+/* Modal Icon Modernization */
+.swal2-popup:not(.swal2-toast) .swal2-icon {
+  margin: 0.25rem auto 0.75rem !important;
+  width: 4.25rem !important;
+  height: 4.25rem !important;
+  border-width: 3.5px !important;
+  transform: scale(0.95);
+  transition: transform 300ms ease;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-success {
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+  background-color: #ecfdf5 !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-success [class^='swal2-success-line'] {
+  background-color: #10b981 !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-success .swal2-success-ring {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-error {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+  background-color: #ef4444 !important;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-warning {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+  background-color: #fffbeb !important;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-info {
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+  background-color: #eff6ff !important;
+}
+
+/* ======================================================== */
+/* SweetAlert2 Toast Container & Notification Customization */
+/* ======================================================== */
+
+.swal2-container.swal2-toast-shown,
+.swal2-container.swal2-toast-no-backdrop {
+  background-color: transparent !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  pointer-events: none !important;
+  padding: 0 !important;
+  z-index: 999999 !important;
+}
+
+body.swal2-toast-shown .swal2-container {
+  background-color: transparent !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* Desktop Toast Positioning */
+.swal2-container.swal2-top-end {
+  top: 5rem !important;
+  right: 1.5rem !important;
+  left: auto !important;
+  bottom: auto !important;
+  position: fixed !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Mobile Toast Positioning */
+.swal2-container.swal2-top {
+  top: 1rem !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  width: calc(100vw - 1.5rem) !important;
+  max-width: 420px !important;
+  position: fixed !important;
+  height: auto !important;
+}
+
+/* Toast Popup Card Layout */
+.swal2-popup.swal2-toast {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 1rem !important;
+  padding: 0.85rem 1.15rem !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  overflow: hidden !important;
+  max-height: none !important;
+}
+
+/* Toast Icon */
+.swal2-popup.swal2-toast .swal2-icon {
+  margin: 0 !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  min-width: 2.25rem !important;
+  border-width: 2.5px !important;
+  flex-shrink: 0 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-success {
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+  background-color: #ecfdf5 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-error {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-warning {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+  background-color: #fffbeb !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-info {
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+  background-color: #eff6ff !important;
+}
+
+/* Toast Text & Title */
+.swal2-popup.swal2-toast .swal2-title {
+  margin: 0 !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+  flex: 1 1 auto !important;
+}
+
+.swal2-popup.swal2-toast .swal2-html-container {
+  margin: 0.15rem 0 0 0 !important;
+  font-size: 0.75rem !important;
+  color: #475569 !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+}
+
+/* Toast Progress Bar */
+.swal2-popup.swal2-toast .swal2-timer-progress-bar {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  height: 3.5px !important;
+  background: var(--color-primary, #1e3a8a) !important;
+  border-radius: 0 0 1rem 1rem !important;
+}
+
+/* Desktop Toast Animation (Slide-in from Right) */
+@keyframes swalToastDesktopIn {
+  0% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.92);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-8px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes swalToastDesktopOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.92);
+  }
+}
+
+/* Mobile Toast Animation (Slide-down from Top) */
+@keyframes swalToastMobileIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-80px) scale(0.92);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(8px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes swalToastMobileOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scale(0.92);
+  }
+}
+
+.swal2-toast-desktop-in {
+  animation: swalToastDesktopIn 380ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+.swal2-toast-desktop-out {
+  animation: swalToastDesktopOut 220ms ease-in forwards !important;
+}
+
+.swal2-toast-mobile-in {
+  animation: swalToastMobileIn 380ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+.swal2-toast-mobile-out {
+  animation: swalToastMobileOut 220ms ease-in forwards !important;
+}
+
+@media (max-width: 768px) {
+  .swal2-container.swal2-top-end,
+  .swal2-container.swal2-top {
+    top: 1rem !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: calc(100vw - 1.5rem) !important;
+    max-width: 420px !important;
+  }
 }
 
 @media print {
   body {
-    background-color: #ffffff !important;
+    background: none;
+  }
+  .a4-page, .docx-wrapper > section.docx {
+    box-shadow: none !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    page-break-after: always !important;
+  }
+  .no-print {
+    display: none !important;
   }
 }
