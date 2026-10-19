@@ -56,6 +56,13 @@ export default function LoginPage() {
       }
     };
     loadPublicSettings();
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('expired') === '1') {
+        setErrorMsg('เซสชันการใช้งานของคุณหมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+      }
+    }
   }, [router]);
 
   // Initialize Google Identity Services when Client ID is available

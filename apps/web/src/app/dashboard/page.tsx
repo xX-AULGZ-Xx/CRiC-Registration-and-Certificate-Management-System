@@ -68,7 +68,10 @@ export default function DashboardPage() {
       if (res.success) {
         setEvents(res.data);
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.message?.includes('เซสชันหมดอายุ') || err?.message?.includes('401')) {
+        return;
+      }
       console.error(err);
     } finally {
       setLoading(false);

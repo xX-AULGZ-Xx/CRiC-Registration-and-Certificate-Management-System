@@ -31,6 +31,15 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const data = await res.json().catch(() => ({ success: false, message: 'Invalid response from server' }));
   
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== 'undefined') {
+      // If unauthorized on dashboard pages, clear credentials and redirect to login
+      if (window.location.pathname.startsWith('/dashboard')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login?expired=1';
+        return { success: false, message: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' };
+      }
+    }
     throw new Error(data.message || `Request failed with status ${res.status}`);
   }
 
