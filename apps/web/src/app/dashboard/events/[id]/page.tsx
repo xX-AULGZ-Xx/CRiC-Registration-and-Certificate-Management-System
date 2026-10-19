@@ -197,6 +197,14 @@ export default function EventManagePage() {
       router.push('/login');
       return;
     }
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get('tab');
+      const savedMode = localStorage.getItem('portal_mode');
+      if (tabParam === 'evaluation' || (!tabParam && savedMode === 'evaluation')) {
+        setActiveTab('evaluation');
+      }
+    }
     if (eventId) {
       loadEventData();
     }

@@ -60,7 +60,9 @@ export default function Navbar() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('portal_mode', mode);
       window.dispatchEvent(new CustomEvent('portal-mode-changed', { detail: mode }));
-      if (pathname === '/') {
+      if (pathname === '/dashboard') {
+        window.location.href = mode === 'evaluation' ? '/dashboard?mode=evaluation' : '/dashboard';
+      } else if (pathname === '/') {
         const newUrl = mode === 'evaluation' ? '/?mode=evaluation' : '/';
         window.history.pushState(null, '', newUrl);
       } else {
