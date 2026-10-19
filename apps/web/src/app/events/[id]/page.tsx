@@ -177,7 +177,7 @@ export default function EventDetailPage() {
         </div>
 
         {/* Event Quick Info Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 p-6 bg-slate-50/50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 p-6 bg-slate-50/50">
           <div className="flex items-start gap-3 p-3">
             <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700">
               <Calendar className="w-5 h-5" />
@@ -186,6 +186,20 @@ export default function EventDetailPage() {
               <div className="text-xs text-slate-500 font-semibold">วันจัดกิจกรรม</div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
                 {formatDate(eventData.start_date) || 'ตามกำหนดการ'}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3">
+            <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs text-slate-500 font-semibold">เวลาจัดกิจกรรม</div>
+              <div className="text-sm font-bold text-slate-800 mt-0.5">
+                {eventData.start_time
+                  ? `${eventData.start_time}${eventData.end_time ? ` - ${eventData.end_time}` : ''} น.`
+                  : 'ตามกำหนดการ'}
               </div>
             </div>
           </div>

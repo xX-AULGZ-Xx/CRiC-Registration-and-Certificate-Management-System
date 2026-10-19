@@ -28,6 +28,8 @@ router.get('/public', async (req: Request, res: Response) => {
         location: true,
         start_date: true,
         end_date: true,
+        start_time: true,
+        end_time: true,
         registration_start: true,
         registration_end: true,
         max_attendees: true,
@@ -185,6 +187,8 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
       location,
       start_date,
       end_date,
+      start_time,
+      end_time,
       registration_start,
       registration_end,
       max_attendees,
@@ -210,6 +214,8 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
         location: location || null,
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,
+        start_time: start_time ? start_time.trim() : null,
+        end_time: end_time ? end_time.trim() : null,
         registration_start: registration_start ? new Date(registration_start) : null,
         registration_end: registration_end ? new Date(registration_end) : null,
         max_attendees: max_attendees ? parseInt(max_attendees) : 0,
@@ -248,6 +254,8 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
       location,
       start_date,
       end_date,
+      start_time,
+      end_time,
       registration_start,
       registration_end,
       max_attendees,
@@ -264,6 +272,8 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     if (location !== undefined) dataToUpdate.location = location;
     if (start_date !== undefined) dataToUpdate.start_date = start_date ? new Date(start_date) : null;
     if (end_date !== undefined) dataToUpdate.end_date = end_date ? new Date(end_date) : null;
+    if (start_time !== undefined) dataToUpdate.start_time = start_time ? start_time.trim() : null;
+    if (end_time !== undefined) dataToUpdate.end_time = end_time ? end_time.trim() : null;
     if (registration_start !== undefined) dataToUpdate.registration_start = registration_start ? new Date(registration_start) : null;
     if (registration_end !== undefined) dataToUpdate.registration_end = registration_end ? new Date(registration_end) : null;
     if (max_attendees !== undefined) dataToUpdate.max_attendees = parseInt(max_attendees) || 0;

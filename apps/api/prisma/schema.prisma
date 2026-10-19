@@ -57,6 +57,8 @@ model Event {
   location            String?           @db.VarChar(255)
   start_date          DateTime?
   end_date            DateTime?
+  start_time          String?           @db.VarChar(10)
+  end_time            String?           @db.VarChar(10)
   registration_start  DateTime?
   registration_end    DateTime?
   max_attendees       Int               @default(0)

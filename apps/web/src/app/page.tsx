@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Calendar,
+  Clock,
   MapPin,
   Users,
   Search,
@@ -221,6 +222,15 @@ export default function HomePage() {
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                           <span>วันที่: {formatDate(evt.start_date)}</span>
+                        </div>
+                      )}
+                      {evt.start_time && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span>
+                            เวลา: {evt.start_time}
+                            {evt.end_time ? ` - ${evt.end_time}` : ''} น.
+                          </span>
                         </div>
                       )}
                       {evt.location && (

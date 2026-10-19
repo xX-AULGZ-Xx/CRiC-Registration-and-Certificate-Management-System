@@ -27,6 +27,7 @@ import {
   Download,
   Printer,
   Sliders,
+  Pencil,
 } from 'lucide-react';
 import CertificateRenderer, {
   BlockStyle,
@@ -62,6 +63,123 @@ export default function EventManagePage() {
   const [evalSummary, setEvalSummary] = useState<any>(null);
   const [loadingEval, setLoadingEval] = useState(false);
   const [showFormEditor, setShowFormEditor] = useState(false);
+
+  // Edit Event Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editProjectRefCode, setEditProjectRefCode] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editStartDate, setEditStartDate] = useState('');
+  const [editEndDate, setEditEndDate] = useState('');
+  const [editStartTime, setEditStartTime] = useState('');
+  const [editEndTime, setEditEndTime] = useState('');
+  const [editRegStart, setEditRegStart] = useState('');
+  const [editRegEnd, setEditRegEnd] = useState('');
+  const [editMaxAttendees, setEditMaxAttendees] = useState('');
+  const [editStatus, setEditStatus] = useState('OPEN');
+  const [editCertPrefix, setEditCertPrefix] = useState('');
+
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatDateTime = (dateStr?: string | null) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }) + ' น.';
+  };
+
+  const openEditModal = () => {
+    if (!event) return;
+    setEditTitle(event.title || '');
+    setEditDescription(event.description || '');
+    setEditProjectRefCode(event.project_ref_code || '');
+    setEditLocation(event.location || '');
+    setEditStartDate(event.start_date ? event.start_date.split('T')[0] : '');
+    setEditEndDate(event.end_date ? event.end_date.split('T')[0] : '');
+    setEditStartTime(event.start_time || '');
+    setEditEndTime(event.end_time || '');
+    setEditRegStart(event.registration_start ? event.registration_start.slice(0, 16) : '');
+    setEditRegEnd(event.registration_end ? event.registration_end.slice(0, 16) : '');
+    setEditMaxAttendees(String(event.max_attendees || 0));
+    setEditStatus(event.status || 'OPEN');
+    setEditCertPrefix(certConfig.certificate_no_prefix || 'วอศ.ชร-2569');
+    setShowEditModal(true);
+  };
+
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTitle.trim()) return;
+
+    try {
+      setSavingEdit(true);
+      const res = await fetchApi(`/api/v1/events/${eventId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          description: editDescription.trim() || null,
+          project_ref_code: editProjectRefCode.trim() || null,
+          location: editLocation.trim() || null,
+          start_date: editStartDate ? new Date(editStartDate).toISOString() : null,
+          end_date: editEndDate ? new Date(editEndDate).toISOString() : null,
+          start_time: editStartTime.trim() || null,
+          end_time: editEndTime.trim() || null,
+          registration_start: editRegStart ? new Date(editRegStart).toISOString() : null,
+          registration_end: editRegEnd ? new Date(editRegEnd).toISOString() : null,
+          max_attendees: parseInt(editMaxAttendees) || 0,
+          status: editStatus,
+          certificate_config: {
+            ...certConfig,
+            certificate_no_prefix: editCertPrefix.trim() || 'วอศ.ชร-2569',
+          },
+        }),
+      });
+
+      if (res.success) {
+        setEvent((prev: any) => ({
+          ...prev,
+          title: editTitle.trim(),
+          description: editDescription.trim() || null,
+          project_ref_code: editProjectRefCode.trim() || null,
+          location: editLocation.trim() || null,
+          start_date: editStartDate ? new Date(editStartDate).toISOString() : null,
+          end_date: editEndDate ? new Date(editEndDate).toISOString() : null,
+          start_time: editStartTime.trim() || null,
+          end_time: editEndTime.trim() || null,
+          registration_start: editRegStart ? new Date(editRegStart).toISOString() : null,
+          registration_end: editRegEnd ? new Date(editRegEnd).toISOString() : null,
+          max_attendees: parseInt(editMaxAttendees) || 0,
+          status: editStatus,
+        }));
+        setCertConfig((prev) => ({
+          ...prev,
+          certificate_no_prefix: editCertPrefix.trim() || 'วอศ.ชร-2569',
+        }));
+        setShowEditModal(false);
+        alert('บันทึกการแก้ไขข้อมูลและการตั้งค่าเวลาสำเร็จ');
+      } else {
+        alert(res.message || 'ไม่สามารถบันทึกข้อมูลได้');
+      }
+    } catch (err: any) {
+      alert(err.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const handleExportCsv = () => {
     const token = localStorage.getItem('token');
@@ -443,19 +561,94 @@ export default function EventManagePage() {
 
             {/* Event Settings Details */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 space-y-4 shadow-sm">
-              <h2 className="text-base font-bold text-slate-900">รายละเอียดโครงการ</h2>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900">รายละเอียดโครงการ & กำหนดการเวลา</h2>
+                    <p className="text-slate-400 text-xs">วัน เวลาจัดกิจกรรม และช่วงเวลาเปิดรับลงทะเบียน</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={openEditModal}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs shadow-2xs transition cursor-pointer"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>แก้ไขข้อมูล & เวลา</span>
+                </button>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-700">
-                <div>
-                  <span className="font-bold text-slate-500">สถานที่:</span> {event.location || '-'}
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-blue-600" /> วันจัดกิจกรรม
+                  </div>
+                  <div className="font-bold text-slate-900 text-sm">
+                    {formatDate(event.start_date) || 'ไม่ได้กำหนดวันที่'}
+                    {event.end_date && ` ถึง ${formatDate(event.end_date)}`}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-bold text-slate-500">รหัสโครงการอ้างอิง:</span> {event.project_ref_code || '-'}
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" /> เวลาจัดกิจกรรม
+                  </div>
+                  <div className="font-bold text-blue-700 text-sm">
+                    {event.start_time ? `${event.start_time}${event.end_time ? ` - ${event.end_time}` : ''} น.` : 'ไม่ได้ระบุเวลา'}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-bold text-slate-500">จำนวนรับสูงสุด:</span> {event.max_attendees > 0 ? `${event.max_attendees} คน` : 'ไม่จำกัด'}
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="text-[11px] font-bold text-slate-400">สถานที่จัดกิจกรรม</div>
+                  <div className="font-semibold text-slate-800">{event.location || '-'}</div>
                 </div>
-                <div>
-                  <span className="font-bold text-slate-500">คำนำหน้าเลขที่เกียรติบัตร:</span> {certConfig.certificate_no_prefix || 'CERT-2569'}
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="text-[11px] font-bold text-slate-400">ช่วงเปิด-ปิดรับลงทะเบียน</div>
+                  <div className="font-semibold text-slate-800">
+                    {event.registration_start || event.registration_end ? (
+                      <span>
+                        {event.registration_start ? formatDateTime(event.registration_start) : 'เปิดตลอด'}
+                        {event.registration_end ? ` ถึง ${formatDateTime(event.registration_end)}` : ''}
+                      </span>
+                    ) : (
+                      <span className="text-emerald-700 font-medium">เปิดรับลงทะเบียนตลอดเวลา</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="text-[11px] font-bold text-slate-400">รหัสโครงการอ้างอิง</div>
+                  <div className="font-mono font-semibold text-slate-800">{event.project_ref_code || '-'}</div>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="text-[11px] font-bold text-slate-400">จำนวนรับสูงสุด</div>
+                  <div className="font-semibold text-slate-800">{event.max_attendees > 0 ? `${event.max_attendees} คน` : 'ไม่จำกัดจำนวน'}</div>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="text-[11px] font-bold text-slate-400">คำนำหน้าเลขที่เกียรติบัตร</div>
+                  <div className="font-mono font-semibold text-slate-800">{certConfig.certificate_no_prefix || 'วอศ.ชร-2569'}</div>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="text-[11px] font-bold text-slate-400">สถานะกิจกรรม</div>
+                  <div>
+                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      event.status === 'OPEN'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : event.status === 'CLOSED'
+                        ? 'bg-slate-200 text-slate-700'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {event.status === 'OPEN' ? 'เปิดรับลงทะเบียน' : event.status === 'CLOSED' ? 'ปิดรับลงทะเบียน' : event.status}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -976,6 +1169,207 @@ export default function EventManagePage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Edit Event Details & Time Settings Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">แก้ไขข้อมูลและกำหนดการเวลา</h3>
+                <p className="text-xs text-slate-500">ปรับปรุงรายละเอียด วันและเวลาจัดกิจกรรม และช่วงเวลารับลงทะเบียน</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateEvent} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">ชื่อกิจกรรม / หลักสูตรอบรม *</label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">คำอธิบายกิจกรรม</label>
+                <textarea
+                  rows={2}
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">รหัสโครงการอ้างอิง</label>
+                  <input
+                    type="text"
+                    value={editProjectRefCode}
+                    onChange={(e) => setEditProjectRefCode(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">สถานะกิจกรรม</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium"
+                  >
+                    <option value="OPEN">เปิดรับลงทะเบียน (OPEN)</option>
+                    <option value="CLOSED">ปิดรับลงทะเบียน (CLOSED)</option>
+                    <option value="COMPLETED">เสร็จสิ้นกิจกรรม (COMPLETED)</option>
+                    <option value="CANCELLED">ยกเลิกกิจกรรม (CANCELLED)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">สถานที่จัดกิจกรรม</label>
+                  <input
+                    type="text"
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">จำนวนรับสูงสุด (0 = ไม่จำกัด)</label>
+                  <input
+                    type="number"
+                    value={editMaxAttendees}
+                    onChange={(e) => setEditMaxAttendees(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Event Date & Time */}
+              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100/80 space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                  <Clock className="w-4 h-4 text-blue-600" />
+                  <span>กำหนดการวันและเวลาจัดกิจกรรม</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">วันที่เริ่มกิจกรรม</label>
+                    <input
+                      type="date"
+                      value={editStartDate}
+                      onChange={(e) => setEditStartDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">วันที่สิ้นสุด (ถ้าจัดหลายวัน)</label>
+                    <input
+                      type="date"
+                      value={editEndDate}
+                      onChange={(e) => setEditEndDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">เวลาเริ่มกิจกรรม</label>
+                    <input
+                      type="time"
+                      value={editStartTime}
+                      onChange={(e) => setEditStartTime(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">เวลาสิ้นสุดกิจกรรม</label>
+                    <input
+                      type="time"
+                      value={editEndTime}
+                      onChange={(e) => setEditEndTime(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Registration Period */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                  <Calendar className="w-4 h-4 text-slate-500" />
+                  <span>ช่วงเวลาเปิด-ปิดรับลงทะเบียน (ทางเลือก)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">เปิดรับลงทะเบียนตั้งแต่</label>
+                    <input
+                      type="datetime-local"
+                      value={editRegStart}
+                      onChange={(e) => setEditRegStart(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">ปิดรับลงทะเบียนเมื่อ</label>
+                    <input
+                      type="datetime-local"
+                      value={editRegEnd}
+                      onChange={(e) => setEditRegEnd(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">คำนำหน้าเลขที่เกียรติบัตร</label>
+                <input
+                  type="text"
+                  value={editCertPrefix}
+                  onChange={(e) => setEditCertPrefix(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
+                >
+                  {savingEdit ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

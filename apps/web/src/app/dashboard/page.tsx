@@ -16,6 +16,8 @@ import {
   Sparkles,
   Search,
   User,
+  Clock,
+  MapPin,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
@@ -27,9 +29,15 @@ export default function DashboardPage() {
 
   // New Event Form
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [projectRefCode, setProjectRefCode] = useState('');
   const [location, setLocation] = useState('');
   const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('16:30');
+  const [regStart, setRegStart] = useState('');
+  const [regEnd, setRegEnd] = useState('');
   const [maxAttendees, setMaxAttendees] = useState('100');
   const [certPrefix, setCertPrefix] = useState('วอศ.ชร-2569');
 
@@ -77,9 +85,15 @@ export default function DashboardPage() {
         method: 'POST',
         body: JSON.stringify({
           title: title.trim(),
+          description: description.trim() || undefined,
           project_ref_code: projectRefCode.trim() || undefined,
           location: location.trim() || undefined,
           start_date: startDate ? new Date(startDate).toISOString() : undefined,
+          end_date: endDate ? new Date(endDate).toISOString() : undefined,
+          start_time: startTime.trim() || undefined,
+          end_time: endTime.trim() || undefined,
+          registration_start: regStart ? new Date(regStart).toISOString() : undefined,
+          registration_end: regEnd ? new Date(regEnd).toISOString() : undefined,
           max_attendees: parseInt(maxAttendees) || 0,
           certificate_config: {
             certificate_no_prefix: certPrefix.trim() || 'CERT-2569',
@@ -92,8 +106,15 @@ export default function DashboardPage() {
       if (res.success) {
         setShowCreateModal(false);
         setTitle('');
+        setDescription('');
         setProjectRefCode('');
         setLocation('');
+        setStartDate('');
+        setEndDate('');
+        setStartTime('09:00');
+        setEndTime('16:30');
+        setRegStart('');
+        setRegEnd('');
         loadEvents();
       }
     } catch (err: any) {
@@ -264,8 +285,26 @@ export default function DashboardPage() {
                     </Link>
                   </h3>
 
-                  <div className="text-xs text-slate-500 flex flex-wrap items-center gap-4">
-                    {evt.location && <span>สถานที่: {evt.location}</span>}
+                  <div className="text-xs text-slate-500 flex flex-wrap items-center gap-y-1.5 gap-x-4">
+                    {evt.start_date && (
+                      <span className="flex items-center gap-1 text-slate-700 font-medium">
+                        <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                        {new Date(evt.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {evt.end_date && ` - ${new Date(evt.end_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}`}
+                      </span>
+                    )}
+                    {evt.start_time && (
+                      <span className="flex items-center gap-1 text-slate-700 font-medium">
+                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                        {evt.start_time}{evt.end_time ? ` - ${evt.end_time}` : ''} น.
+                      </span>
+                    )}
+                    {evt.location && (
+                      <span className="flex items-center gap-1 text-slate-600">
+                        <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                        {evt.location}
+                      </span>
+                    )}
                     <span>ผู้ลงทะเบียน: {evt._count?.attendees || 0} คน</span>
                     <span>ผู้ตอบแบบประเมิน: {evt.evaluation_form?._count?.responses || 0} คน</span>
                   </div>
@@ -306,8 +345,8 @@ export default function DashboardPage() {
 
       {/* Create Event Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-lg font-bold text-slate-900">สร้างกิจกรรม / การอบรมใหม่</h3>
               <button
@@ -328,6 +367,17 @@ export default function DashboardPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="เช่น โครงการอบรมการประยุกต์ใช้ AI ในการทำงาน"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">คำอธิบายกิจกรรมแบบย่อ</label>
+                <textarea
+                  rows={2}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="ระบุวัตถุประสงค์หรือรายละเอียดกิจกรรมสั้นๆ"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
@@ -355,24 +405,14 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">สถานที่จัดกิจกรรม</label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="เช่น ห้องประชุมชงโค อาคารวิทยบริการ"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">วันที่จัดกิจกรรม</label>
+                  <label className="text-xs font-bold text-slate-700">สถานที่จัดกิจกรรม</label>
                   <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="เช่น ห้องประชุมชงโค อาคารวิทยบริการ"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
@@ -386,6 +426,88 @@ export default function DashboardPage() {
                     placeholder="เช่น วอศ.ชร-2569"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
+                </div>
+              </div>
+
+              {/* Event Date & Time */}
+              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100/80 space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                  <Clock className="w-4 h-4 text-blue-600" />
+                  <span>กำหนดการวันและเวลาจัดกิจกรรม</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">วันที่เริ่มกิจกรรม *</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">วันที่สิ้นสุด (ถ้าจัดหลายวัน)</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">เวลาเริ่มกิจกรรม</label>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">เวลาสิ้นสุดกิจกรรม</label>
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Registration Period (Optional) */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                  <Calendar className="w-4 h-4 text-slate-500" />
+                  <span>ช่วงเวลารับลงทะเบียน (ทางเลือก)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">เปิดรับลงทะเบียนตั้งแต่</label>
+                    <input
+                      type="datetime-local"
+                      value={regStart}
+                      onChange={(e) => setRegStart(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">ปิดรับลงทะเบียนเมื่อ</label>
+                    <input
+                      type="datetime-local"
+                      value={regEnd}
+                      onChange={(e) => setRegEnd(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 

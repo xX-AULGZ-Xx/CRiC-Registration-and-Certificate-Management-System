@@ -45,6 +45,8 @@ router.get('/events/:eventId/public-info', async (req: Request, res: Response) =
           location: event.location,
           start_date: event.start_date,
           end_date: event.end_date,
+          start_time: (event as any).start_time,
+          end_time: (event as any).end_time,
           registration_start: event.registration_start,
           registration_end: event.registration_end,
           max_attendees: event.max_attendees,
