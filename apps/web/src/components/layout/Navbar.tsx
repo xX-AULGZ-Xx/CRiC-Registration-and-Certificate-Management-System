@@ -15,9 +15,6 @@ export default function Navbar() {
   const [brandNameTh, setBrandNameTh] = useState<string>('ระบบลงทะเบียนและออกเกียรติบัตร');
   const [brandNameEn, setBrandNameEn] = useState<string>('Registration & Certificate Management System');
 
-  if (pathname?.startsWith('/surveys') || pathname === '/install' || pathname?.startsWith('/events')) {
-    return null;
-  }
 
   const updateFavicon = (url: string) => {
     if (!url) return;
@@ -101,6 +98,10 @@ export default function Navbar() {
     setCurrentUser(null);
     window.location.href = '/login';
   };
+
+  if (pathname?.startsWith('/surveys') || pathname === '/install' || pathname?.startsWith('/events')) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
