@@ -158,6 +158,14 @@ export default function EvaluationFormEditor({
   const activeColorObj = SURVEY_COLORS[selectedColor] || SURVEY_COLORS.indigo;
 
   // Rules & Conditions
+  const [issueCertificate, setIssueCertificate] = useState<boolean>(() => {
+    if (existingTheme.issue_certificate !== undefined) {
+      return Boolean(existingTheme.issue_certificate);
+    }
+    const regCfg = initialData?.event?.registration_config || {};
+    const isEvalOnly = regCfg.is_evaluation_only === true || regCfg.has_registration === false;
+    return !isEvalOnly;
+  });
   const [minPassingScore, setMinPassingScore] = useState<number>(existingTheme.min_passing_score || 0);
   const [preventDuplicate, setPreventDuplicate] = useState<boolean>(existingTheme.prevent_duplicate ?? true);
   const [startDate, setStartDate] = useState<string>(existingTheme.start_date || '');
@@ -182,6 +190,13 @@ export default function EvaluationFormEditor({
         if (formData.is_active !== undefined) setIsActive(formData.is_active);
 
         const theme = formData.theme_config || {};
+        const regCfg = formData.event?.registration_config || {};
+        const isEvalOnly = regCfg.is_evaluation_only === true || regCfg.has_registration === false;
+        if (theme.issue_certificate !== undefined) {
+          setIssueCertificate(Boolean(theme.issue_certificate));
+        } else {
+          setIssueCertificate(!isEvalOnly);
+        }
         if (theme.color) setSelectedColor(theme.color);
         if (theme.rating_style) setSelectedRatingStyle(theme.rating_style);
         if (theme.min_passing_score !== undefined) setMinPassingScore(theme.min_passing_score);
@@ -329,6 +344,7 @@ export default function EvaluationFormEditor({
         prevent_duplicate: preventDuplicate,
         start_date: startDate || undefined,
         end_date: endDate || undefined,
+        issue_certificate: issueCertificate,
       };
 
       const res = await fetchApi(`/api/v1/evaluation/events/${eventId}/form`, {
@@ -817,42 +833,66 @@ export default function EvaluationFormEditor({
           {/* TAB 3: RULES & CONDITIONS */}
           {activeTab === 'rules' && (
             <div className="space-y-6">
-              {/* Passing Score Threshold */}
+              {/* Certificate Issuance Toggle */}
               <div className="bg-white rounded-2xl p-5 border border-slate-200 space-y-3 shadow-xs">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-xs sm:text-sm">
-                      เกณฑ์คะแนนเฉลี่ยขั้นต่ำเพื่อรับเกียรติบัตร (Passing Score Threshold)
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      ผู้เข้าร่วมต้องประเมินคะแนนเฉลี่ย (1.00 - 5.00) ถึงเกณฑ์ที่กำหนด จึงจะได้รับสิทธิ์ดาวน์โหลดเกียรติบัตร
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="font-mono font-black text-blue-700 text-lg">
-                      {minPassingScore > 0 ? `${minPassingScore.toFixed(2)} / 5.00` : 'ไม่กำหนดเกณฑ์'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="pt-2">
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
-                    type="range"
-                    min="0"
-                    max="5"
-                    step="0.25"
-                    value={minPassingScore}
-                    onChange={(e) => setMinPassingScore(parseFloat(e.target.value))}
-                    className="w-full accent-blue-600"
+                    type="checkbox"
+                    checked={issueCertificate}
+                    onChange={(e) => setIssueCertificate(e.target.checked)}
+                    className="mt-1 w-4 h-4 text-blue-600 rounded"
                   />
-                  <div className="flex justify-between text-[11px] text-slate-400 mt-1">
-                    <span>0.00 (ตอบครบรับได้เลย)</span>
-                    <span>3.00 (ปานกลาง)</span>
-                    <span>3.50 (ระดับมาก)</span>
-                    <span>4.50 (มากที่สุด)</span>
+                  <div>
+                    <div className="font-bold text-slate-900 text-xs sm:text-sm">
+                      ออกเกียรติบัตรให้แก่ผู้ตอบแบบประเมิน (Certificate Issuance)
+                    </div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {issueCertificate
+                        ? 'เปิดใช้งาน: ผู้ตอบแบบประเมินจะต้องกรอกข้อมูลยืนยันตัวตน (เบอร์โทรศัพท์ที่ลงทะเบียน) และจะได้รับเกียรติบัตรเมื่อตอบแบบประเมิน'
+                        : 'ปิดใช้งาน (แบบประเมินเฉยๆ): ผู้ตอบแบบประเมินไม่ต้องกรอกข้อมูลยืนยันตัวตนเพื่อรับเกียรติบัตร และระบบจะไม่มีการออกเกียรติบัตร'}
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {/* Passing Score Threshold (Only relevant when certificates are issued) */}
+              {issueCertificate && (
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 space-y-3 shadow-xs animate-in fade-in duration-200">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-xs sm:text-sm">
+                        เกณฑ์คะแนนเฉลี่ยขั้นต่ำเพื่อรับเกียรติบัตร (Passing Score Threshold)
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        ผู้เข้าร่วมต้องประเมินคะแนนเฉลี่ย (1.00 - 5.00) ถึงเกณฑ์ที่กำหนด จึงจะได้รับสิทธิ์ดาวน์โหลดเกียรติบัตร
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="font-mono font-black text-blue-700 text-lg">
+                        {minPassingScore > 0 ? `${minPassingScore.toFixed(2)} / 5.00` : 'ไม่กำหนดเกณฑ์'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      step="0.25"
+                      value={minPassingScore}
+                      onChange={(e) => setMinPassingScore(parseFloat(e.target.value))}
+                      className="w-full accent-blue-600"
+                    />
+                    <div className="flex justify-between text-[11px] text-slate-400 mt-1">
+                      <span>0.00 (ตอบครบรับได้เลย)</span>
+                      <span>3.00 (ปานกลาง)</span>
+                      <span>3.50 (ระดับมาก)</span>
+                      <span>4.50 (มากที่สุด)</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Duplicate Prevention */}
               <div className="bg-white rounded-2xl p-5 border border-slate-200 space-y-3 shadow-xs">

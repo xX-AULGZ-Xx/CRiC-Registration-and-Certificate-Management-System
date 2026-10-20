@@ -70,6 +70,7 @@ router.get('/forms/:id/public', async (req: Request, res: Response) => {
             start_date: true,
             organizer: { select: { full_name: true, organization: true } },
             certificate_config: true,
+            registration_config: true,
           },
         },
         sections: {
@@ -95,6 +96,7 @@ router.get('/forms/:id/public', async (req: Request, res: Response) => {
               start_date: true,
               organizer: { select: { full_name: true, organization: true } },
               certificate_config: true,
+              registration_config: true,
             },
           },
           sections: {
@@ -254,8 +256,14 @@ const handleEvaluationResponse = async (req: Request, res: Response) => {
 
       // Check certificate issuance eligibility
       let issuedCertificateNo = null;
-      if (attendee) {
-        const certConfig = (form.event.certificate_config as any) || {};
+      const regConfig = (form.event.registration_config as any) || {};
+      const isEvalOnly = regConfig.is_evaluation_only === true || regConfig.has_registration === false;
+      const certConfig = (form.event.certificate_config as any) || {};
+      const shouldIssueCert = themeConfig.issue_certificate !== undefined
+        ? Boolean(themeConfig.issue_certificate)
+        : !isEvalOnly && certConfig.enabled !== false;
+
+      if (attendee && shouldIssueCert) {
         const requireCheckIn = certConfig.require_check_in ?? true;
 
         const isEligible = (!requireCheckIn || attendee.status === 'checked_in') && passedThreshold;
@@ -314,6 +322,14 @@ router.get('/events/:eventId/form', authenticate, async (req: AuthRequest, res: 
     const form = await prisma.evaluationForm.findUnique({
       where: { event_id: eventId },
       include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            registration_config: true,
+            certificate_config: true,
+          },
+        },
         sections: {
           orderBy: { order_index: 'asc' },
           include: {
@@ -428,6 +444,14 @@ router.get('/events/:eventId/summary', authenticate, async (req: AuthRequest, re
     const form = await prisma.evaluationForm.findUnique({
       where: { event_id: eventId },
       include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            registration_config: true,
+            certificate_config: true,
+          },
+        },
         sections: {
           orderBy: { order_index: 'asc' },
           include: {

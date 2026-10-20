@@ -130,6 +130,21 @@ function SurveyContent() {
       return;
     }
 
+    // If certificates are issued, require respondent identity
+    const regConfig = form?.event?.registration_config || {};
+    const certConfig = form?.event?.certificate_config || {};
+    const themeConfig = form?.theme_config || {};
+    const isEvalOnlyEvent = regConfig.is_evaluation_only === true || regConfig.has_registration === false;
+    const hasCertificate =
+      themeConfig.issue_certificate !== undefined
+        ? Boolean(themeConfig.issue_certificate)
+        : !isEvalOnlyEvent && certConfig.enabled !== false;
+
+    if (hasCertificate && !attendeeId && !phone.trim() && !citizenId.trim()) {
+      setErrorMsg('กรุณากรอกเบอร์โทรศัพท์ที่ใช้ลงทะเบียน เพื่อยืนยันตัวตนรับเกียรติบัตร');
+      return;
+    }
+
     try {
       setSubmitting(true);
       const res = await fetchApi(`/api/v1/evaluation/forms/${formId}/submit`, {
@@ -184,6 +199,16 @@ function SurveyContent() {
   const themeColor: ColorOption = SURVEY_COLORS[colorKey] || SURVEY_COLORS.indigo;
   const ratingStyle = form.theme_config?.rating_style || 'buttons';
 
+  // Certificate check
+  const regConfig = form.event?.registration_config || {};
+  const certConfig = form.event?.certificate_config || {};
+  const themeConfig = form.theme_config || {};
+  const isEvalOnlyEvent = regConfig.is_evaluation_only === true || regConfig.has_registration === false;
+  const hasCertificate =
+    themeConfig.issue_certificate !== undefined
+      ? Boolean(themeConfig.issue_certificate)
+      : !isEvalOnlyEvent && certConfig.enabled !== false;
+
   // Rating labels
   const ratingDescriptions: Record<number, string> = {
     5: 'มากที่สุด',
@@ -234,9 +259,13 @@ function SurveyContent() {
                 </Link>
               </div>
             </div>
-          ) : (
+          ) : hasCertificate ? (
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-600 text-xs sm:text-sm leading-relaxed">
               ผู้จัดกิจกรรมจะตรวจสอบและดำเนินการออกเกียรติบัตรให้แก่ท่านในลำดับถัดไป หรือท่านสามารถค้นหาเกียรติบัตรย้อนหลังได้ด้วยเบอร์โทรศัพท์/เลขบัตรประชาชน
+            </div>
+          ) : (
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-600 text-xs sm:text-sm leading-relaxed">
+              ระบบได้บันทึกความคิดเห็นของท่านเรียบร้อยแล้ว ขอบคุณที่สละเวลาในการตอบแบบประเมิน
             </div>
           )}
 
@@ -247,13 +276,17 @@ function SurveyContent() {
             >
               กลับสู่หน้าหลัก
             </Link>
-            <span className="text-slate-300">•</span>
-            <Link
-              href="/certificates/search"
-              className="text-blue-700 hover:underline transition"
-            >
-              ค้นหาเกียรติบัตร
-            </Link>
+            {hasCertificate && (
+              <>
+                <span className="text-slate-300">•</span>
+                <Link
+                  href="/certificates/search"
+                  className="text-blue-700 hover:underline transition"
+                >
+                  ค้นหาเกียรติบัตร
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -294,29 +327,31 @@ function SurveyContent() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Attendee Matching Section */}
-          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
-            <div className="border-b border-slate-100 pb-3">
-              <h2 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
-                <User className={`w-4 h-4 ${themeColor.accentTextClass}`} />
-                <span>ข้อมูลยืนยันตัวตนเพื่อรับเกียรติบัตร</span>
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                กรอกเบอร์โทรศัพท์ที่ใช้ลงทะเบียน เพื่อให้ระบบออกเกียรติบัตรและเชื่อมโยงข้อมูลให้คุณอัตโนมัติ
-              </p>
-            </div>
+          {/* Attendee Matching Section (Only shown when certificates are enabled) */}
+          {hasCertificate && (
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                  <User className={`w-4 h-4 ${themeColor.accentTextClass}`} />
+                  <span>ข้อมูลยืนยันตัวตนเพื่อรับเกียรติบัตร</span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  กรอกเบอร์โทรศัพท์ที่ใช้ลงทะเบียน เพื่อให้ระบบออกเกียรติบัตรและเชื่อมโยงข้อมูลให้คุณอัตโนมัติ
+                </p>
+              </div>
 
-            <div className="space-y-1.5 max-w-md">
-              <label className="text-xs font-bold text-slate-700">เบอร์โทรศัพท์ที่ลงทะเบียน *</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="เช่น 0812345678"
-                className={`w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${themeColor.ringClass} focus:outline-none transition`}
-              />
+              <div className="space-y-1.5 max-w-md">
+                <label className="text-xs font-bold text-slate-700">เบอร์โทรศัพท์ที่ลงทะเบียน *</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="เช่น 0812345678"
+                  className={`w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${themeColor.ringClass} focus:outline-none transition`}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Survey Sections */}
           {form.sections &&

@@ -9,6 +9,7 @@ export interface SurveyThemeConfig {
   prevent_duplicate?: boolean;
   start_date?: string;
   end_date?: string;
+  issue_certificate?: boolean;
 }
 
 export interface ColorOption {

@@ -285,6 +285,9 @@ export default function DashboardPage() {
               description: surveyDescription.trim() || undefined,
               target_responses: parseInt(surveyTargetResponses) || 50,
               is_active: true,
+              theme_config: {
+                issue_certificate: false,
+              },
               sections: surveyTemplate === 'standard' ? standardSections : [],
             }),
           });
