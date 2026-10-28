@@ -68,7 +68,7 @@ export default function HomePage() {
     const handleModeChange = (e: any) => {
       if (e.detail && (e.detail === 'register' || e.detail === 'evaluation')) {
         setPortalMode(e.detail);
-        loadEvents(e.detail);
+        loadEvents(e.detail, true);
       }
     };
     window.addEventListener('portal-mode-changed', handleModeChange);
@@ -123,9 +123,11 @@ export default function HomePage() {
     }
   };
 
-  const loadEvents = async (targetMode?: string) => {
+  const loadEvents = async (targetMode?: string, silent: boolean = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const m = targetMode || portalMode;
       const res = await fetchApi(`/api/v1/events/public?mode=${m}`);
       if (res.success) {
@@ -134,7 +136,9 @@ export default function HomePage() {
     } catch (err) {
       console.warn('Could not load events:', err);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 

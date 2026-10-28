@@ -60,13 +60,29 @@ export default function Navbar() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('portal_mode', mode);
       window.dispatchEvent(new CustomEvent('portal-mode-changed', { detail: mode }));
-      if (pathname === '/dashboard') {
-        window.location.href = mode === 'evaluation' ? '/dashboard?mode=evaluation' : '/dashboard';
-      } else if (pathname === '/') {
-        const newUrl = mode === 'evaluation' ? '/?mode=evaluation' : '/';
-        window.history.pushState(null, '', newUrl);
-      } else {
-        window.location.href = mode === 'evaluation' ? '/?mode=evaluation' : '/';
+
+      try {
+        const url = new URL(window.location.href);
+        if (mode === 'evaluation') {
+          url.searchParams.set('mode', 'evaluation');
+        } else {
+          url.searchParams.delete('mode');
+        }
+
+        if (pathname?.startsWith('/dashboard/events/')) {
+          if (mode === 'evaluation') {
+            url.searchParams.set('tab', 'evaluation');
+          } else {
+            if (url.searchParams.get('tab') === 'evaluation') {
+              url.searchParams.delete('tab');
+            }
+          }
+        }
+
+        const newPath = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '');
+        window.history.replaceState(null, '', newPath);
+      } catch {
+        // fallback
       }
     }
   };
