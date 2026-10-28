@@ -84,6 +84,16 @@ export default function EventManagePage() {
   const [editHasRegistration, setEditHasRegistration] = useState(true);
   const [editHasEvaluation, setEditHasEvaluation] = useState(true);
 
+  // CSV Import State
+  const [showCsvModal, setShowCsvModal] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvParsedRows, setCsvParsedRows] = useState<any[]>([]);
+  const [csvInitialStatus, setCsvInitialStatus] = useState<'registered' | 'checked_in'>('registered');
+  const [importingCsv, setImportingCsv] = useState(false);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const [csvSuccessResult, setCsvSuccessResult] = useState<{ imported: number; skipped: number; total: number } | null>(null);
+  const csvFileInputRef = useRef<HTMLInputElement>(null);
+
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -398,6 +408,184 @@ export default function EventManagePage() {
       alert(err.message || 'เกิดข้อผิดพลาดในการบันทึก');
     } finally {
       setSavingCert(false);
+    }
+  };
+
+  const handleDownloadCsvTemplate = () => {
+    const headers = ['คำนำหน้า', 'ชื่อ-นามสกุล', 'ตำแหน่ง', 'หน่วยงาน/สังกัด', 'เบอร์โทรศัพท์', 'อีเมล', 'เลขบัตรประชาชน'];
+    const sampleRows = [
+      ['นาย', 'สมชาย ใจดี', 'ครูชำนาญการ', 'วิทยาลัยอาชีวศึกษาเชียงราย', '0812345678', 'somchai@example.com', '1234567890123'],
+      ['นางสาว', 'สมหญิง รักเรียน', 'นักเรียน / นักศึกษา', 'วิทยาลัยอาชีวศึกษาเชียงราย', '0898765432', 'somying@example.com', '9876543210987'],
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...sampleRows.map((row) => row.map((val) => `"${val.replace(/"/g, '""')}"`).join(',')),
+    ].join('\r\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const safeTitle = event?.title ? event.title.replace(/[^\w\u0E00-\u0E7F]/g, '_') : 'attendees';
+    link.setAttribute('download', `แม่แบบนำเข้ารายชื่อ_${safeTitle}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const parseCsvText = (text: string) => {
+    let cleanText = text;
+    if (cleanText.charCodeAt(0) === 0xfeff) {
+      cleanText = cleanText.slice(1);
+    }
+
+    const lines: string[][] = [];
+    let currentRow: string[] = [];
+    let currentField = '';
+    let insideQuotes = false;
+
+    for (let i = 0; i < cleanText.length; i++) {
+      const char = cleanText[i];
+      const nextChar = cleanText[i + 1];
+
+      if (char === '"') {
+        if (insideQuotes && nextChar === '"') {
+          currentField += '"';
+          i++;
+        } else {
+          insideQuotes = !insideQuotes;
+        }
+      } else if ((char === ',' || char === ';') && !insideQuotes) {
+        currentRow.push(currentField.trim());
+        currentField = '';
+      } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+        if (char === '\r' && nextChar === '\n') {
+          i++;
+        }
+        currentRow.push(currentField.trim());
+        if (currentRow.some((val) => val.length > 0)) {
+          lines.push(currentRow);
+        }
+        currentRow = [];
+        currentField = '';
+      } else {
+        currentField += char;
+      }
+    }
+    if (currentField.length > 0 || currentRow.length > 0) {
+      currentRow.push(currentField.trim());
+      if (currentRow.some((val) => val.length > 0)) {
+        lines.push(currentRow);
+      }
+    }
+
+    if (lines.length < 2) return [];
+
+    const rawHeaders = lines[0].map((h) => h.toLowerCase().replace(/[\s\-_/]/g, ''));
+
+    const colIndex = {
+      title_name: rawHeaders.findIndex((h) => h.includes('คำนำหน้า') || h.includes('titlename') || h === 'title'),
+      full_name: rawHeaders.findIndex(
+        (h) => h.includes('ชื่อนามสกุล') || h.includes('fullname') || h.includes('ชื่อ') || h === 'name'
+      ),
+      position: rawHeaders.findIndex((h) => h.includes('ตำแหน่ง') || h.includes('position')),
+      organization: rawHeaders.findIndex(
+        (h) =>
+          h.includes('หน่วยงาน') ||
+          h.includes('สังกัด') ||
+          h.includes('โรงเรียน') ||
+          h.includes('organization') ||
+          h.includes('org')
+      ),
+      phone: rawHeaders.findIndex((h) => h.includes('โทร') || h.includes('phone') || h.includes('tel') || h.includes('mobile')),
+      email: rawHeaders.findIndex((h) => h.includes('อีเมล') || h.includes('email') || h.includes('mail')),
+      citizen_id: rawHeaders.findIndex(
+        (h) => h.includes('บัตร') || h.includes('ประชาชน') || h.includes('citizen') || h.includes('idcard')
+      ),
+    };
+
+    if (colIndex.full_name === -1) {
+      colIndex.full_name = colIndex.title_name === 0 && lines[0].length > 1 ? 1 : 0;
+    }
+
+    const parsed: any[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i];
+      const full_name = colIndex.full_name >= 0 ? row[colIndex.full_name] : '';
+      if (!full_name || !full_name.trim()) continue;
+
+      parsed.push({
+        title_name: colIndex.title_name >= 0 ? row[colIndex.title_name] || '' : '',
+        full_name: full_name.trim(),
+        position: colIndex.position >= 0 ? row[colIndex.position] || '' : '',
+        organization: colIndex.organization >= 0 ? row[colIndex.organization] || '' : '',
+        phone: colIndex.phone >= 0 ? row[colIndex.phone] || '' : '',
+        email: colIndex.email >= 0 ? row[colIndex.email] || '' : '',
+        citizen_id: colIndex.citizen_id >= 0 ? row[colIndex.citizen_id] || '' : '',
+      });
+    }
+
+    return parsed;
+  };
+
+  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCsvFile(file);
+    setCsvError(null);
+    setCsvSuccessResult(null);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = (evt.target?.result as string) || '';
+        const rows = parseCsvText(text);
+        if (rows.length === 0) {
+          setCsvError('ไม่พบข้อมูลในไฟล์ หรือไม่มีคอลัมน์ชื่อ-นามสกุลที่ถูกต้อง');
+          setCsvParsedRows([]);
+        } else {
+          setCsvParsedRows(rows);
+        }
+      } catch (err: any) {
+        setCsvError('เกิดข้อผิดพลาดในการอ่านไฟล์ CSV: ' + err.message);
+        setCsvParsedRows([]);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+
+  const handleConfirmImportCsv = async () => {
+    if (csvParsedRows.length === 0) return;
+
+    try {
+      setImportingCsv(true);
+      setCsvError(null);
+
+      const res = await fetchApi(`/api/v1/registration/events/${eventId}/import-csv`, {
+        method: 'POST',
+        body: JSON.stringify({
+          attendees: csvParsedRows,
+          initial_status: csvInitialStatus,
+        }),
+      });
+
+      if (res.success && res.data) {
+        setCsvSuccessResult({
+          imported: res.data.imported_count,
+          skipped: res.data.skipped_count,
+          total: res.data.total_rows,
+        });
+        loadAttendees();
+        loadEventData();
+      } else {
+        setCsvError(res.message || 'ไม่สามารถนำเข้าข้อมูลได้');
+      }
+    } catch (err: any) {
+      setCsvError(err.message || 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
+    } finally {
+      setImportingCsv(false);
     }
   };
 
@@ -773,15 +961,34 @@ export default function EventManagePage() {
                 </p>
               </div>
 
-              {/* Batch issue certificates button */}
-              <button
-                type="button"
-                onClick={handleIssueAll}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer w-full sm:w-auto shrink-0"
-              >
-                <Award className="w-4 h-4" />
-                <span>ออกเกียรติบัตรทุกคนที่เช็คชื่อแล้ว</span>
-              </button>
+              {/* Action Buttons: Import CSV and Batch Issue */}
+              <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCsvFile(null);
+                    setCsvParsedRows([]);
+                    setCsvError(null);
+                    setCsvSuccessResult(null);
+                    if (csvFileInputRef.current) csvFileInputRef.current.value = '';
+                    setShowCsvModal(true);
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer shrink-0"
+                  title="นำเข้ารายชื่อผู้ลงทะเบียนจากไฟล์ CSV"
+                >
+                  <Upload className="w-4 h-4 text-blue-600" />
+                  <span>นำเข้ารายชื่อ CSV</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleIssueAll}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+                >
+                  <Award className="w-4 h-4" />
+                  <span>ออกเกียรติบัตรทุกคนที่เช็คชื่อแล้ว</span>
+                </button>
+              </div>
             </div>
 
             <form onSubmit={handleQuickCheckIn} className="flex flex-col sm:flex-row gap-2 max-w-lg">
@@ -1488,6 +1695,255 @@ export default function EventManagePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* CSV Import Modal */}
+      {showCsvModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-blue-600" />
+                  <span>นำเข้ารายชื่อผู้ลงทะเบียนจากไฟล์ CSV</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  นำเข้ารายชื่อที่รวบรวมจากภายนอก พร้อมตรวจสอบข้อมูลตัวอย่างก่อนบันทึก
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCsvModal(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Success Message Banner */}
+            {csvSuccessResult ? (
+              <div className="space-y-4 py-4">
+                <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-base">นำเข้าข้อมูลสำเร็จเรียบร้อย</h4>
+                  <p className="text-xs text-slate-600">
+                    นำเข้ารายชื่อสำเร็จ <span className="font-bold text-emerald-700">{csvSuccessResult.imported}</span> ท่าน
+                    {csvSuccessResult.skipped > 0 && (
+                      <span> (ข้ามรายการซ้ำหรือไม่สมบูรณ์ <span className="font-bold text-amber-700">{csvSuccessResult.skipped}</span> ท่าน)</span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCsvModal(false)}
+                    className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
+                  >
+                    ปิดหน้าต่าง
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {/* Step 1: Download Template */}
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>ไฟล์แม่แบบสำหรับการนำเข้า (Template)</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      ดาวน์โหลดไฟล์ตัวอย่างที่มีคอลัมน์มาตรฐานครบถ้วนเพื่อนำไปกรอกข้อมูล
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDownloadCsvTemplate}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-blue-200 text-blue-700 font-bold text-xs shadow-2xs transition active:scale-95 cursor-pointer shrink-0"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>ดาวน์โหลดแม่แบบ CSV</span>
+                  </button>
+                </div>
+
+                {/* Step 2: Attendance Status Setting */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-800">
+                    สถานะการเข้าร่วมเมื่อนำเข้า
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <label
+                      className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition ${
+                        csvInitialStatus === 'registered'
+                          ? 'border-blue-500 bg-blue-50/40 text-blue-900 ring-1 ring-blue-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="csvInitialStatus"
+                        value="registered"
+                        checked={csvInitialStatus === 'registered'}
+                        onChange={() => setCsvInitialStatus('registered')}
+                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <div className="text-xs font-bold">ลงทะเบียนแล้ว (รอเช็คชื่อ)</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          ผู้เข้าร่วมต้องมาเช็คชื่อหน้างาน หรือสแกน QR Code ก่อนรับเกียรติบัตร
+                        </div>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition ${
+                        csvInitialStatus === 'checked_in'
+                          ? 'border-emerald-500 bg-emerald-50/40 text-emerald-900 ring-1 ring-emerald-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="csvInitialStatus"
+                        value="checked_in"
+                        checked={csvInitialStatus === 'checked_in'}
+                        onChange={() => setCsvInitialStatus('checked_in')}
+                        className="mt-0.5 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <div className="text-xs font-bold">เช็คชื่อแล้วทันที (พร้อมออกเกียรติบัตร)</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          บันทึกสถานะว่าเข้าร่วมกิจกรรมแล้ว สามารถออกเกียรติบัตรได้ทันที
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Step 3: File Input */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-800">
+                    เลือกไฟล์ CSV สำหรับนำเข้า
+                  </label>
+                  <div
+                    onClick={() => csvFileInputRef.current?.click()}
+                    className="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/20 rounded-2xl p-6 text-center cursor-pointer transition"
+                  >
+                    <input
+                      type="file"
+                      ref={csvFileInputRef}
+                      onChange={handleCsvFileChange}
+                      accept=".csv,text/csv"
+                      className="hidden"
+                    />
+                    <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                    {csvFile ? (
+                      <div>
+                        <span className="text-xs font-bold text-slate-800">{csvFile.name}</span>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          ({(csvFile.size / 1024).toFixed(1)} KB) - คลิกเพื่อเปลี่ยนไฟล์
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="text-xs font-bold text-slate-700">
+                          คลิกเพื่อเลือกไฟล์ .CSV จากเครื่องคอมพิวเตอร์ของคุณ
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-1">
+                          รองรับไฟล์ CSV ที่เข้ารหัส UTF-8 และ UTF-8 with BOM จาก Microsoft Excel
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Error Banner */}
+                {csvError && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                    <span>{csvError}</span>
+                  </div>
+                )}
+
+                {/* Step 4: Preview Table */}
+                {csvParsedRows.length > 0 && (
+                  <div className="space-y-2 pt-1 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-bold text-slate-800">
+                        ตัวอย่างข้อมูลที่ตรวจพบ ({csvParsedRows.length} รายการ)
+                      </div>
+                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        พร้อมนำเข้า {csvParsedRows.length} รายชื่อ
+                      </span>
+                    </div>
+
+                    <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white">
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-slate-50 sticky top-0 border-b border-slate-200 text-slate-600 font-bold">
+                          <tr>
+                            <th className="py-2 px-3 w-10">ลำดับ</th>
+                            <th className="py-2 px-3">คำนำหน้า</th>
+                            <th className="py-2 px-3">ชื่อ - นามสกุล</th>
+                            <th className="py-2 px-3">ตำแหน่ง</th>
+                            <th className="py-2 px-3">หน่วยงาน/สังกัด</th>
+                            <th className="py-2 px-3">เบอร์โทร</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-slate-700">
+                          {csvParsedRows.slice(0, 10).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50/70">
+                              <td className="py-1.5 px-3 text-slate-400 font-mono">{idx + 1}</td>
+                              <td className="py-1.5 px-3 text-slate-500">{row.title_name || '-'}</td>
+                              <td className="py-1.5 px-3 font-semibold text-slate-900">{row.full_name}</td>
+                              <td className="py-1.5 px-3 text-slate-600">{row.position || '-'}</td>
+                              <td className="py-1.5 px-3 text-slate-600">{row.organization || '-'}</td>
+                              <td className="py-1.5 px-3 font-mono text-slate-600">{row.phone || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {csvParsedRows.length > 10 && (
+                      <div className="text-[11px] text-slate-400 text-center">
+                        แสดงตัวอย่าง 10 รายการแรก จากทั้งหมด {csvParsedRows.length} รายการ
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowCsvModal(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmImportCsv}
+                    disabled={importingCsv || csvParsedRows.length === 0}
+                    className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    {importingCsv ? (
+                      <span>กำลังนำเข้าข้อมูล...</span>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>ยืนยันนำเข้าข้อมูล {csvParsedRows.length > 0 ? `(${csvParsedRows.length} ท่าน)` : ''}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

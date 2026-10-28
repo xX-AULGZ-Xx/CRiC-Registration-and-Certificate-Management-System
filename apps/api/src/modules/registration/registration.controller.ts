@@ -329,4 +329,99 @@ router.delete('/attendees/:id', authenticate, async (req: AuthRequest, res: Resp
   }
 });
 
+// 8. AUTH: POST /api/v1/registration/events/:eventId/import-csv - Batch import attendees from CSV
+router.post('/events/:eventId/import-csv', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = BigInt(req.params.eventId);
+    const access = await checkEventAccess(eventId, req.user!);
+    if (!access) return res.status(404).json({ success: false, message: 'ไม่พบกิจกรรม' });
+    if (access === 'FORBIDDEN') return res.status(403).json({ success: false, message: 'ไม่มีสิทธิ์เข้าถึงกิจกรรมนี้' });
+
+    const { attendees, initial_status } = req.body;
+    if (!Array.isArray(attendees) || attendees.length === 0) {
+      return res.status(400).json({ success: false, message: 'ไม่พบข้อมูลรายชื่อที่ต้องการนำเข้า' });
+    }
+
+    const isCheckedIn = initial_status === 'checked_in';
+    const now = new Date();
+
+    // Fetch existing attendees to detect duplicates in this event
+    const existingAttendees = await prisma.attendee.findMany({
+      where: { event_id: eventId },
+      select: { full_name: true, phone: true, citizen_id: true },
+    });
+
+    const existingPhones = new Set(existingAttendees.map((a) => a.phone).filter(Boolean));
+    const existingCitizens = new Set(existingAttendees.map((a) => a.citizen_id).filter(Boolean));
+    const existingNames = new Set(existingAttendees.map((a) => a.full_name.trim().toLowerCase()));
+
+    const batchPhones = new Set<string>();
+    const batchCitizens = new Set<string>();
+    const batchNames = new Set<string>();
+
+    const validToInsert: any[] = [];
+    let skippedCount = 0;
+
+    for (const item of attendees) {
+      const rawName = item.full_name ? String(item.full_name).trim() : '';
+      if (!rawName) {
+        skippedCount++;
+        continue;
+      }
+
+      const cleanPhone = item.phone ? String(item.phone).trim().replace(/[-\s]/g, '') : null;
+      const cleanCitizen = item.citizen_id ? String(item.citizen_id).trim().replace(/[-\s]/g, '') : null;
+      const nameKey = rawName.toLowerCase();
+
+      // Check duplicates
+      const isDupPhone = cleanPhone && (existingPhones.has(cleanPhone) || batchPhones.has(cleanPhone));
+      const isDupCitizen = cleanCitizen && (existingCitizens.has(cleanCitizen) || batchCitizens.has(cleanCitizen));
+      const isDupName = (existingNames.has(nameKey) || batchNames.has(nameKey)) && !cleanPhone && !cleanCitizen;
+
+      if (isDupPhone || isDupCitizen || isDupName) {
+        skippedCount++;
+        continue;
+      }
+
+      if (cleanPhone) batchPhones.add(cleanPhone);
+      if (cleanCitizen) batchCitizens.add(cleanCitizen);
+      batchNames.add(nameKey);
+
+      validToInsert.push({
+        event_id: eventId,
+        title_name: item.title_name ? String(item.title_name).trim() : null,
+        full_name: rawName,
+        position: item.position ? String(item.position).trim() : null,
+        organization: item.organization ? String(item.organization).trim() : null,
+        phone: cleanPhone,
+        email: item.email ? String(item.email).trim() : null,
+        citizen_id: cleanCitizen,
+        status: isCheckedIn ? 'checked_in' : 'registered',
+        checked_in_at: isCheckedIn ? now : null,
+        is_certificate_eligible: isCheckedIn,
+        custom_data: item.custom_data || {},
+      });
+    }
+
+    if (validToInsert.length > 0) {
+      await prisma.attendee.createMany({
+        data: validToInsert,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: `นำเข้ารายชื่อสำเร็จ ${validToInsert.length} ท่าน (ข้ามรายการซ้ำ/ไม่สมบูรณ์ ${skippedCount} ท่าน)`,
+      data: {
+        imported_count: validToInsert.length,
+        skipped_count: skippedCount,
+        total_rows: attendees.length,
+      },
+    });
+  } catch (error: any) {
+    console.error('Import CSV error:', error);
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล CSV', error: error.message });
+  }
+});
+
 export default router;
