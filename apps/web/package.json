@@ -9,10 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/jszip": "^3.4.0",
     "@types/qrcode.react": "^3.0.0",
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
+    "jszip": "^3.10.2",
     "lucide-react": "^0.378.0",
     "next": "^16.4.2",
     "qrcode.react": "^4.2.0",

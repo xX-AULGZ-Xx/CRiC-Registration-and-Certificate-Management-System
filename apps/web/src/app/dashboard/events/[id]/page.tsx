@@ -28,7 +28,11 @@ import {
   Printer,
   Sliders,
   Pencil,
+  Loader2,
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import JSZip from 'jszip';
 import CertificateRenderer, {
   BlockStyle,
   CertificateConfig,
@@ -93,6 +97,17 @@ export default function EventManagePage() {
   const [csvError, setCsvError] = useState<string | null>(null);
   const [csvSuccessResult, setCsvSuccessResult] = useState<{ imported: number; skipped: number; total: number } | null>(null);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Batch Certificate Export State
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'single_pdf' | 'zip_individual'>('single_pdf');
+  const [exportScope, setExportScope] = useState<'checked_in_all' | 'issued_only'>('checked_in_all');
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState<{ current: number; total: number; percent: number; name: string } | null>(null);
+  const [exportStatusText, setExportStatusText] = useState<string>('');
+  const [currentExportAttendee, setCurrentExportAttendee] = useState<any>(null);
+  const isExportCancelledRef = useRef(false);
+  const hiddenCertExportRef = useRef<HTMLDivElement>(null);
 
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return '';
@@ -586,6 +601,168 @@ export default function EventManagePage() {
       setCsvError(err.message || 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
     } finally {
       setImportingCsv(false);
+    }
+  };
+
+  const handleCancelBatchExport = () => {
+    isExportCancelledRef.current = true;
+    setExportStatusText('กำลังยกเลิกการส่งออกข้อมูล...');
+  };
+
+  const handleStartBatchExport = async () => {
+    isExportCancelledRef.current = false;
+    setIsExporting(true);
+    setExportStatusText('กำลังเตรียมข้อมูลผู้เข้าร่วม...');
+
+    try {
+      let currentAttendeesList = [...attendees];
+
+      // 1. If scope is checked_in_all, check if anyone needs a certificate issued first
+      if (exportScope === 'checked_in_all') {
+        const checkedInWithoutCert = currentAttendeesList.filter((a) => a.status === 'checked_in' && !a.certificate_no);
+        if (checkedInWithoutCert.length > 0) {
+          setExportStatusText(`กำลังออกเลขที่เกียรติบัตรให้อัตโนมัติ (${checkedInWithoutCert.length} ท่าน)...`);
+          const issueRes = await fetchApi(`/api/v1/certificates/events/${eventId}/issue-all`, {
+            method: 'POST',
+            body: JSON.stringify({ only_checked_in: true }),
+          });
+          if (issueRes.success) {
+            const attRes = await fetchApi(`/api/v1/registration/events/${eventId}/attendees`);
+            if (attRes.success) {
+              currentAttendeesList = attRes.data;
+              setAttendees(attRes.data);
+            }
+          }
+        }
+      }
+
+      // Filter target attendees based on scope
+      let targets = [];
+      if (exportScope === 'checked_in_all') {
+        targets = currentAttendeesList.filter((a) => a.status === 'checked_in' && a.certificate_no);
+      } else {
+        targets = currentAttendeesList.filter((a) => !!a.certificate_no);
+      }
+
+      if (targets.length === 0) {
+        alert('ไม่พบผู้เข้าร่วมที่ตรงตามเงื่อนไขที่เลือก (ยังไม่มีผู้เข้าร่วมที่มีเลขที่เกียรติบัตร)');
+        setIsExporting(false);
+        return;
+      }
+
+      const total = targets.length;
+      let combinedPdf: any = null;
+      let zip: any = null;
+
+      if (exportFormat === 'single_pdf') {
+        combinedPdf = new jsPDF({
+          orientation: 'landscape',
+          unit: 'mm',
+          format: 'a4',
+          compress: true,
+        });
+      } else {
+        zip = new JSZip();
+      }
+
+      for (let i = 0; i < total; i++) {
+        if (isExportCancelledRef.current) {
+          setExportStatusText('ยกเลิกการส่งออกข้อมูลเรียบร้อยแล้ว');
+          break;
+        }
+
+        const att = targets[i];
+        const displayName = `${att.title_name || ''}${att.full_name}`.trim();
+        const percent = Math.round(((i + 1) / total) * 100);
+
+        setExportProgress({
+          current: i + 1,
+          total,
+          percent,
+          name: displayName,
+        });
+        setExportStatusText(`กำลังสร้างเกียรติบัตรคนที่ ${i + 1} จาก ${total} (${percent}%)...`);
+
+        setCurrentExportAttendee(att);
+
+        // Allow DOM to update and images/fonts to paint
+        await new Promise((r) => setTimeout(r, 70));
+
+        if (!hiddenCertExportRef.current) continue;
+
+        const canvas = await html2canvas(hiddenCertExportRef.current, {
+          scale: 2.5,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          ignoreElements: (el) => el.classList.contains('designer-handle') || el.classList.contains('designer-outline'),
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+        if (exportFormat === 'single_pdf') {
+          if (i > 0) {
+            combinedPdf.addPage([297, 210], 'landscape');
+          }
+          combinedPdf.addImage(imgData, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
+        } else {
+          const individualPdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4',
+            compress: true,
+          });
+          individualPdf.addImage(imgData, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
+          const pdfBlob = individualPdf.output('blob');
+
+          const safeName = displayName.replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_-]/g, '_');
+          const safeCertNo = (att.certificate_no || '').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_-]/g, '_');
+          const seq = String(i + 1).padStart(3, '0');
+          const fileName = `${seq}_${safeName}_${safeCertNo}.pdf`;
+          zip.file(fileName, pdfBlob);
+        }
+      }
+
+      if (isExportCancelledRef.current) {
+        setIsExporting(false);
+        setCurrentExportAttendee(null);
+        return;
+      }
+
+      const safeEventTitle = (event?.title || 'event').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_-]/g, '_');
+
+      if (exportFormat === 'single_pdf') {
+        setExportStatusText('กำลังบันทึกไฟล์ PDF รวม...');
+        combinedPdf.save(`เกียรติบัตรทั้งหมด_${safeEventTitle}.pdf`);
+      } else {
+        setExportStatusText('กำลังบีบอัดไฟล์ ZIP...');
+        const zipBlob = await zip.generateAsync({ type: 'blob' }, (metadata: any) => {
+          setExportStatusText(`กำลังบีบอัดไฟล์ ZIP (${metadata.percent.toFixed(0)}%)...`);
+        });
+
+        const downloadUrl = URL.createObjectURL(zipBlob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', `เกียรติบัตรทั้งหมด_${safeEventTitle}.zip`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
+      }
+
+      setExportStatusText('ดาวน์โหลดเกียรติบัตรเสร็จสมบูรณ์เรียบร้อยแล้ว');
+      setTimeout(() => {
+        setIsExporting(false);
+        setExportProgress(null);
+        setCurrentExportAttendee(null);
+        setShowExportModal(false);
+      }, 1200);
+    } catch (err: any) {
+      console.error('Batch export error:', err);
+      alert('เกิดข้อผิดพลาดในการสร้างไฟล์เกียรติบัตร: ' + (err.message || ''));
+      setIsExporting(false);
+      setExportProgress(null);
+      setCurrentExportAttendee(null);
     }
   };
 
@@ -1124,18 +1301,34 @@ export default function EventManagePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Canvas Preview (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200">
               <div className="text-xs text-slate-600">
                 <span className="font-bold text-blue-700">คำแนะนำ:</span> คลิกที่บล็อกข้อความบนเกียรติบัตรเพื่อปรับขนาด สี หรือลากเพื่อจัดตำแหน่ง (Drag & Drop)
               </div>
-              <button
-                type="button"
-                onClick={handleSaveCertConfig}
-                disabled={savingCert}
-                className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-md transition cursor-pointer disabled:opacity-50"
-              >
-                {savingCert ? 'กำลังบันทึก...' : 'บันทึกรูปแบบเกียรติบัตร'}
-              </button>
+              <div className="flex items-center gap-2 flex-wrap shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsExporting(false);
+                    setExportProgress(null);
+                    setShowExportModal(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer"
+                  title="Export เกียรติบัตรทั้งหมดในครั้งเดียว"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export เกียรติบัตรทั้งหมด</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveCertConfig}
+                  disabled={savingCert}
+                  className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-md transition cursor-pointer disabled:opacity-50"
+                >
+                  {savingCert ? 'กำลังบันทึก...' : 'บันทึกรูปแบบเกียรติบัตร'}
+                </button>
+              </div>
             </div>
 
             <CertificateRenderer
@@ -1947,6 +2140,253 @@ export default function EventManagePage() {
           </div>
         </div>
       )}
+
+      {/* Batch Certificate Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Download className="w-5 h-5 text-amber-600" />
+                  <span>Export เกียรติบัตรทั้งหมดในครั้งเดียว</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  สร้างและดาวน์โหลดเกียรติบัตรของผู้เข้าร่วมกิจกรรมพร้อมกันตามรูปแบบที่กำหนด
+                </p>
+              </div>
+              {!isExporting && (
+                <button
+                  type="button"
+                  onClick={() => setShowExportModal(false)}
+                  className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {isExporting ? (
+              /* Export In-Progress View */
+              <div className="space-y-6 py-4">
+                <div className="text-center space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200 shadow-xs">
+                    <Loader2 className="w-7 h-7 animate-spin" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-base">กำลังสร้างไฟล์เกียรติบัตร...</h4>
+                  <p className="text-xs text-slate-600">
+                    {exportStatusText}
+                  </p>
+                </div>
+
+                {exportProgress && (
+                  <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-slate-700">ความคืบหน้า</span>
+                      <span className="text-amber-700">
+                        {exportProgress.current} / {exportProgress.total} ใบ ({exportProgress.percent}%)
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full transition-all duration-150"
+                        style={{ width: `${exportProgress.percent}%` }}
+                      />
+                    </div>
+
+                    <div className="text-[11px] text-slate-500 text-center truncate pt-1">
+                      กำลังประมวลผล: <span className="font-semibold text-slate-800">{exportProgress.name}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelBatchExport}
+                    className="px-5 py-2.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-700 font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer"
+                  >
+                    ยกเลิกการส่งออก
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Settings & Configuration View */
+              <div className="space-y-5">
+                {/* Format selection */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-800">
+                    1. รูปแบบไฟล์ที่ต้องการส่งออก
+                  </label>
+                  <div className="space-y-2.5">
+                    <label
+                      className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition ${
+                        exportFormat === 'single_pdf'
+                          ? 'border-amber-500 bg-amber-50/40 text-amber-950 ring-1 ring-amber-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="exportFormat"
+                        value="single_pdf"
+                        checked={exportFormat === 'single_pdf'}
+                        onChange={() => setExportFormat('single_pdf')}
+                        className="mt-0.5 text-amber-600 focus:ring-amber-500"
+                      />
+                      <div>
+                        <div className="text-xs font-bold">รวมเป็นไฟล์ PDF เดียวทั้งหมด (All-in-One PDF)</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          จัดเรียง 1 คนต่อ 1 หน้า A4 แนวนอน ความคมชัดสูง เหมาะสำหรับส่งโรงพิมพ์หรือสั่งพิมพ์ออกเครื่องพิมพ์รวดเดียว
+                        </div>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition ${
+                        exportFormat === 'zip_individual'
+                          ? 'border-amber-500 bg-amber-50/40 text-amber-950 ring-1 ring-amber-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="exportFormat"
+                        value="zip_individual"
+                        checked={exportFormat === 'zip_individual'}
+                        onChange={() => setExportFormat('zip_individual')}
+                        className="mt-0.5 text-amber-600 focus:ring-amber-500"
+                      />
+                      <div>
+                        <div className="text-xs font-bold">บีบอัดเป็นไฟล์ ZIP แยกรายบุคคล (ZIP Archive)</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          บรรจุไฟล์ PDF แยกรายบุคคล ตั้งชื่อไฟล์เป็น [ลำดับ]_[ชื่อ-นามสกุล]_[เลขที่].pdf สะดวกสำหรับการส่งต่อรายคน
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Target Scope selection */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-800">
+                    2. กลุ่มเป้าหมายผู้เข้าร่วมที่ต้องการออกเกียรติบัตร
+                  </label>
+                  <div className="space-y-2.5">
+                    <label
+                      className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition ${
+                        exportScope === 'checked_in_all'
+                          ? 'border-blue-500 bg-blue-50/40 text-blue-950 ring-1 ring-blue-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="exportScope"
+                        value="checked_in_all"
+                        checked={exportScope === 'checked_in_all'}
+                        onChange={() => setExportScope('checked_in_all')}
+                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <div className="text-xs font-bold">
+                          ผู้เข้าร่วมที่เช็คชื่อแล้วทั้งหมด ({attendees.filter((a) => a.status === 'checked_in').length} ท่าน)
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          หากใครยังไม่มีเลขที่เกียรติบัตร ระบบจะดำเนินการออกเลขที่ให้อัตโนมัติก่อนเริ่มสร้างไฟล์
+                        </div>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition ${
+                        exportScope === 'issued_only'
+                          ? 'border-blue-500 bg-blue-50/40 text-blue-950 ring-1 ring-blue-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="exportScope"
+                        value="issued_only"
+                        checked={exportScope === 'issued_only'}
+                        onChange={() => setExportScope('issued_only')}
+                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <div className="text-xs font-bold">
+                          เฉพาะผู้ที่มีเลขที่เกียรติบัตรแล้ว ({attendees.filter((a) => a.certificate_no).length} ท่าน)
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          ออกเฉพาะผู้ที่มีการออกเลขที่เกียรติบัตรไว้แล้วเท่านั้น
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
+                  <span className="font-bold text-slate-800">ข้อควรทราบ:</span> ระบบจะเรนเดอร์ภาพเกียรติบัตรตามรูปแบบฟอนต์ ขนาด สี และ QR Code ที่จัดไว้ใน Certificate Designer ความละเอียดสูง หากมีจำนวนผู้เข้าร่วมจำนวนมาก กรุณารอจนกว่าการดาวน์โหลดจะเสร็จสิ้น
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowExportModal(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleStartBatchExport}
+                    className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>เริ่ม Export เกียรติบัตร</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Hidden off-screen Certificate Renderer for batch export */}
+      <div
+        style={{
+          position: 'fixed',
+          left: '-9999px',
+          top: '-9999px',
+          width: '1200px',
+          zIndex: -100,
+          pointerEvents: 'none',
+          opacity: 0.99,
+        }}
+      >
+        {currentExportAttendee && (
+          <div ref={hiddenCertExportRef} style={{ width: '1200px' }}>
+            <CertificateRenderer
+              attendee={{
+                id: currentExportAttendee.id,
+                full_name: currentExportAttendee.full_name,
+                title_name: currentExportAttendee.title_name,
+                position: currentExportAttendee.position,
+                organization: currentExportAttendee.organization,
+                certificate_no: currentExportAttendee.certificate_no,
+                event_title: event?.title,
+                event_id: eventId,
+              }}
+              config={certConfig}
+              showActions={false}
+              isEditable={false}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
