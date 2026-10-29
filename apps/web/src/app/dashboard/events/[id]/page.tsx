@@ -2566,22 +2566,31 @@ export default function EventManagePage() {
 
             {/* QR Code Container Card */}
             <div className="p-4 sm:p-5 bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col items-center justify-center shadow-inner">
-              <div
-                ref={qrCanvasContainerRef}
-                className="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-center max-w-[240px] w-full aspect-square"
-              >
+              <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-center w-[230px] h-[230px] shrink-0 overflow-hidden">
                 <QRCodeCanvas
                   value={currentPrUrl}
-                  size={768}
+                  size={200}
                   level="H"
                   includeMargin={true}
-                  className="w-full h-full object-contain"
+                  style={{ width: '200px', height: '200px' }}
                 />
               </div>
               <div className="mt-3 text-center w-full px-2">
                 <span className="font-mono text-[11px] text-slate-500 break-all select-all px-2.5 py-1 rounded-lg bg-white border border-slate-200/70 inline-block max-w-full truncate">
                   {currentPrUrl}
                 </span>
+              </div>
+            </div>
+
+            {/* Hidden High-Resolution Canvas for 1024x1024 PNG download */}
+            <div style={{ display: 'none' }}>
+              <div ref={qrCanvasContainerRef}>
+                <QRCodeCanvas
+                  value={currentPrUrl}
+                  size={1024}
+                  level="H"
+                  includeMargin={true}
+                />
               </div>
             </div>
 
