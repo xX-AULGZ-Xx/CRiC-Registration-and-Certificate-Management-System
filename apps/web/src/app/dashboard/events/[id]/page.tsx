@@ -29,7 +29,9 @@ import {
   Sliders,
   Pencil,
   Loader2,
+  X,
 } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import JSZip from 'jszip';
@@ -108,6 +110,12 @@ export default function EventManagePage() {
   const [currentExportAttendee, setCurrentExportAttendee] = useState<any>(null);
   const isExportCancelledRef = useRef(false);
   const hiddenCertExportRef = useRef<HTMLDivElement>(null);
+
+  // PR / QR Code Modal State
+  const [showPrModal, setShowPrModal] = useState(false);
+  const [prTab, setPrTab] = useState<'registration' | 'survey' | 'certificate'>('registration');
+  const [copiedPrType, setCopiedPrType] = useState<string | null>(null);
+  const qrCanvasContainerRef = useRef<HTMLDivElement>(null);
 
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return '';
@@ -801,6 +809,43 @@ export default function EventManagePage() {
     alert('คัดลอกลิงก์เรียบร้อยแล้ว');
   };
 
+  const openPrModal = (initialTab?: 'registration' | 'survey' | 'certificate') => {
+    if (portalMode === 'evaluation') {
+      setPrTab(initialTab || 'survey');
+    } else {
+      setPrTab(initialTab || 'registration');
+    }
+    setShowPrModal(true);
+    setCopiedPrType(null);
+  };
+
+  const handleDownloadQrCode = () => {
+    if (!qrCanvasContainerRef.current) return;
+    const canvas = qrCanvasContainerRef.current.querySelector('canvas');
+    if (!canvas) return;
+    const pngUrl = canvas.toDataURL('image/png');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = pngUrl;
+    const prefixMap: Record<string, string> = {
+      registration: 'ลงทะเบียน',
+      survey: 'แบบประเมิน',
+      certificate: 'ตรวจสอบเกียรติบัตร',
+    };
+    const cleanTitle = (event?.title || eventId).replace(/[\\/:*?"<>|]/g, '_');
+    downloadLink.download = `QRCode_${prefixMap[prTab] || 'code'}_${cleanTitle}.png`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+
+  const handleCopyPrLink = (url: string, type: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedPrType(type);
+    setTimeout(() => {
+      setCopiedPrType((prev) => (prev === type ? null : prev));
+    }, 2500);
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
@@ -834,6 +879,28 @@ export default function EventManagePage() {
   const appOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const publicRegUrl = `${appOrigin}/events/${eventId}`;
   const publicSurveyUrl = `${appOrigin}/surveys/${eventId}`;
+  const publicCertUrl = `${appOrigin}/certificates/search?q=${encodeURIComponent(event.title || '')}`;
+
+  const currentPrUrl =
+    prTab === 'registration'
+      ? publicRegUrl
+      : prTab === 'survey'
+      ? publicSurveyUrl
+      : publicCertUrl;
+
+  const currentPrTitle =
+    prTab === 'registration'
+      ? 'QR Code ลงทะเบียนเข้าร่วม'
+      : prTab === 'survey'
+      ? 'QR Code แบบประเมินความพึงพอใจ'
+      : 'QR Code ตรวจสอบเกียรติบัตร';
+
+  const currentCopyButtonText =
+    prTab === 'registration'
+      ? 'คัดลอกลิงก์รับสมัคร'
+      : prTab === 'survey'
+      ? 'คัดลอกลิงก์แบบประเมิน'
+      : 'คัดลอกลิงก์ตรวจสอบเกียรติบัตร';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -864,6 +931,15 @@ export default function EventManagePage() {
 
         {/* Status Toggle & Public Link */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openPrModal()}
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs shadow-xs transition cursor-pointer"
+          >
+            <QrCode className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+            <span>QR Code ประชาสัมพันธ์</span>
+          </button>
+
           {portalMode !== 'evaluation' && (
             <Link
               href={`/events/${eventId}`}
@@ -959,40 +1035,98 @@ export default function EventManagePage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Quick Share Links Card */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 space-y-6 shadow-sm">
-              <h2 className="text-base font-bold text-slate-900">
-                ลิงก์และ QR Code สำหรับประชาสัมพันธ์
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    ลิงก์และ QR Code สำหรับประชาสัมพันธ์
+                  </h2>
+                  <p className="text-slate-400 text-xs">ลิงก์และรหัส QR Code สำหรับเผยแพร่ให้ผู้เข้าร่วมกิจกรรม</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openPrModal()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold text-xs shadow-2xs transition cursor-pointer self-start sm:self-auto border border-emerald-200/60"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>ดู QR Code และลิงก์ประชาสัมพันธ์</span>
+                </button>
+              </div>
 
               <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
-                  <div className="text-xs font-bold text-blue-900 flex items-center justify-between">
-                    <span>ลิงก์ลงทะเบียนเข้าร่วมกิจกรรม (Public Registration)</span>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(publicRegUrl)}
-                      className="inline-flex items-center gap-1 text-blue-700 hover:underline cursor-pointer"
-                    >
-                      <Copy className="w-3.5 h-3.5" /> คัดลอก
-                    </button>
+                {portalMode !== 'evaluation' && (
+                  <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
+                    <div className="text-xs font-bold text-blue-900 flex flex-wrap items-center justify-between gap-2">
+                      <span>ลิงก์ลงทะเบียนเข้าร่วมกิจกรรม (Public Registration)</span>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => openPrModal('registration')}
+                          className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer"
+                        >
+                          <QrCode className="w-3.5 h-3.5" /> แสดง QR Code
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(publicRegUrl)}
+                          className="inline-flex items-center gap-1 text-blue-700 hover:underline font-semibold cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" /> คัดลอก
+                        </button>
+                      </div>
+                    </div>
+                    <div className="font-mono text-xs text-blue-800 break-all select-all">
+                      {publicRegUrl}
+                    </div>
                   </div>
-                  <div className="font-mono text-xs text-blue-800 break-all select-all">
-                    {publicRegUrl}
-                  </div>
-                </div>
+                )}
 
                 <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-2">
-                  <div className="text-xs font-bold text-indigo-900 flex items-center justify-between">
+                  <div className="text-xs font-bold text-indigo-900 flex flex-wrap items-center justify-between gap-2">
                     <span>ลิงก์แบบประเมินความพึงพอใจ (Evaluation Survey)</span>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(publicSurveyUrl)}
-                      className="inline-flex items-center gap-1 text-indigo-700 hover:underline cursor-pointer"
-                    >
-                      <Copy className="w-3.5 h-3.5" /> คัดลอก
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openPrModal('survey')}
+                        className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer"
+                      >
+                        <QrCode className="w-3.5 h-3.5" /> แสดง QR Code
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(publicSurveyUrl)}
+                        className="inline-flex items-center gap-1 text-indigo-700 hover:underline font-semibold cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5" /> คัดลอก
+                      </button>
+                    </div>
                   </div>
                   <div className="font-mono text-xs text-indigo-800 break-all select-all">
                     {publicSurveyUrl}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-100 space-y-2">
+                  <div className="text-xs font-bold text-amber-900 flex flex-wrap items-center justify-between gap-2">
+                    <span>ลิงก์ค้นหาและตรวจสอบเกียรติบัตร (Certificate Verification)</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openPrModal('certificate')}
+                        className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer"
+                      >
+                        <QrCode className="w-3.5 h-3.5" /> แสดง QR Code
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(publicCertUrl)}
+                        className="inline-flex items-center gap-1 text-amber-800 hover:underline font-semibold cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5" /> คัดลอก
+                      </button>
+                    </div>
+                  </div>
+                  <div className="font-mono text-xs text-amber-800 break-all select-all">
+                    {publicCertUrl}
                   </div>
                 </div>
               </div>
@@ -2351,6 +2485,148 @@ export default function EventManagePage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* PR / QR Code Modal */}
+      {showPrModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 relative shadow-2xl border border-slate-100 space-y-5 my-8">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowPrModal(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 rounded-full p-1.5 hover:bg-slate-100 transition cursor-pointer"
+              title="ปิดหน้าต่าง"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Top Icon */}
+            <div className="flex flex-col items-center text-center pt-1">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 shadow-xs border border-emerald-100/60">
+                <QrCode className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">
+                {currentPrTitle}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1.5 max-w-sm line-clamp-2 leading-relaxed">
+                {event?.title}
+              </p>
+            </div>
+
+            {/* Segmented Tab Switcher (Registration / Survey / Certificate) */}
+            <div className="flex items-center p-1 bg-slate-100 rounded-xl gap-1">
+              {portalMode !== 'evaluation' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrTab('registration');
+                    setCopiedPrType(null);
+                  }}
+                  className={`flex-1 py-1.5 px-2 text-xs font-bold rounded-lg transition cursor-pointer text-center ${
+                    prTab === 'registration'
+                      ? 'bg-white text-emerald-800 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  ลงทะเบียน
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setPrTab('survey');
+                  setCopiedPrType(null);
+                }}
+                className={`flex-1 py-1.5 px-2 text-xs font-bold rounded-lg transition cursor-pointer text-center ${
+                  prTab === 'survey'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                แบบประเมิน
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPrTab('certificate');
+                  setCopiedPrType(null);
+                }}
+                className={`flex-1 py-1.5 px-2 text-xs font-bold rounded-lg transition cursor-pointer text-center ${
+                  prTab === 'certificate'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                ตรวจเกียรติบัตร
+              </button>
+            </div>
+
+            {/* QR Code Container Card */}
+            <div className="p-4 sm:p-5 bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col items-center justify-center shadow-inner">
+              <div
+                ref={qrCanvasContainerRef}
+                className="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-center max-w-[240px] w-full aspect-square"
+              >
+                <QRCodeCanvas
+                  value={currentPrUrl}
+                  size={768}
+                  level="H"
+                  includeMargin={true}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="mt-3 text-center w-full px-2">
+                <span className="font-mono text-[11px] text-slate-500 break-all select-all px-2.5 py-1 rounded-lg bg-white border border-slate-200/70 inline-block max-w-full truncate">
+                  {currentPrUrl}
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2.5 pt-1">
+              {/* Button 1: Download PNG */}
+              <button
+                type="button"
+                onClick={handleDownloadQrCode}
+                className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4 shrink-0" />
+                <span>ดาวน์โหลดรูปภาพ QR Code (PNG)</span>
+              </button>
+
+              {/* Button 2: Copy Link for current tab */}
+              <button
+                type="button"
+                onClick={() => handleCopyPrLink(currentPrUrl, prTab)}
+                className="w-full py-3 px-4 rounded-xl bg-emerald-800 hover:bg-emerald-900 active:bg-emerald-950 text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {copiedPrType === prTab ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-300 shrink-0" />
+                    <span>คัดลอกลิงก์สำเร็จแล้ว</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 shrink-0" />
+                    <span>{currentCopyButtonText}</span>
+                  </>
+                )}
+              </button>
+
+              {/* Button 3: Direct link to verify / preview */}
+              <a
+                href={currentPrUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <span>เปิดดูหน้าเว็บในแท็บใหม่</span>
+              </a>
+            </div>
           </div>
         </div>
       )}
