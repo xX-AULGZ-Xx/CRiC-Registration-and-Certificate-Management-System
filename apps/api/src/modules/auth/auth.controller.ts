@@ -325,14 +325,31 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
 // PUT /api/v1/auth/profile
 router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const { full_name, email, position, organization, password } = req.body;
+    const { full_name, email, position, organization, password, signature_img } = req.body;
 
     const dataToUpdate: any = {};
-    if (full_name) dataToUpdate.full_name = full_name.trim();
-    if (email !== undefined) dataToUpdate.email = email ? email.trim() : null;
-    if (position !== undefined) dataToUpdate.position = position;
-    if (organization !== undefined) dataToUpdate.organization = organization;
-    if (password && password.trim().length >= 6) {
+    if (full_name !== undefined) {
+      if (!full_name || !full_name.trim()) {
+        return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อ-นามสกุล' });
+      }
+      dataToUpdate.full_name = full_name.trim();
+    }
+    if (email !== undefined) {
+      dataToUpdate.email = email && email.trim() ? email.trim() : null;
+    }
+    if (position !== undefined) {
+      dataToUpdate.position = position ? position.trim() : null;
+    }
+    if (organization !== undefined) {
+      dataToUpdate.organization = organization ? organization.trim() : null;
+    }
+    if (signature_img !== undefined) {
+      dataToUpdate.signature_img = signature_img || null;
+    }
+    if (password && password.trim()) {
+      if (password.trim().length < 6) {
+        return res.status(400).json({ success: false, message: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร' });
+      }
       dataToUpdate.password_hash = await bcrypt.hash(password.trim(), 10);
     }
 

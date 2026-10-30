@@ -15,13 +15,16 @@ import {
   ChevronDown,
   ClipboardList,
   Star,
+  UserCheck,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
+import ProfileEditModal from '@/components/profile/ProfileEditModal';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [brandLogo, setBrandLogo] = useState<string>('');
   const [brandNameTh, setBrandNameTh] = useState<string>('ระบบลงทะเบียนและออกเกียรติบัตร');
@@ -141,8 +144,27 @@ export default function Navbar() {
     };
 
     window.addEventListener('system-brand-updated', handleBrandUpdate);
+
+    const handleUserUpdate = (e: any) => {
+      if (e.detail) {
+        setCurrentUser(e.detail);
+      } else {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          try {
+            setCurrentUser(JSON.parse(userStr));
+          } catch {
+            // ignore
+          }
+        }
+      }
+    };
+
+    window.addEventListener('user-updated', handleUserUpdate);
+
     return () => {
       window.removeEventListener('system-brand-updated', handleBrandUpdate);
+      window.removeEventListener('user-updated', handleUserUpdate);
     };
   }, []);
 
@@ -371,6 +393,18 @@ export default function Navbar() {
                         <span>แดชบอร์ด</span>
                       </Link>
 
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          setProfileModalOpen(true);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/80 transition active:scale-[0.98] cursor-pointer"
+                      >
+                        <User className="w-4 h-4 text-blue-600" />
+                        <span>ข้อมูลส่วนตัว / โปรไฟล์</span>
+                      </button>
+
                       {currentUser.role === 'ADMIN' && (
                         <Link
                           href="/dashboard/admin/settings"
@@ -415,6 +449,13 @@ export default function Navbar() {
           </nav>
         </div>
       </div>
+
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        onUserUpdated={(updated) => setCurrentUser(updated)}
+      />
     </header>
   );
 }
