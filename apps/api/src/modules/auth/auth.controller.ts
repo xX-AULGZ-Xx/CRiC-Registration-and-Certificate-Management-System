@@ -169,6 +169,12 @@ router.post('/google', async (req: Request, res: Response) => {
       const randomSecret = Math.random().toString(36).slice(-8) + Date.now().toString(36);
       const randomPasswordHash = await bcrypt.hash(randomSecret, 10);
 
+      // Get system default organization name
+      const orgSetting = await prisma.systemSetting.findUnique({
+        where: { key: 'org_name_th' },
+      });
+      const defaultOrg = orgSetting?.value?.trim() || 'วิทยาลัยการอาชีพเวียงเชียงรุ้ง';
+
       user = await prisma.user.create({
         data: {
           username: usernameCandidate,
@@ -176,7 +182,7 @@ router.post('/google', async (req: Request, res: Response) => {
           email: normalizedEmail,
           full_name: name || normalizedEmail.split('@')[0],
           role: 'ORGANIZER',
-          organization: 'วิทยาลัยอาชีวศึกษาเชียงราย',
+          organization: defaultOrg,
           position: 'ผู้จัดกิจกรรม',
           is_active: true,
         },
@@ -262,6 +268,12 @@ router.post('/register', async (req: Request, res: Response) => {
     const password_hash = await bcrypt.hash(password, 10);
     const assignedRole = userCount === 0 ? 'ADMIN' : (role === 'ADMIN' ? 'ADMIN' : 'ORGANIZER');
 
+    // Get system default organization name
+    const orgSetting = await prisma.systemSetting.findUnique({
+      where: { key: 'org_name_th' },
+    });
+    const defaultOrg = orgSetting?.value?.trim() || 'วิทยาลัยการอาชีพเวียงเชียงรุ้ง';
+
     const newUser = await prisma.user.create({
       data: {
         username: username.trim(),
@@ -269,8 +281,8 @@ router.post('/register', async (req: Request, res: Response) => {
         email: email ? email.trim() : null,
         full_name: full_name.trim(),
         role: assignedRole,
-        position: position || null,
-        organization: organization || 'วิทยาลัยอาชีวศึกษาเชียงราย',
+        position: position ? position.trim() : null,
+        organization: organization ? organization.trim() : defaultOrg,
       },
     });
 

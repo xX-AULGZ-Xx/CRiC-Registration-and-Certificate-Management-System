@@ -88,6 +88,7 @@ export default function AdminSettingsPage() {
   const [userSearch, setUserSearch] = useState('');
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [syncingOrg, setSyncingOrg] = useState(false);
   const [userFormData, setUserFormData] = useState({
     username: '',
     password: '',
@@ -95,7 +96,7 @@ export default function AdminSettingsPage() {
     email: '',
     role: 'ORGANIZER',
     position: '',
-    organization: 'วิทยาลัยอาชีวศึกษาเชียงราย',
+    organization: 'วิทยาลัยการอาชีพเวียงเชียงรุ้ง',
     is_active: true,
   });
 
@@ -336,6 +337,35 @@ export default function AdminSettingsPage() {
   };
 
   // --- USER MANAGEMENT HANDLERS ---
+  const handleSyncOrgToAllUsers = async () => {
+    const orgName = settings.org_name_th?.trim();
+    if (!orgName) {
+      showToast('error', 'กรุณาระบุชื่อองค์กร/สถาบันก่อนดำเนินการ');
+      return;
+    }
+
+    if (!confirm(`ต้องการซิงค์ชื่อสังกัด '${orgName}' ให้กับผู้ใช้งานทั้งหมดในระบบหรือไม่?`)) {
+      return;
+    }
+
+    setSyncingOrg(true);
+    try {
+      const res = await fetchApi('/api/v1/admin/sync-organization', {
+        method: 'POST',
+      });
+      if (res.success) {
+        showToast('success', res.message || 'ซิงค์ชื่อสังกัดสำเร็จ');
+        refreshUsers();
+      } else {
+        showToast('error', res.message || 'ไม่สามารถซิงค์ชื่อสังกัดได้');
+      }
+    } catch (err: any) {
+      showToast('error', err.message || 'เกิดข้อผิดพลาดในการซิงค์ชื่อสังกัด');
+    } finally {
+      setSyncingOrg(false);
+    }
+  };
+
   const openCreateUserModal = () => {
     setEditingUser(null);
     setUserFormData({
@@ -345,7 +375,7 @@ export default function AdminSettingsPage() {
       email: '',
       role: 'ORGANIZER',
       position: '',
-      organization: settings.org_name_th || 'วิทยาลัยอาชีวศึกษาเชียงราย',
+      organization: settings.org_name_th || 'วิทยาลัยการอาชีพเวียงเชียงรุ้ง',
       is_active: true,
     });
     setUserModalOpen(true);
@@ -840,15 +870,27 @@ export default function AdminSettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  ชื่อองค์กร / สถาบัน (ภาษาไทย) *
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    ชื่อองค์กร / สถาบัน (ภาษาไทย) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleSyncOrgToAllUsers}
+                    disabled={syncingOrg}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer disabled:opacity-50"
+                    title="อัปเดตชื่อสังกัดของผู้ใช้งานทุกคนในระบบให้เป็นชื่อสถาบันนี้"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${syncingOrg ? 'animate-spin' : ''}`} />
+                    <span>{syncingOrg ? 'กำลังซิงค์...' : 'ซิงค์ชื่อสังกัดให้ผู้ใช้งานทั้งหมด'}</span>
+                  </button>
+                </div>
                 <input
                   type="text"
                   required
                   value={settings.org_name_th || ''}
                   onChange={(e) => setSettings({ ...settings, org_name_th: e.target.value })}
-                  placeholder="เช่น วิทยาลัยอาชีวศึกษาเชียงราย"
+                  placeholder="เช่น วิทยาลัยการอาชีพเวียงเชียงรุ้ง"
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm font-medium"
                 />
               </div>
@@ -1778,14 +1820,27 @@ export default function AdminSettingsPage() {
               />
             </div>
 
-            <button
-              type="button"
-              onClick={openCreateUserModal}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-95 cursor-pointer w-full sm:w-auto shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>เพิ่มผู้ใช้งานใหม่</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleSyncOrgToAllUsers}
+                disabled={syncingOrg}
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50 w-full sm:w-auto shrink-0"
+                title="อัปเดตชื่อสังกัดของผู้ใช้งานทุกคนให้เป็นชื่อสถาบันปัจจุบันของระบบ"
+              >
+                <Building2 className={`w-4 h-4 text-slate-500 ${syncingOrg ? 'animate-spin' : ''}`} />
+                <span>{syncingOrg ? 'กำลังซิงค์...' : 'ซิงค์สังกัดให้ทุกคน'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={openCreateUserModal}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-95 cursor-pointer w-full sm:w-auto shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>เพิ่มผู้ใช้งานใหม่</span>
+              </button>
+            </div>
           </div>
 
           {/* Users Table */}

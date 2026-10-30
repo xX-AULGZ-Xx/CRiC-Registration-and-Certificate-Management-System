@@ -7,6 +7,7 @@ import {
   Mail,
   Briefcase,
   Building,
+  Building2,
   Key,
   Lock,
   Eye,
@@ -45,6 +46,7 @@ export default function ProfileEditModal({
   const [email, setEmail] = useState('');
   const [position, setPosition] = useState('');
   const [organization, setOrganization] = useState('');
+  const [systemOrgName, setSystemOrgName] = useState('');
   const [signatureImg, setSignatureImg] = useState<string | null>(null);
 
   // Password State
@@ -94,6 +96,7 @@ export default function ProfileEditModal({
 
         // 2. Fetch fresh user data from API
         const res = await fetchApi('/api/v1/auth/me');
+        let fetchedOrg = '';
         if (res.success && res.data) {
           const u = res.data;
           setUsername(u.username || '');
@@ -101,8 +104,23 @@ export default function ProfileEditModal({
           setFullName(u.full_name || '');
           setEmail(u.email || '');
           setPosition(u.position || '');
-          setOrganization(u.organization || '');
+          fetchedOrg = u.organization || '';
+          setOrganization(fetchedOrg);
           setSignatureImg(u.signature_img || null);
+        }
+
+        // 3. Load system institution name from public settings
+        try {
+          const sysRes = await fetchApi('/api/v1/system/public-settings');
+          if (sysRes.success && sysRes.data?.org_name_th) {
+            const orgNameTh = sysRes.data.org_name_th.trim();
+            setSystemOrgName(orgNameTh);
+            if (!fetchedOrg) {
+              setOrganization(orgNameTh);
+            }
+          }
+        } catch {
+          // ignore
         }
       } catch (err: any) {
         console.warn('Could not fetch fresh user profile:', err);
@@ -372,9 +390,22 @@ export default function ProfileEditModal({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  หน่วยงาน / สังกัด (Organization)
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    หน่วยงาน / สังกัด (Organization)
+                  </label>
+                  {systemOrgName && (
+                    <button
+                      type="button"
+                      onClick={() => setOrganization(systemOrgName)}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 hover:text-blue-800 hover:underline cursor-pointer"
+                      title="คลิกเพื่อนำชื่อสถาบันตามระบบมาใส่ในช่องนี้"
+                    >
+                      <Building2 className="w-3.5 h-3.5" />
+                      <span>ใช้ชื่อสถาบันตามระบบ</span>
+                    </button>
+                  )}
+                </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <Building className="w-4 h-4" />
@@ -383,7 +414,7 @@ export default function ProfileEditModal({
                     type="text"
                     value={organization}
                     onChange={(e) => setOrganization(e.target.value)}
-                    placeholder="เช่น วิทยาลัยอาชีวศึกษาเชียงราย"
+                    placeholder={systemOrgName || 'ระบุชื่อหน่วยงานหรือสถาบันการศึกษา'}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                 </div>

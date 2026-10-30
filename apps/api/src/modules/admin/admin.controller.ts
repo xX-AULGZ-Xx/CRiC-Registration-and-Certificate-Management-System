@@ -200,6 +200,32 @@ router.put('/settings', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// POST /api/v1/admin/sync-organization - Sync current system organization name to all active users
+router.post('/sync-organization', async (req: AuthRequest, res: Response) => {
+  try {
+    const orgSetting = await prisma.systemSetting.findUnique({
+      where: { key: 'org_name_th' },
+    });
+    const orgName = orgSetting?.value?.trim() || 'วิทยาลัยการอาชีพเวียงเชียงรุ้ง';
+
+    const result = await prisma.user.updateMany({
+      data: { organization: orgName },
+    });
+
+    return res.json({
+      success: true,
+      message: `ซิงค์ชื่อสังกัด '${orgName}' ให้กับผู้ใช้งานทั้งหมด ${result.count} บัญชีเรียบร้อยแล้ว`,
+      data: {
+        count: result.count,
+        organization: orgName,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error syncing organization to users:', error);
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการซิงค์ชื่อสังกัด', error: error.message });
+  }
+});
+
 // ==========================================
 // 2. USER MANAGEMENT
 // ==========================================
