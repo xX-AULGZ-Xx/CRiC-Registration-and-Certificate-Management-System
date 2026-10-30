@@ -153,6 +153,13 @@ router.get('/settings', async (req: AuthRequest, res: Response) => {
       google_client_id: '',
       google_login_enabled: 'true',
       google_auto_register: 'true',
+      // Theme Customization Defaults
+      theme_font_heading: 'Prompt',
+      theme_font_body: 'Sarabun',
+      theme_font_size: 'normal',
+      theme_primary_color: '#1e3a8a',
+      theme_accent_color: '#0d9488',
+      theme_border_radius: 'soft',
     };
 
     return res.json({

@@ -28,13 +28,26 @@ import {
   Settings,
   Upload,
   ImageIcon,
+  Palette,
+  Type,
+  RotateCcw,
+  Check,
+  Sliders,
 } from 'lucide-react';
+import {
+  AVAILABLE_FONTS,
+  COLOR_PRESETS,
+  BORDER_RADIUS_OPTIONS,
+  FONT_SIZE_OPTIONS,
+  DEFAULT_THEME,
+  applyThemeToDom,
+} from '@/components/theme/ThemeProvider';
 import { fetchApi } from '@/lib/api';
 
 export default function AdminSettingsPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'certificates' | 'users' | 'surveys' | 'auth'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'appearance' | 'certificates' | 'users' | 'surveys' | 'auth'>('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -61,6 +74,13 @@ export default function AdminSettingsPage() {
     google_client_id: '',
     google_login_enabled: 'true',
     google_auto_register: 'true',
+    // Theme Customization State
+    theme_font_heading: 'Prompt',
+    theme_font_body: 'Sarabun',
+    theme_font_size: 'normal',
+    theme_primary_color: '#1e3a8a',
+    theme_accent_color: '#0d9488',
+    theme_border_radius: 'soft',
   });
 
   // --- TAB 3: User Management State ---
@@ -220,6 +240,18 @@ export default function AdminSettingsPage() {
         showToast('success', 'บันทึกการตั้งค่าระบบเรียบร้อยแล้ว');
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('system-brand-updated', { detail: settings.org_logo_url }));
+          window.dispatchEvent(
+            new CustomEvent('theme-updated', {
+              detail: {
+                theme_font_heading: settings.theme_font_heading || 'Prompt',
+                theme_font_body: settings.theme_font_body || 'Sarabun',
+                theme_font_size: settings.theme_font_size || 'normal',
+                theme_primary_color: settings.theme_primary_color || '#1e3a8a',
+                theme_accent_color: settings.theme_accent_color || '#0d9488',
+                theme_border_radius: settings.theme_border_radius || 'soft',
+              },
+            })
+          );
         }
       }
     } catch (err: any) {
@@ -227,6 +259,26 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleResetThemeDefaults = () => {
+    const defaultThemeObj = {
+      theme_font_heading: DEFAULT_THEME.theme_font_heading,
+      theme_font_body: DEFAULT_THEME.theme_font_body,
+      theme_font_size: DEFAULT_THEME.theme_font_size,
+      theme_primary_color: DEFAULT_THEME.theme_primary_color,
+      theme_accent_color: DEFAULT_THEME.theme_accent_color,
+      theme_border_radius: DEFAULT_THEME.theme_border_radius,
+    };
+    setSettings((prev) => ({
+      ...prev,
+      ...defaultThemeObj,
+    }));
+    applyThemeToDom({
+      ...DEFAULT_THEME,
+      ...defaultThemeObj,
+    });
+    showToast('success', 'คืนค่ารูปแบบและธีมเริ่มต้นเรียบร้อยแล้ว (กดบันทึกเพื่อนำไปใช้งานถาวร)');
   };
 
   // --- FILE UPLOAD HANDLERS ---
@@ -690,6 +742,19 @@ export default function AdminSettingsPage() {
 
         <button
           type="button"
+          onClick={() => setActiveTab('appearance')}
+          className={`flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 whitespace-nowrap ${
+            activeTab === 'appearance'
+              ? 'bg-blue-700 text-white shadow-md shadow-blue-500/20'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Palette className="w-4 h-4 shrink-0" />
+          <span>ธีม & การแสดงผล</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('certificates')}
           className={`flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === 'certificates'
@@ -937,6 +1002,579 @@ export default function AdminSettingsPage() {
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูลองค์กร'}</span>
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB: THEME & APPEARANCE (FULL CUSTOM)                    */}
+      {/* ======================================================== */}
+      {activeTab === 'appearance' && (
+        <form onSubmit={handleSaveSettings} className="space-y-6">
+          {/* Section: Live Preview Card */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                  <Palette className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">ตัวอย่างการแสดงผลแบบ Real-time (Live Preview)</h2>
+                  <p className="text-xs text-slate-500">
+                    จำลองหน้าตา องค์ประกอบ แบบอักษร และสีหลักตามค่าที่ท่านกำลังปรับแต่งด้านล่าง
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleResetThemeDefaults}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>คืนค่าเริ่มต้น</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Preview Canvas Container */}
+            <div
+              className="p-6 sm:p-8 bg-slate-50 border border-slate-200/80 shadow-inner space-y-6 transition-all duration-200"
+              style={{
+                borderRadius:
+                  settings.theme_border_radius === 'sharp'
+                    ? '6px'
+                    : settings.theme_border_radius === 'rounded'
+                    ? '20px'
+                    : '12px',
+              }}
+            >
+              {/* Preview Header Row */}
+              <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200">
+                <div>
+                  <span
+                    className="inline-block px-2.5 py-1 text-xs font-bold text-white mb-2 shadow-xs transition-all"
+                    style={{
+                      backgroundColor: settings.theme_primary_color || '#1e3a8a',
+                      borderRadius:
+                        settings.theme_border_radius === 'sharp'
+                          ? '4px'
+                          : settings.theme_border_radius === 'rounded'
+                          ? '9999px'
+                          : '8px',
+                    }}
+                  >
+                    ตัวอย่างป้ายสถานะ
+                  </span>
+                  <h3
+                    className="text-xl sm:text-2xl font-black text-slate-900 leading-snug transition-all"
+                    style={{
+                      fontFamily: (AVAILABLE_FONTS.find((f) => f.id === settings.theme_font_heading) || AVAILABLE_FONTS[0]).family,
+                    }}
+                  >
+                    ระบบลงทะเบียน ออกเกียรติบัตร และประเมินความพึงพอใจ
+                  </h3>
+                  <p
+                    className="text-slate-600 mt-2 max-w-2xl leading-relaxed transition-all"
+                    style={{
+                      fontFamily: (AVAILABLE_FONTS.find((f) => f.id === settings.theme_font_body) || AVAILABLE_FONTS[1]).family,
+                      fontSize:
+                        settings.theme_font_size === 'large'
+                          ? '17px'
+                          : settings.theme_font_size === 'extra-large'
+                          ? '18px'
+                          : '16px',
+                    }}
+                  >
+                    {settings.org_name_th || 'วิทยาลัยอาชีวศึกษาเชียงราย'} มุ่งมั่นพัฒนาระบบเทคโนโลยีสารสนเทศเพื่อการบริการและการศึกษา ยกระดับการจัดกิจกรรมอบรมสัมมนาและการออกเกียรติบัตรอิเล็กทรอนิกส์ที่ได้มาตรฐานความปลอดภัย
+                  </p>
+                </div>
+
+                <div
+                  className="p-4 bg-white border border-slate-200/80 shadow-xs flex flex-col items-center justify-center min-w-[140px]"
+                  style={{
+                    borderRadius:
+                      settings.theme_border_radius === 'sharp'
+                        ? '6px'
+                        : settings.theme_border_radius === 'rounded'
+                        ? '16px'
+                        : '10px',
+                  }}
+                >
+                  <div className="text-[11px] font-bold text-slate-400">สถิติผู้เข้าร่วม</div>
+                  <div
+                    className="text-2xl font-black mt-0.5"
+                    style={{ color: settings.theme_primary_color || '#1e3a8a' }}
+                  >
+                    1,250
+                  </div>
+                  <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">รับเกียรติบัตรแล้ว</div>
+                </div>
+              </div>
+
+              {/* Preview UI Elements (Buttons, Inputs, Chips) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+                {/* Primary Button */}
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-default"
+                  style={{
+                    backgroundColor: settings.theme_primary_color || '#1e3a8a',
+                    borderRadius:
+                      settings.theme_border_radius === 'sharp'
+                        ? '6px'
+                        : settings.theme_border_radius === 'rounded'
+                        ? '9999px'
+                        : '10px',
+                  }}
+                >
+                  <Check className="w-4 h-4 shrink-0" />
+                  <span>ปุ่มหลัก (Primary Button)</span>
+                </button>
+
+                {/* Accent Button */}
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-default"
+                  style={{
+                    backgroundColor: settings.theme_accent_color || '#0d9488',
+                    borderRadius:
+                      settings.theme_border_radius === 'sharp'
+                        ? '6px'
+                        : settings.theme_border_radius === 'rounded'
+                        ? '9999px'
+                        : '10px',
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>ปุ่มรอง (Accent Button)</span>
+                </button>
+
+                {/* Outline Button */}
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 bg-white border font-bold text-xs sm:text-sm shadow-2xs transition flex items-center justify-center gap-2 cursor-default"
+                  style={{
+                    borderColor: settings.theme_primary_color || '#1e3a8a',
+                    color: settings.theme_primary_color || '#1e3a8a',
+                    borderRadius:
+                      settings.theme_border_radius === 'sharp'
+                        ? '6px'
+                        : settings.theme_border_radius === 'rounded'
+                        ? '9999px'
+                        : '10px',
+                  }}
+                >
+                  <span>ปุ่มเส้นขอบ (Outline)</span>
+                </button>
+
+                {/* Sample Input */}
+                <div
+                  className="bg-white border px-3 py-2 text-xs text-slate-500 shadow-2xs flex items-center justify-between"
+                  style={{
+                    borderColor: settings.theme_primary_color || '#1e3a8a',
+                    borderRadius:
+                      settings.theme_border_radius === 'sharp'
+                        ? '6px'
+                        : settings.theme_border_radius === 'rounded'
+                        ? '9999px'
+                        : '10px',
+                  }}
+                >
+                  <span>ช่องกรอกข้อมูลตัวอย่าง...</span>
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: settings.theme_primary_color || '#1e3a8a' }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Typography (Font Configuration) */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                <Type className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">1. การตั้งค่าแบบอักษร (Typography & Fonts)</h2>
+                <p className="text-xs text-slate-500">
+                  เลือกแบบอักษรภาษาไทยยอดนิยมสำหรับหัวข้อและเนื้อหา พร้อมปรับสเกลขนาดตัวอักษรของระบบ
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Heading Font */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  ฟอนต์หัวเรื่อง (Heading Font) *
+                </label>
+                <p className="text-[11px] text-slate-400">ใช้สำหรับหัวข้อหลัก หัวข้อย่อย ป้ายชื่อ และแถบเมนูนำทาง</p>
+                <select
+                  value={settings.theme_font_heading || 'Prompt'}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSettings((prev) => ({ ...prev, theme_font_heading: val }));
+                    applyThemeToDom({
+                      theme_font_heading: val,
+                      theme_font_body: settings.theme_font_body || 'Sarabun',
+                      theme_font_size: (settings.theme_font_size as any) || 'normal',
+                      theme_primary_color: settings.theme_primary_color || '#1e3a8a',
+                      theme_accent_color: settings.theme_accent_color || '#0d9488',
+                      theme_border_radius: (settings.theme_border_radius as any) || 'soft',
+                    });
+                  }}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  {AVAILABLE_FONTS.map((font) => (
+                    <option key={font.id} value={font.id}>
+                      {font.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Body Font */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  ฟอนต์เนื้อหาทั่วไป (Body Font) *
+                </label>
+                <p className="text-[11px] text-slate-400">ใช้สำหรับเนื้อหาบรรยาย คำอธิบาย ตาราง และข้อความทั่วไป</p>
+                <select
+                  value={settings.theme_font_body || 'Sarabun'}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSettings((prev) => ({ ...prev, theme_font_body: val }));
+                    applyThemeToDom({
+                      theme_font_heading: settings.theme_font_heading || 'Prompt',
+                      theme_font_body: val,
+                      theme_font_size: (settings.theme_font_size as any) || 'normal',
+                      theme_primary_color: settings.theme_primary_color || '#1e3a8a',
+                      theme_accent_color: settings.theme_accent_color || '#0d9488',
+                      theme_border_radius: (settings.theme_border_radius as any) || 'soft',
+                    });
+                  }}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  {AVAILABLE_FONTS.map((font) => (
+                    <option key={font.id} value={font.id}>
+                      {font.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Font Size Scaling */}
+            <div className="space-y-2 pt-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                ขนาดตัวอักษรพื้นฐาน (Base Font Size)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {FONT_SIZE_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.id}
+                    className={`flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition ${
+                      settings.theme_font_size === opt.id || (!settings.theme_font_size && opt.id === 'normal')
+                        ? 'border-blue-500 bg-blue-50/50 text-blue-900 ring-1 ring-blue-500'
+                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="theme_font_size"
+                      value={opt.id}
+                      checked={settings.theme_font_size === opt.id || (!settings.theme_font_size && opt.id === 'normal')}
+                      onChange={() => {
+                        setSettings((prev) => ({ ...prev, theme_font_size: opt.id }));
+                        applyThemeToDom({
+                          theme_font_heading: settings.theme_font_heading || 'Prompt',
+                          theme_font_body: settings.theme_font_body || 'Sarabun',
+                          theme_font_size: opt.id as any,
+                          theme_primary_color: settings.theme_primary_color || '#1e3a8a',
+                          theme_accent_color: settings.theme_accent_color || '#0d9488',
+                          theme_border_radius: (settings.theme_border_radius as any) || 'soft',
+                        });
+                      }}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-xs font-bold">{opt.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Color Presets & Custom Colors */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                <Palette className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">2. ชุดสีและโทนสีของระบบ (Color Theme)</h2>
+                <p className="text-xs text-slate-500">
+                  เลือกชุดสีแนะนำสำเร็จรูป หรือระบุรหัสสีหลัก (Primary) และสีรอง (Accent) ได้เองตามเอกลักษณ์สถาบัน
+                </p>
+              </div>
+            </div>
+
+            {/* Presets Grid */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                ชุดสีแนะนำสำเร็จรูป (Color Presets)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {COLOR_PRESETS.map((preset) => {
+                  const isSelected =
+                    settings.theme_primary_color?.toLowerCase() === preset.primary.toLowerCase() &&
+                    settings.theme_accent_color?.toLowerCase() === preset.accent.toLowerCase();
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => {
+                        setSettings((prev) => ({
+                          ...prev,
+                          theme_primary_color: preset.primary,
+                          theme_accent_color: preset.accent,
+                        }));
+                        applyThemeToDom({
+                          theme_font_heading: settings.theme_font_heading || 'Prompt',
+                          theme_font_body: settings.theme_font_body || 'Sarabun',
+                          theme_font_size: (settings.theme_font_size as any) || 'normal',
+                          theme_primary_color: preset.primary,
+                          theme_accent_color: preset.accent,
+                          theme_border_radius: (settings.theme_border_radius as any) || 'soft',
+                        });
+                      }}
+                      className={`p-3.5 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between gap-2.5 ${
+                        isSelected
+                          ? 'border-blue-600 bg-blue-50/40 ring-2 ring-blue-500/20 shadow-xs'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="w-5 h-5 rounded-full shadow-xs border border-white"
+                            style={{ backgroundColor: preset.primary }}
+                          />
+                          <span
+                            className="w-5 h-5 rounded-full shadow-xs border border-white -ml-2"
+                            style={{ backgroundColor: preset.accent }}
+                          />
+                        </div>
+                        {isSelected && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white">
+                            ใช้งานอยู่
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900">{preset.name}</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">{preset.description}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Custom Color Pickers */}
+            <div className="pt-2 border-t border-slate-100 space-y-3">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                กำหนดรหัสสีเองอย่างอิสระ (Custom Hex Colors)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Primary Color */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">สีหลัก (Primary Brand Color)</span>
+                    <span
+                      className="w-4 h-4 rounded-full border border-slate-300"
+                      style={{ backgroundColor: settings.theme_primary_color || '#1e3a8a' }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={settings.theme_primary_color || '#1e3a8a'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSettings((prev) => ({ ...prev, theme_primary_color: val }));
+                        applyThemeToDom({
+                          theme_font_heading: settings.theme_font_heading || 'Prompt',
+                          theme_font_body: settings.theme_font_body || 'Sarabun',
+                          theme_font_size: (settings.theme_font_size as any) || 'normal',
+                          theme_primary_color: val,
+                          theme_accent_color: settings.theme_accent_color || '#0d9488',
+                          theme_border_radius: (settings.theme_border_radius as any) || 'soft',
+                        });
+                      }}
+                      className="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={settings.theme_primary_color || '#1e3a8a'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSettings((prev) => ({ ...prev, theme_primary_color: val }));
+                        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                          applyThemeToDom({
+                            theme_font_heading: settings.theme_font_heading || 'Prompt',
+                            theme_font_body: settings.theme_font_body || 'Sarabun',
+                            theme_font_size: (settings.theme_font_size as any) || 'normal',
+                            theme_primary_color: val,
+                            theme_accent_color: settings.theme_accent_color || '#0d9488',
+                            theme_border_radius: (settings.theme_border_radius as any) || 'soft',
+                          });
+                        }
+                      }}
+                      placeholder="#1e3a8a"
+                      className="flex-1 px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Accent Color */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">สีรอง (Accent Secondary Color)</span>
+                    <span
+                      className="w-4 h-4 rounded-full border border-slate-300"
+                      style={{ backgroundColor: settings.theme_accent_color || '#0d9488' }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={settings.theme_accent_color || '#0d9488'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSettings((prev) => ({ ...prev, theme_accent_color: val }));
+                        applyThemeToDom({
+                          theme_font_heading: settings.theme_font_heading || 'Prompt',
+                          theme_font_body: settings.theme_font_body || 'Sarabun',
+                          theme_font_size: (settings.theme_font_size as any) || 'normal',
+                          theme_primary_color: settings.theme_primary_color || '#1e3a8a',
+                          theme_accent_color: val,
+                          theme_border_radius: (settings.theme_border_radius as any) || 'soft',
+                        });
+                      }}
+                      className="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={settings.theme_accent_color || '#0d9488'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSettings((prev) => ({ ...prev, theme_accent_color: val }));
+                        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                          applyThemeToDom({
+                            theme_font_heading: settings.theme_font_heading || 'Prompt',
+                            theme_font_body: settings.theme_font_body || 'Sarabun',
+                            theme_font_size: (settings.theme_font_size as any) || 'normal',
+                            theme_primary_color: settings.theme_primary_color || '#1e3a8a',
+                            theme_accent_color: val,
+                            theme_border_radius: (settings.theme_border_radius as any) || 'soft',
+                          });
+                        }
+                      }}
+                      placeholder="#0d9488"
+                      className="flex-1 px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Border Radius (ความโค้งมน) */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
+                <Sliders className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">3. ความโค้งมนขององค์ประกอบ (Border Radius)</h2>
+                <p className="text-xs text-slate-500">
+                  กำหนดรูปแบบความโค้งมนของมุมการ์ด กล่องข้อความ และปุ่มทั่วทั้งระบบ
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {BORDER_RADIUS_OPTIONS.map((opt) => {
+                const isSelected =
+                  settings.theme_border_radius === opt.id || (!settings.theme_border_radius && opt.id === 'soft');
+                return (
+                  <label
+                    key={opt.id}
+                    className={`p-4 rounded-2xl border cursor-pointer transition flex flex-col gap-3 ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-50/40 ring-1 ring-blue-500 text-blue-950'
+                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold">{opt.name}</span>
+                      <input
+                        type="radio"
+                        name="theme_border_radius"
+                        value={opt.id}
+                        checked={isSelected}
+                        onChange={() => {
+                          setSettings((prev) => ({ ...prev, theme_border_radius: opt.id }));
+                          applyThemeToDom({
+                            theme_font_heading: settings.theme_font_heading || 'Prompt',
+                            theme_font_body: settings.theme_font_body || 'Sarabun',
+                            theme_font_size: (settings.theme_font_size as any) || 'normal',
+                            theme_primary_color: settings.theme_primary_color || '#1e3a8a',
+                            theme_accent_color: settings.theme_accent_color || '#0d9488',
+                            theme_border_radius: opt.id as any,
+                          });
+                        }}
+                        className="text-blue-600 focus:ring-blue-500"
+                      />
+                    </div>
+                    {/* Visual representation box */}
+                    <div
+                      className="h-10 bg-slate-100 border border-slate-300 flex items-center justify-center text-[10px] text-slate-500 font-mono"
+                      style={{
+                        borderRadius: opt.value,
+                      }}
+                    >
+                      ขอบ {opt.value}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <button
+              type="button"
+              onClick={handleResetThemeDefaults}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold text-xs sm:text-sm hover:bg-slate-50 transition w-full sm:w-auto cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4 text-slate-500" />
+              <span>คืนค่ารูปแบบเริ่มต้น</span>
+            </button>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50 w-full sm:w-auto"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่าธีม & รูปแบบ'}</span>
             </button>
           </div>
         </form>

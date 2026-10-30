@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import InstallGuard from '@/components/layout/InstallGuard';
+import ThemeProvider from '@/components/theme/ThemeProvider';
 
 const prompt = Prompt({
   weight: ['300', '400', '500', '600', '700'],
@@ -47,11 +48,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased font-sans">
-        <InstallGuard>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </InstallGuard>
+        <ThemeProvider>
+          <InstallGuard>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </InstallGuard>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -46,13 +46,26 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Public system branding settings endpoint (for Navbar logo, Favicon, footer)
+// Public system branding settings endpoint (for Navbar logo, Favicon, footer, and Global Theme)
 app.get('/api/v1/system/public-settings', async (req, res) => {
   try {
     const settings = await prisma.systemSetting.findMany({
       where: {
         key: {
-          in: ['org_name_th', 'org_name_en', 'org_logo_url', 'org_website', 'google_client_id', 'google_login_enabled'],
+          in: [
+            'org_name_th',
+            'org_name_en',
+            'org_logo_url',
+            'org_website',
+            'google_client_id',
+            'google_login_enabled',
+            'theme_font_heading',
+            'theme_font_body',
+            'theme_font_size',
+            'theme_primary_color',
+            'theme_accent_color',
+            'theme_border_radius',
+          ],
         },
       },
     });
@@ -69,6 +82,13 @@ app.get('/api/v1/system/public-settings', async (req, res) => {
         org_website: map['org_website'] || 'https://www.crvc.ac.th',
         google_client_id: map['google_client_id'] || process.env.GOOGLE_CLIENT_ID || '',
         google_login_enabled: map['google_login_enabled'] !== 'false',
+        // Theme Customization Properties
+        theme_font_heading: map['theme_font_heading'] || 'Prompt',
+        theme_font_body: map['theme_font_body'] || 'Sarabun',
+        theme_font_size: map['theme_font_size'] || 'normal',
+        theme_primary_color: map['theme_primary_color'] || '#1e3a8a',
+        theme_accent_color: map['theme_accent_color'] || '#0d9488',
+        theme_border_radius: map['theme_border_radius'] || 'soft',
       },
     });
   } catch (error: any) {

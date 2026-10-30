@@ -69,14 +69,30 @@
   --color-primary: #1e3a8a;
   --color-primary-hover: #172554;
   --color-accent: #0d9488;
+  --font-heading-family: 'Prompt', sans-serif;
+  --font-body-family: 'Sarabun', sans-serif;
   --font-ui-family: 'Prompt', sans-serif;
-  --app-radius: 10px;
+  --base-font-size: 16px;
+  --app-radius: 12px;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: #f1f5f9;
-  font-family: var(--font-ui-family, 'Prompt'), var(--font-prompt), sans-serif;
+  font-family: var(--font-body-family, 'Sarabun'), var(--font-sarabun), sans-serif;
+  font-size: var(--base-font-size, 16px);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading-family, 'Prompt'), var(--font-prompt), sans-serif;
+}
+
+.font-heading {
+  font-family: var(--font-heading-family, 'Prompt'), sans-serif !important;
+}
+
+.font-body {
+  font-family: var(--font-body-family, 'Sarabun'), sans-serif !important;
 }
 
 input, button, select, textarea, optgroup {
