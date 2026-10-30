@@ -198,8 +198,9 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <>
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand & Mode Switch */}
           <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5 min-w-0 shrink">
@@ -449,13 +450,14 @@ export default function Navbar() {
           </nav>
         </div>
       </div>
-
-      {/* Profile Edit Modal */}
-      <ProfileEditModal
-        isOpen={profileModalOpen}
-        onClose={() => setProfileModalOpen(false)}
-        onUserUpdated={(updated) => setCurrentUser(updated)}
-      />
     </header>
+
+    {/* Profile Edit Modal */}
+    <ProfileEditModal
+      isOpen={profileModalOpen}
+      onClose={() => setProfileModalOpen(false)}
+      onUserUpdated={(updated) => setCurrentUser(updated)}
+    />
+  </>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   User,
   Mail,
@@ -32,6 +33,7 @@ export default function ProfileEditModal({
   onClose,
   onUserUpdated,
 }: ProfileEditModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingSig, setUploadingSig] = useState(false);
@@ -56,6 +58,10 @@ export default function ProfileEditModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const sigFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -108,7 +114,7 @@ export default function ProfileEditModal({
     loadProfile();
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // Handle Signature Image Upload
   const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,8 +239,8 @@ export default function ProfileEditModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
       <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 relative shadow-2xl border border-slate-100 my-8 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -540,6 +546,7 @@ export default function ProfileEditModal({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
