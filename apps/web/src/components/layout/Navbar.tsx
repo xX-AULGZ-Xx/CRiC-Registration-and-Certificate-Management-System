@@ -251,7 +251,7 @@ export default function Navbar() {
                 onClick={() => handleSwitchMode('evaluation')}
                 className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   portalMode === 'evaluation'
-                    ? 'bg-indigo-600 text-white shadow-xs'
+                    ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                 }`}
                 title="โหมดทำแบบประเมินความพึงพอใจ"
@@ -288,7 +288,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/?mode=evaluation"
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-indigo-700 hover:bg-indigo-50/70 transition"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/70 transition"
                 title="แบบประเมินทั้งหมด"
               >
                 <Star className="w-4 h-4 text-amber-500 shrink-0" />
@@ -388,9 +388,9 @@ export default function Navbar() {
                       <Link
                         href="/dashboard"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:text-indigo-700 hover:bg-indigo-50/80 transition active:scale-[0.98]"
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/80 transition active:scale-[0.98]"
                       >
-                        <LayoutDashboard className="w-4 h-4 text-indigo-600" />
+                        <LayoutDashboard className="w-4 h-4 text-blue-600" />
                         <span>แดชบอร์ด</span>
                       </Link>
 

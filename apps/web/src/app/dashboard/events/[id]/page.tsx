@@ -914,13 +914,7 @@ export default function EventManagePage() {
             <ArrowLeft className="w-4 h-4" /> กลับสู่แดชบอร์ด
           </Link>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <span
-              className={`font-mono text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
-                portalMode === 'evaluation'
-                  ? 'bg-indigo-100 text-indigo-800'
-                  : 'bg-blue-100 text-blue-800'
-              }`}
-            >
+            <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full shrink-0 bg-blue-100 text-blue-800">
               {event.event_code}
             </span>
             <h1 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 truncate max-w-full">
@@ -954,13 +948,9 @@ export default function EventManagePage() {
           <Link
             href={`/surveys/${eventId}`}
             target="_blank"
-            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border font-semibold text-xs shadow-xs transition ${
-              portalMode === 'evaluation'
-                ? 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-            }`}
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border font-semibold text-xs shadow-xs transition border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
           >
-            <FileText className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
             <span>หน้าแบบประเมิน</span>
           </Link>
         </div>
@@ -1016,9 +1006,7 @@ export default function EventManagePage() {
           onClick={() => setActiveTab('evaluation')}
           className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === 'evaluation'
-              ? portalMode === 'evaluation'
-                ? 'border-indigo-700 text-indigo-700'
-                : 'border-blue-700 text-blue-700'
+              ? 'border-blue-700 text-blue-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -1080,8 +1068,8 @@ export default function EventManagePage() {
                   </div>
                 )}
 
-                <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-2">
-                  <div className="text-xs font-bold text-indigo-900 flex flex-wrap items-center justify-between gap-2">
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
+                  <div className="text-xs font-bold text-blue-900 flex flex-wrap items-center justify-between gap-2">
                     <span>ลิงก์แบบประเมินความพึงพอใจ (Evaluation Survey)</span>
                     <div className="flex items-center gap-3">
                       <button
@@ -1094,13 +1082,13 @@ export default function EventManagePage() {
                       <button
                         type="button"
                         onClick={() => copyToClipboard(publicSurveyUrl)}
-                        className="inline-flex items-center gap-1 text-indigo-700 hover:underline font-semibold cursor-pointer"
+                        className="inline-flex items-center gap-1 text-blue-700 hover:underline font-semibold cursor-pointer"
                       >
                         <Copy className="w-3.5 h-3.5" /> คัดลอก
                       </button>
                     </div>
                   </div>
-                  <div className="font-mono text-xs text-indigo-800 break-all select-all">
+                  <div className="font-mono text-xs text-blue-800 break-all select-all">
                     {publicSurveyUrl}
                   </div>
                 </div>
@@ -1229,7 +1217,7 @@ export default function EventManagePage() {
 
           {/* Quick Stats Column */}
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-3xl p-6 text-white space-y-4 shadow-md">
+            <div className="bg-gradient-to-br from-blue-950 to-blue-900 rounded-3xl p-6 text-white space-y-4 shadow-md">
               <h3 className="font-bold text-sm text-blue-200">สถิติภาพรวมกิจกรรม</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-white/10 pb-2">
@@ -1988,7 +1976,7 @@ export default function EventManagePage() {
                       type="checkbox"
                       checked={editHasEvaluation}
                       onChange={(e) => setEditHasEvaluation(e.target.checked)}
-                      className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
                       <div className="text-xs font-bold text-slate-800">

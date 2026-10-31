@@ -196,7 +196,7 @@ export default function HomePage() {
             {portalMode === 'evaluation' ? (
               <>
                 แบบประเมินความพึงพอใจโครงการ & <br className="hidden sm:inline" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-indigo-300 to-teal-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-blue-200 to-teal-300">
                   ระบบประเมินออนไลน์
                 </span>
               </>
@@ -270,11 +270,7 @@ export default function HomePage() {
               )}
               <button
                 type="submit"
-                className={`px-5 py-2.5 rounded-xl text-white font-bold text-sm shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer ${
-                  portalMode === 'evaluation'
-                    ? 'bg-indigo-600 hover:bg-indigo-700'
-                    : 'bg-blue-700 hover:bg-blue-800'
-                }`}
+                className="px-5 py-2.5 rounded-xl text-white font-bold text-sm shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer bg-blue-700 hover:bg-blue-800"
               >
                 ค้นหา
               </button>
@@ -410,7 +406,7 @@ export default function HomePage() {
             {portalMode === 'evaluation' ? (
               <>
                 <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-                  <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-300">
+                  <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
                     <ClipboardCheck className="w-5 h-5" />
                   </div>
                   <div className="text-xs">
@@ -483,7 +479,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
               {portalMode === 'evaluation' ? (
                 <>
-                  <Star className="w-6 h-6 text-indigo-600 fill-indigo-600" />
+                  <Star className="w-6 h-6 text-blue-600 fill-blue-600" />
                   <span>แบบประเมินความพึงพอใจโครงการ</span>
                 </>
               ) : (
@@ -534,7 +530,7 @@ export default function HomePage() {
                 <div
                   className={`h-36 p-5 flex flex-col justify-between text-white relative transition-colors ${
                     portalMode === 'evaluation'
-                      ? 'bg-gradient-to-tr from-indigo-800 via-purple-700 to-slate-800'
+                      ? 'bg-gradient-to-tr from-blue-900 via-blue-800 to-slate-800'
                       : 'bg-gradient-to-tr from-blue-700 via-blue-600 to-teal-500'
                   }`}
                 >
@@ -551,7 +547,7 @@ export default function HomePage() {
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold ${
                           portalMode === 'evaluation'
-                            ? 'bg-purple-500/90 text-white'
+                            ? 'bg-blue-600/90 text-white'
                             : evt.status === 'OPEN'
                             ? 'bg-emerald-500/90 text-white'
                             : 'bg-slate-700/80 text-slate-200'
@@ -609,7 +605,7 @@ export default function HomePage() {
                       )}
                       {portalMode === 'register' && (
                         <div className="flex items-center gap-2">
-                          <Users className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                           <span>
                             ผู้ลงทะเบียน: {evt._count?.attendees || 0}
                             {evt.max_attendees > 0 ? ` / ${evt.max_attendees}` : ''} คน
@@ -624,7 +620,7 @@ export default function HomePage() {
                     {portalMode === 'evaluation' ? (
                       <Link
                         href={`/surveys/${evt.id}`}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md transition active:scale-98"
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-700 hover:bg-blue-800 text-white shadow-md transition active:scale-98"
                       >
                         <ClipboardCheck className="w-4 h-4" />
                         <span>ทำแบบประเมินความพึงพอใจ</span>

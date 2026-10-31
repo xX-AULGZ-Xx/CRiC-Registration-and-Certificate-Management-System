@@ -203,7 +203,7 @@ export default function LoginPage() {
                 className="w-16 h-16 object-contain drop-shadow-xs"
               />
             ) : (
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white mx-auto shadow-md">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white mx-auto shadow-md">
                 <Award className="w-8 h-8" />
               </div>
             )}

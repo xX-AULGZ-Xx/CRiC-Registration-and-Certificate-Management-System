@@ -361,7 +361,7 @@ export default function DashboardPage() {
             {currentUser && (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-xs ${
                 portalMode === 'evaluation'
-                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200/80'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200/80'
                   : 'bg-blue-50 text-blue-700 border-blue-200/80'
               }`}>
                 {currentUser.avatar_url ? (
@@ -403,11 +403,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer shrink-0 ${
-              portalMode === 'evaluation'
-                ? 'bg-indigo-600 hover:bg-indigo-700'
-                : 'bg-blue-700 hover:bg-blue-800'
-            }`}
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition active:scale-95 cursor-pointer shrink-0 bg-blue-700 hover:bg-blue-800"
           >
             <Plus className="w-4 h-4" />
             <span>{portalMode === 'evaluation' ? 'สร้างแบบสอบถามใหม่' : 'สร้างกิจกรรมใหม่'}</span>
@@ -420,7 +416,7 @@ export default function DashboardPage() {
         {portalMode === 'evaluation' ? (
           <>
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
                 <ClipboardList className="w-6 h-6" />
               </div>
               <div>
@@ -430,7 +426,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
                 <Users className="w-6 h-6" />
               </div>
               <div>
@@ -536,11 +532,7 @@ export default function DashboardPage() {
                 >
                   <div className="space-y-1.5 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`px-2.5 py-0.5 rounded-full font-mono text-xs font-bold ${
-                        portalMode === 'evaluation'
-                          ? 'bg-indigo-100 text-indigo-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
+                      <span className="px-2.5 py-0.5 rounded-full font-mono text-xs font-bold bg-blue-100 text-blue-800">
                         {evt.event_code}
                       </span>
                       {evt.project_ref_code && (
@@ -551,7 +543,7 @@ export default function DashboardPage() {
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                           portalMode === 'evaluation'
-                            ? 'bg-indigo-100 text-indigo-800'
+                            ? 'bg-blue-100 text-blue-800'
                             : evt.status === 'OPEN'
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-slate-200 text-slate-700'
@@ -573,7 +565,7 @@ export default function DashboardPage() {
                     <h3 className="text-base font-bold text-slate-900">
                       <Link
                         href={portalMode === 'evaluation' ? `/dashboard/events/${evt.id}?tab=evaluation` : `/dashboard/events/${evt.id}`}
-                        className={`transition ${portalMode === 'evaluation' ? 'hover:text-indigo-700' : 'hover:text-blue-700'}`}
+                        className="transition hover:text-blue-700"
                       >
                         {evt.title}
                       </Link>
@@ -582,7 +574,7 @@ export default function DashboardPage() {
                     <div className="text-xs text-slate-500 flex flex-wrap items-center gap-y-1.5 gap-x-4">
                       {portalMode === 'evaluation' ? (
                         <>
-                          <span className="flex items-center gap-1 text-indigo-700 font-semibold">
+                          <span className="flex items-center gap-1 text-blue-700 font-semibold">
                             <BarChart2 className="w-3.5 h-3.5" />
                             ผู้ตอบแบบสอบถาม: {evt.evaluation_form?._count?.responses || 0} คน
                           </span>
@@ -633,11 +625,7 @@ export default function DashboardPage() {
 
                     <Link
                       href={portalMode === 'evaluation' ? `/dashboard/events/${evt.id}?tab=evaluation` : `/dashboard/events/${evt.id}`}
-                      className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs transition ${
-                        portalMode === 'evaluation'
-                          ? 'bg-indigo-600 hover:bg-indigo-700'
-                          : 'bg-blue-700 hover:bg-blue-800'
-                      }`}
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs transition bg-blue-700 hover:bg-blue-800"
                     >
                       {portalMode === 'evaluation' ? (
                         <>
@@ -707,7 +695,7 @@ export default function DashboardPage() {
                     value={surveyTitle}
                     onChange={(e) => setSurveyTitle(e.target.value)}
                     placeholder="เช่น แบบประเมินความพึงพอใจ โครงการพัฒนาทักษะวิชาชีพดิจิทัล"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
@@ -718,7 +706,7 @@ export default function DashboardPage() {
                     value={surveyDescription}
                     onChange={(e) => setSurveyDescription(e.target.value)}
                     placeholder="เช่น เพื่อประเมินผลความพึงพอใจและนำข้อเสนอแนะไปปรับปรุงการจัดโครงการ"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
@@ -730,7 +718,7 @@ export default function DashboardPage() {
                       value={surveyProjectRefCode}
                       onChange={(e) => setSurveyProjectRefCode(e.target.value)}
                       placeholder="เช่น PRJ-2569-001"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
 
@@ -740,15 +728,15 @@ export default function DashboardPage() {
                       type="number"
                       value={surveyTargetResponses}
                       onChange={(e) => setSurveyTargetResponses(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Survey Period */}
-                <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100/80 space-y-3">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-950">
-                    <Calendar className="w-4 h-4 text-indigo-600" />
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100/80 space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                    <Calendar className="w-4 h-4 text-blue-600" />
                     <span>กำหนดการเปิดและปิดรับแบบสอบถาม</span>
                   </div>
 
@@ -759,7 +747,7 @@ export default function DashboardPage() {
                         type="date"
                         value={surveyStartDate}
                         onChange={(e) => setSurveyStartDate(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       />
                     </div>
 
@@ -769,7 +757,7 @@ export default function DashboardPage() {
                         type="date"
                         value={surveyEndDate}
                         onChange={(e) => setSurveyEndDate(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -782,7 +770,7 @@ export default function DashboardPage() {
                     <label
                       className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition ${
                         surveyTemplate === 'standard'
-                          ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20'
+                          ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-500/20'
                           : 'border-slate-200 hover:bg-slate-50'
                       }`}
                     >
@@ -792,7 +780,7 @@ export default function DashboardPage() {
                         value="standard"
                         checked={surveyTemplate === 'standard'}
                         onChange={() => setSurveyTemplate('standard')}
-                        className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
                       />
                       <div className="text-xs">
                         <div className="font-bold text-slate-900">ชุดมาตรฐาน 3 ตอน</div>
@@ -805,7 +793,7 @@ export default function DashboardPage() {
                     <label
                       className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition ${
                         surveyTemplate === 'blank'
-                          ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20'
+                          ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-500/20'
                           : 'border-slate-200 hover:bg-slate-50'
                       }`}
                     >
@@ -815,7 +803,7 @@ export default function DashboardPage() {
                         value="blank"
                         checked={surveyTemplate === 'blank'}
                         onChange={() => setSurveyTemplate('blank')}
-                        className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
                       />
                       <div className="text-xs">
                         <div className="font-bold text-slate-900">แบบฟอร์มว่าง</div>
@@ -838,7 +826,7 @@ export default function DashboardPage() {
                   <button
                     type="submit"
                     disabled={creating}
-                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
                   >
                     {creating ? 'กำลังสร้างแบบสอบถาม...' : 'สร้างและเริ่มออกแบบคำถาม'}
                   </button>
@@ -1002,13 +990,13 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Evaluation System Toggle */}
-                <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100/80 space-y-2">
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100/80 space-y-2">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={enableEvaluationInEvent}
                       onChange={(e) => setEnableEvaluationInEvent(e.target.checked)}
-                      className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
                       <div className="text-xs font-bold text-slate-800">

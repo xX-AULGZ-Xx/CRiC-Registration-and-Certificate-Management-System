@@ -134,7 +134,7 @@ export default function InstallPage() {
 
   if (checkingStatus) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 flex flex-col items-center justify-center p-4 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 flex flex-col items-center justify-center p-4 text-white">
         <RefreshCw className="w-10 h-10 text-blue-400 animate-spin mb-4" />
         <p className="text-base font-semibold text-slate-300">กำลังตรวจสอบสถานะการติดตั้งระบบ...</p>
       </div>
@@ -144,7 +144,7 @@ export default function InstallPage() {
   // If already installed, show message and link to login
   if (isInstalled && currentStep !== 4) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 text-center space-y-6">
           <div className="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
             <CheckCircle2 className="w-9 h-9" />
