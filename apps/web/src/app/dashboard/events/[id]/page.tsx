@@ -70,6 +70,7 @@ export default function EventManagePage() {
   const [evalSummary, setEvalSummary] = useState<any>(null);
   const [loadingEval, setLoadingEval] = useState(false);
   const [showFormEditor, setShowFormEditor] = useState(false);
+  const [evalSearch, setEvalSearch] = useState('');
 
   // Edit Event Modal State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -1669,10 +1670,31 @@ export default function EventManagePage() {
           )}
 
           {loadingEval ? (
-            <div className="text-center py-16 text-slate-400">กำลังประมวลผลข้อมูลสถิติแบบประเมิน...</div>
-          ) : !evalSummary ? (
-            <div className="bg-white rounded-3xl p-8 text-center text-slate-400 border border-slate-200">
-              ยังไม่มีข้อมูลการตอบแบบประเมิน
+            <div className="text-center py-16 text-slate-400 flex flex-col items-center justify-center gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+              <span>กำลังประมวลผลข้อมูลสถิติแบบประเมิน...</span>
+            </div>
+          ) : !evalSummary || evalSummary.has_form === false ? (
+            <div className="bg-white rounded-3xl p-10 text-center border border-slate-200 shadow-sm max-w-xl mx-auto space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                <Sliders className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-slate-900">ยังไม่ได้สร้างแบบประเมินสำหรับกิจกรรมนี้</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  กิจกรรมนี้ยังไม่มีแบบสอบถามความพึงพอใจ คุณสามารถเริ่มต้นสร้างแบบประเมิน ออกแบบคำถาม หรือเลือกใช้แม่แบบมาตรฐานได้ทันที
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowFormEditor(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>สร้างและออกแบบแบบประเมิน</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-6">
@@ -1715,53 +1737,190 @@ export default function EventManagePage() {
                   รายงานผลการประเมินรายข้อ (Statistical Report)
                 </h3>
 
-                {evalSummary.sections?.map((sec: any) => (
-                  <div key={sec.id} className="space-y-4 pt-4 border-t border-slate-100 first:border-t-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-slate-800 text-sm">{sec.title}</h4>
-                      {sec.stats?.count > 0 && (
-                        <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full">
-                          ค่าเฉลี่ยตอน: {sec.stats.mean} (ระดับ {sec.stats.level})
-                        </span>
-                      )}
-                    </div>
+                {evalSummary.sections?.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    ยังไม่มีข้อคำถามในแบบประเมิน
+                  </div>
+                ) : (
+                  evalSummary.sections?.map((sec: any) => (
+                    <div key={sec.id} className="space-y-4 pt-4 border-t border-slate-100 first:border-t-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-slate-800 text-sm">{sec.title}</h4>
+                        {sec.stats?.count > 0 && (
+                          <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full">
+                            ค่าเฉลี่ยตอน: {sec.stats.mean} (ระดับ {sec.stats.level})
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="space-y-3">
-                      {sec.questions?.map((q: any) => (
-                        <div
-                          key={q.id}
-                          className="p-4 rounded-2xl bg-slate-50/70 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
-                        >
-                          <div className="font-medium text-slate-800 flex-1">
-                            {q.question_text}
-                          </div>
+                      <div className="space-y-3">
+                        {sec.questions?.map((q: any) => (
+                          <div
+                            key={q.id}
+                            className="p-4 rounded-2xl bg-slate-50/70 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
+                          >
+                            <div className="font-medium text-slate-800 flex-1">
+                              {q.question_text}
+                            </div>
 
-                          {q.question_type === 'RATING_5' && q.stats && (
-                            <div className="flex items-center gap-4 shrink-0">
-                              <div className="text-right">
-                                <div className="font-mono font-bold text-slate-900">
-                                  x̄ = {q.stats.mean}
+                            {q.question_type === 'RATING_5' && q.stats && (
+                              <div className="flex items-center gap-4 shrink-0">
+                                <div className="text-right">
+                                  <div className="font-mono font-bold text-slate-900">
+                                    x̄ = {q.stats.mean}
+                                  </div>
+                                  <div className="text-[10px] text-slate-400">
+                                    S.D. = {q.stats.sd}
+                                  </div>
                                 </div>
-                                <div className="text-[10px] text-slate-400">
-                                  S.D. = {q.stats.sd}
-                                </div>
+                                <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[11px]">
+                                  {q.stats.level}
+                                </span>
                               </div>
-                              <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[11px]">
-                                {q.stats.level}
-                              </span>
-                            </div>
-                          )}
+                            )}
 
-                          {q.question_type === 'TEXT' && q.text_answers && (
-                            <div className="text-slate-500 italic">
-                              มีข้อเสนอแนะ {q.text_answers.length} รายการ
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            {q.question_type === 'TEXT' && q.text_answers && (
+                              <div className="text-slate-500 italic">
+                                มีข้อเสนอแนะ {q.text_answers.length} รายการ
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Evaluation Responses Roster Table */}
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-lg">
+                        รายชื่อผู้ส่งคำตอบแบบประเมิน (Respondent Roster)
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        ผู้ตอบแบบประเมินทั้งหมด {evalSummary.responses?.length || 0} คน
+                      </p>
                     </div>
                   </div>
-                ))}
+
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="ค้นหาชื่อ, เบอร์โทร..."
+                      value={evalSearch}
+                      onChange={(e) => setEvalSearch(e.target.value)}
+                      className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {(() => {
+                  const responses = (evalSummary.responses || []).filter((r: any) => {
+                    if (!evalSearch.trim()) return true;
+                    const query = evalSearch.toLowerCase().trim();
+                    const name = (r.attendee?.full_name || '').toLowerCase();
+                    const phone = (r.attendee?.phone || '').toLowerCase();
+                    const cert = (r.attendee?.certificate_no || '').toLowerCase();
+                    return name.includes(query) || phone.includes(query) || cert.includes(query);
+                  });
+
+                  if (responses.length === 0) {
+                    return (
+                      <div className="py-12 text-center text-slate-400 text-xs space-y-2">
+                        <AlertCircle className="w-8 h-8 text-slate-300 mx-auto" />
+                        <p className="font-bold text-slate-600">
+                          {evalSearch ? 'ไม่พบข้อมูลที่ตรงกับคำค้นหา' : 'ยังไม่มีผู้ส่งคำตอบแบบประเมินในขณะนี้'}
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          เมื่อผู้เข้าร่วมตอบแบบประเมิน รายชื่อ วันเวลาที่ส่ง และผลคะแนนจะแสดงที่นี่โดยอัตโนมัติ
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-100 text-slate-500 font-bold bg-slate-50/50">
+                            <th className="py-3 px-4 rounded-l-xl">ลำดับ</th>
+                            <th className="py-3 px-4">ชื่อ-นามสกุล / ผู้ตอบ</th>
+                            <th className="py-3 px-4">เบอร์โทรศัพท์</th>
+                            <th className="py-3 px-4">วันที่-เวลาที่ส่ง</th>
+                            <th className="py-3 px-4 text-center">คะแนนเฉลี่ย (x̄)</th>
+                            <th className="py-3 px-4 text-center">เกณฑ์การประเมิน</th>
+                            <th className="py-3 px-4 rounded-r-xl">เกียรติบัตร</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                          {responses.map((r: any, idx: number) => {
+                            const dateStr = r.submitted_at
+                              ? new Date(r.submitted_at).toLocaleDateString('th-TH', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : '-';
+
+                            return (
+                              <tr key={r.id} className="hover:bg-slate-50/70 transition">
+                                <td className="py-3.5 px-4 text-slate-400 font-mono">{idx + 1}</td>
+                                <td className="py-3.5 px-4 font-bold text-slate-900">
+                                  {r.attendee?.full_name || 'ผู้ตอบทั่วไป (ไม่ระบุตัวตน)'}
+                                </td>
+                                <td className="py-3.5 px-4 text-slate-500 font-mono">
+                                  {r.attendee?.phone || '-'}
+                                </td>
+                                <td className="py-3.5 px-4 text-slate-500">{dateStr}</td>
+                                <td className="py-3.5 px-4 text-center">
+                                  {typeof r.mean_score === 'number' ? (
+                                    <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                                      {r.mean_score.toFixed(2)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400">-</span>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-4 text-center">
+                                  {r.passed_threshold ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                                      <Check className="w-3 h-3" />
+                                      ผ่านเกณฑ์
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full">
+                                      <AlertCircle className="w-3 h-3" />
+                                      ไม่ผ่านเกณฑ์
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  {r.attendee?.certificate_no ? (
+                                    <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-blue-800 bg-blue-50 px-2.5 py-1 rounded-lg">
+                                      <Award className="w-3.5 h-3.5 text-blue-600" />
+                                      {r.attendee.certificate_no}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400 text-[11px]">-</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}

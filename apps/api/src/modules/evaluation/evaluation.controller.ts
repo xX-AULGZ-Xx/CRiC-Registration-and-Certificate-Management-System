@@ -388,32 +388,117 @@ router.post('/events/:eventId/form', authenticate, async (req: AuthRequest, res:
       }
 
       if (Array.isArray(sections)) {
-        await tx.evaluationSection.deleteMany({ where: { form_id: form.id } });
+        // Query existing sections and questions
+        const existingSections = await tx.evaluationSection.findMany({
+          where: { form_id: form.id },
+          include: {
+            questions: {
+              include: {
+                _count: { select: { answers: true } },
+              },
+            },
+          },
+        });
+
+        const existingSecMap = new Map<string, (typeof existingSections)[0]>();
+        existingSections.forEach((s) => existingSecMap.set(s.id.toString(), s));
+
+        const existingQuestionsMap = new Map<string, any>();
+        existingSections.forEach((s) => {
+          s.questions.forEach((q) => {
+            existingQuestionsMap.set(q.id.toString(), q);
+          });
+        });
+
+        const keptSectionIds = new Set<string>();
+        const keptQuestionIds = new Set<string>();
 
         for (let sIdx = 0; sIdx < sections.length; sIdx++) {
           const sec = sections[sIdx];
-          const createdSec = await tx.evaluationSection.create({
-            data: {
-              form_id: form.id,
-              title: sec.title || `ตอนที่ ${sIdx + 1}`,
-              description: sec.description || '',
-              order_index: sIdx + 1,
-            },
-          });
+          const secIdStr = sec.id ? String(sec.id) : null;
+          let currentSecId: bigint;
+
+          if (secIdStr && existingSecMap.has(secIdStr)) {
+            const updatedSec = await tx.evaluationSection.update({
+              where: { id: BigInt(secIdStr) },
+              data: {
+                title: sec.title || `ตอนที่ ${sIdx + 1}`,
+                description: sec.description || '',
+                order_index: sIdx + 1,
+              },
+            });
+            currentSecId = updatedSec.id;
+            keptSectionIds.add(currentSecId.toString());
+          } else {
+            const createdSec = await tx.evaluationSection.create({
+              data: {
+                form_id: form.id,
+                title: sec.title || `ตอนที่ ${sIdx + 1}`,
+                description: sec.description || '',
+                order_index: sIdx + 1,
+              },
+            });
+            currentSecId = createdSec.id;
+            keptSectionIds.add(currentSecId.toString());
+          }
 
           if (Array.isArray(sec.questions)) {
             for (let qIdx = 0; qIdx < sec.questions.length; qIdx++) {
               const q = sec.questions[qIdx];
-              await tx.evaluationQuestion.create({
-                data: {
-                  section_id: createdSec.id,
-                  question_text: q.question_text || '',
-                  question_type: q.question_type || QuestionType.RATING_5,
-                  options: q.options || [],
-                  order_index: qIdx + 1,
-                  is_required: q.is_required !== undefined ? q.is_required : true,
-                },
-              });
+              const qIdStr = q.id ? String(q.id) : null;
+
+              if (qIdStr && existingQuestionsMap.has(qIdStr)) {
+                const updatedQ = await tx.evaluationQuestion.update({
+                  where: { id: BigInt(qIdStr) },
+                  data: {
+                    section_id: currentSecId,
+                    question_text: q.question_text || '',
+                    question_type: q.question_type || QuestionType.RATING_5,
+                    options: q.options || [],
+                    order_index: qIdx + 1,
+                    is_required: q.is_required !== undefined ? q.is_required : true,
+                  },
+                });
+                keptQuestionIds.add(updatedQ.id.toString());
+              } else {
+                const createdQ = await tx.evaluationQuestion.create({
+                  data: {
+                    section_id: currentSecId,
+                    question_text: q.question_text || '',
+                    question_type: q.question_type || QuestionType.RATING_5,
+                    options: q.options || [],
+                    order_index: qIdx + 1,
+                    is_required: q.is_required !== undefined ? q.is_required : true,
+                  },
+                });
+                keptQuestionIds.add(createdQ.id.toString());
+              }
+            }
+          }
+        }
+
+        // Clean up removed questions only if they have NO answers
+        for (const existingSec of existingSections) {
+          for (const q of existingSec.questions) {
+            const qIdStr = q.id.toString();
+            if (!keptQuestionIds.has(qIdStr)) {
+              if (q._count.answers === 0) {
+                await tx.evaluationQuestion.delete({ where: { id: q.id } });
+              }
+            }
+          }
+        }
+
+        // Clean up removed sections only if they have NO remaining questions with answers
+        for (const existingSec of existingSections) {
+          const secIdStr = existingSec.id.toString();
+          if (!keptSectionIds.has(secIdStr)) {
+            const questionsWithAnswersCount = await tx.evaluationAnswer.count({
+              where: { question: { section_id: existingSec.id } },
+            });
+            if (questionsWithAnswersCount === 0) {
+              await tx.evaluationQuestion.deleteMany({ where: { section_id: existingSec.id } });
+              await tx.evaluationSection.delete({ where: { id: existingSec.id } });
             }
           }
         }
@@ -468,7 +553,21 @@ router.get('/events/:eventId/summary', authenticate, async (req: AuthRequest, re
     });
 
     if (!form) {
-      return res.status(404).json({ success: false, message: 'ไม่พบแบบประเมินของกิจกรรมนี้' });
+      return res.json({
+        success: true,
+        data: {
+          has_form: false,
+          form_id: null,
+          title: '',
+          description: '',
+          total_responses: 0,
+          target_responses: 0,
+          completion_rate: 0,
+          overall: { count: 0, sum: 0, mean: 0, sd: 0, level: 'ยังไม่มีแบบประเมิน' },
+          sections: [],
+          responses: [],
+        },
+      });
     }
 
     const totalResponses = form.responses.length;
@@ -535,9 +634,32 @@ router.get('/events/:eventId/summary', authenticate, async (req: AuthRequest, re
 
     const overallStats = calculateStatistics(allRatingScores);
 
+    const serializedResponses = form.responses.map((resp) => {
+      const meta = (resp.respondent_meta as any) || {};
+      return {
+        id: resp.id.toString(),
+        submitted_at: resp.submitted_at,
+        attendee: resp.attendee
+          ? {
+              id: resp.attendee.id.toString(),
+              full_name: resp.attendee.full_name,
+              phone: resp.attendee.phone,
+              email: resp.attendee.email,
+              citizen_id: resp.attendee.citizen_id,
+              certificate_no: resp.attendee.certificate_no,
+              status: resp.attendee.status,
+            }
+          : null,
+        mean_score: typeof meta.mean_score === 'number' ? meta.mean_score : null,
+        passed_threshold: meta.passed_threshold !== undefined ? meta.passed_threshold : true,
+        ip: meta.ip || null,
+      };
+    });
+
     return res.json({
       success: true,
       data: serializeBigInt({
+        has_form: true,
         form_id: form.id,
         title: form.title,
         description: form.description,
@@ -547,6 +669,7 @@ router.get('/events/:eventId/summary', authenticate, async (req: AuthRequest, re
         completion_rate: form.target_responses > 0 ? Math.round((totalResponses / form.target_responses) * 100) : 100,
         overall: overallStats,
         sections: sectionSummaries,
+        responses: serializedResponses,
       }),
     });
   } catch (error: any) {
@@ -594,6 +717,11 @@ router.post('/events/:eventId/apply-template/:templateId', authenticate, async (
           },
         });
       } else {
+        const responseCount = await tx.evaluationResponse.count({ where: { form_id: form.id } });
+        if (responseCount > 0) {
+          throw new Error('ไม่สามารถเปลี่ยนโครงสร้างแม่แบบใหม่ได้เนื่องจากมีผู้ส่งคำตอบแบบประเมินแล้ว เพื่อป้องกันข้อมูลสูญหาย');
+        }
+
         form = await tx.evaluationForm.update({
           where: { id: form.id },
           data: {

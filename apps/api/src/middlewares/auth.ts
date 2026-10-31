@@ -16,11 +16,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'reg-cert-mgmt-system-secret-key-20
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, message: 'กรุณาเข้าสู่ระบบก่อนทำรายการ' });
+  let token: string | null = null;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (typeof req.query.token === 'string' && req.query.token.trim().length > 0) {
+    token = req.query.token.trim();
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'กรุณาเข้าสู่ระบบก่อนทำรายการ' });
+  }
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string; username: string; role: string };
     const user = await prisma.user.findUnique({
