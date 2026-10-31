@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Award, Lock, User, AlertCircle, CheckCircle2, Info, ArrowRight, Shield, ExternalLink } from 'lucide-react';
+import { Award, Lock, User, AlertCircle, CheckCircle2, Info, ArrowRight, Shield, ExternalLink, ArrowLeft, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 
 declare global {
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -190,158 +191,212 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full space-y-7 bg-white rounded-3xl border border-slate-200/90 shadow-xl p-8 sm:p-10">
-        {/* Brand & Header */}
-        <div className="text-center space-y-3">
-          <div className="flex items-center justify-center">
-            {orgLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={orgLogoUrl}
-                alt="Logo"
-                className="w-16 h-16 object-contain drop-shadow-xs"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white mx-auto shadow-md">
-                <Award className="w-8 h-8" />
-              </div>
-            )}
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              เข้าสู่ระบบผู้จัดกิจกรรม
-            </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              สำหรับผู้ดูแลระบบและครูผู้รับผิดชอบโครงการ/กิจกรรม
-            </p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-50/90 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:20px_20px] flex flex-col justify-between p-4 sm:p-6 sm:py-8 relative selection:bg-blue-600 selection:text-white">
+      {/* Top Floating Bar */}
+      <header className="w-full max-w-5xl mx-auto flex items-center justify-between z-10">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/90 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-blue-700 hover:bg-white shadow-xs hover:shadow-sm transition active:scale-95 text-xs sm:text-sm font-semibold"
+          title="ย้อนกลับสู่หน้าหลัก"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>กลับสู่หน้าหลัก</span>
+        </Link>
 
-        {/* Error Notification */}
-        {errorMsg && (
-          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-2.5 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span className="font-medium">{errorMsg}</span>
+        {orgNameTh && (
+          <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-xs border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="truncate max-w-xs">{orgNameTh}</span>
           </div>
         )}
+      </header>
 
-        {/* Traditional Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">ชื่อผู้ใช้งาน หรือ อีเมล</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <User className="w-4 h-4" />
-              </div>
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="เช่น admin หรือ organizer"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">รหัสผ่าน</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Lock className="w-4 h-4" />
-              </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="pt-1">
-            <button
-              type="submit"
-              disabled={loading || googleLoading}
-              className="w-full py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition active:scale-98 disabled:opacity-50 cursor-pointer"
-            >
-              {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบด้วยรหัสผ่าน'}
-            </button>
-          </div>
-        </form>
-
-        {/* Google SSO Divider & Button */}
-        {googleLoginEnabled && (
-          <div className="space-y-4 pt-2">
-            <div className="relative flex items-center justify-center">
-              <div className="border-t border-slate-200 w-full" />
-              <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider absolute">
-                หรือเข้าสู่ระบบด้วย
-              </span>
-            </div>
-
-            {/* Google Button Container */}
-            <div className="w-full flex justify-center">
-              {googleClientId ? (
-                <div className="w-full space-y-2">
-                  {/* Google official rendered button container */}
-                  <div ref={googleBtnContainerRef} className="w-full flex justify-center min-h-[44px]" />
-                  {googleLoading && (
-                    <p className="text-center text-xs text-blue-600 font-medium animate-pulse">
-                      กำลังยืนยันตัวตนกับ Google...
-                    </p>
-                  )}
-                </div>
+      {/* Main Centered Card Container */}
+      <main className="w-full flex items-center justify-center my-auto py-8 z-10">
+        <div className="max-w-md w-full space-y-7 bg-white rounded-3xl border border-slate-200/90 shadow-2xl p-7 sm:p-10 relative">
+          {/* Brand & Header */}
+          <div className="text-center space-y-3">
+            <div className="flex items-center justify-center">
+              {orgLogoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={orgLogoUrl}
+                  alt="Logo"
+                  className="w-16 h-16 object-contain drop-shadow-xs"
+                />
               ) : (
-                <button
-                  type="button"
-                  onClick={handleGoogleButtonClick}
-                  disabled={googleLoading}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm shadow-xs hover:shadow-sm transition active:scale-98 cursor-pointer"
-                >
-                  {/* Official Google G Logo */}
-                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>เข้าสู่ระบบด้วย Google</span>
-                </button>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white mx-auto shadow-md">
+                  <Award className="w-8 h-8" />
+                </div>
               )}
             </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                เข้าสู่ระบบผู้จัดกิจกรรม
+              </h1>
+              <p className="text-xs text-slate-500 mt-1">
+                สำหรับผู้ดูแลระบบและครูผู้รับผิดชอบโครงการ/กิจกรรม
+              </p>
+            </div>
           </div>
-        )}
 
-        {/* Demo Credentials & Install Wizard Footer */}
-        <div className="pt-4 border-t border-slate-100 text-center space-y-2">
-          <div className="text-xs text-slate-400">
-            บัญชีทดสอบเริ่มต้น: <span className="font-mono text-slate-600 font-bold">admin / admin1234</span> หรือ{' '}
-            <span className="font-mono text-slate-600 font-bold">organizer / password1234</span>
-          </div>
-          <div className="text-[11px] text-slate-400">
-            ติดตั้งระบบใหม่ครั้งแรก?{' '}
-            <Link href="/install" className="text-blue-600 hover:underline font-bold">
-              เปิดหน้าวิซาร์ดติดตั้งระบบ (Install Wizard)
+          {/* Error Notification */}
+          {errorMsg && (
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-2.5 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span className="font-medium">{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Traditional Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">ชื่อผู้ใช้งาน หรือ อีเมล</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <User className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="เช่น admin หรือ organizer"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">รหัสผ่าน</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                  title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="submit"
+                disabled={loading || googleLoading}
+                className="w-full py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition active:scale-98 disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบด้วยรหัสผ่าน'}
+              </button>
+            </div>
+          </form>
+
+          {/* Google SSO Divider & Button */}
+          {googleLoginEnabled && (
+            <div className="space-y-4 pt-2">
+              <div className="relative flex items-center justify-center">
+                <div className="border-t border-slate-200 w-full" />
+                <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider absolute">
+                  หรือเข้าสู่ระบบด้วย
+                </span>
+              </div>
+
+              {/* Google Button Container */}
+              <div className="w-full flex justify-center">
+                {googleClientId ? (
+                  <div className="w-full space-y-2">
+                    {/* Google official rendered button container */}
+                    <div ref={googleBtnContainerRef} className="w-full flex justify-center min-h-[44px]" />
+                    {googleLoading && (
+                      <p className="text-center text-xs text-blue-600 font-medium animate-pulse">
+                        กำลังยืนยันตัวตนกับ Google...
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleGoogleButtonClick}
+                    disabled={googleLoading}
+                    className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm shadow-xs hover:shadow-sm transition active:scale-98 cursor-pointer"
+                  >
+                    {/* Official Google G Logo */}
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                      <path
+                        fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                      />
+                    </svg>
+                    <span>เข้าสู่ระบบด้วย Google</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Return to Home link */}
+          <div className="pt-2 text-center">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 hover:underline transition"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>กลับสู่หน้าหลักของระบบ</span>
             </Link>
           </div>
+
+          {/* Demo Credentials & Install Wizard Footer */}
+          <div className="pt-4 border-t border-slate-100 text-center space-y-2">
+            <div className="text-xs text-slate-400">
+              บัญชีทดสอบเริ่มต้น: <span className="font-mono text-slate-600 font-bold">admin / admin1234</span> หรือ{' '}
+              <span className="font-mono text-slate-600 font-bold">organizer / password1234</span>
+            </div>
+            <div className="text-[11px] text-slate-400">
+              ติดตั้งระบบใหม่ครั้งแรก?{' '}
+              <Link href="/install" className="text-blue-600 hover:underline font-bold">
+                เปิดหน้าวิซาร์ดติดตั้งระบบ (Install Wizard)
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
+
+      {/* Standalone Minimal Footer */}
+      <footer className="w-full max-w-5xl mx-auto pt-4 text-center text-xs text-slate-400 z-10">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3">
+          <span>{orgNameTh || 'ระบบลงทะเบียนและออกเกียรติบัตรออนไลน์'}</span>
+          <span className="hidden sm:inline">•</span>
+          <span>Registration & Certificate Management System</span>
+          <span className="hidden sm:inline">•</span>
+          <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
+            <ShieldCheck className="w-3.5 h-3.5" /> ตรวจสอบความถูกต้องได้ 100%
+          </span>
+        </div>
+      </footer>
 
       {/* Modal: Setup Guidance when Google Client ID is not yet provided */}
       {infoModalOpen && (
@@ -368,7 +423,7 @@ export default function LoginPage() {
               </div>
               <ol className="list-decimal list-inside space-y-1 text-slate-500 pl-1 leading-relaxed">
                 <li>เข้าสู่ระบบด้วยบัญชี Admin (<span className="font-mono text-slate-700">admin / admin1234</span>)</li>
-                <li>ไปที่เมนู <span className="font-semibold text-blue-700">⚙️ ตั้งค่าระบบ &gt; ระบบ Google SSO</span></li>
+                <li>ไปที่เมนู <span className="font-semibold text-blue-700">ตั้งค่าระบบ &gt; ระบบ Google SSO</span></li>
                 <li>ใส่ <span className="font-semibold text-slate-700">Google Client ID</span> จาก Google Cloud Console แล้วกดบันทึก</li>
               </ol>
             </div>

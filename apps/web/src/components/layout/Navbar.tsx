@@ -193,7 +193,12 @@ export default function Navbar() {
     window.location.href = '/login';
   };
 
-  if (pathname?.startsWith('/surveys') || pathname === '/install' || pathname?.startsWith('/events')) {
+  if (
+    pathname === '/login' ||
+    pathname === '/install' ||
+    pathname?.startsWith('/surveys') ||
+    pathname?.startsWith('/events')
+  ) {
     return null;
   }
 

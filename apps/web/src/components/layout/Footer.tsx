@@ -7,7 +7,12 @@ import { Award, ShieldCheck } from 'lucide-react';
 export default function Footer() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/surveys') || pathname === '/install' || pathname?.startsWith('/events')) {
+  if (
+    pathname === '/login' ||
+    pathname === '/install' ||
+    pathname?.startsWith('/surveys') ||
+    pathname?.startsWith('/events')
+  ) {
     return null;
   }
   return (
