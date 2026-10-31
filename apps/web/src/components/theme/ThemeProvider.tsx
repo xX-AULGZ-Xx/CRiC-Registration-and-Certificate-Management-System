@@ -98,21 +98,57 @@ export const FONT_SIZE_OPTIONS = [
   { id: 'extra-large', name: 'สบายตา (Extra Comfort - 18px)', value: '18px' },
 ];
 
+// Color calculation helpers
+function hexToRgb(hex: string): [number, number, number] {
+  let cleanHex = hex.replace('#', '').trim();
+  if (cleanHex.length === 3) {
+    cleanHex = cleanHex.split('').map((c) => c + c).join('');
+  }
+  const num = parseInt(cleanHex, 16);
+  if (isNaN(num)) return [30, 58, 138];
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
+  return `#${((1 << 24) + (clamp(r) << 16) + (clamp(g) << 8) + clamp(b)).toString(16).slice(1)}`;
+}
+
+function mixColor(color1: [number, number, number], color2: [number, number, number], weight: number): string {
+  const r = color1[0] * (1 - weight) + color2[0] * weight;
+  const g = color1[1] * (1 - weight) + color2[1] * weight;
+  const b = color1[2] * (1 - weight) + color2[2] * weight;
+  return rgbToHex(r, g, b);
+}
+
+export function generateColorShades(baseHex: string) {
+  const base = hexToRgb(baseHex);
+  const white: [number, number, number] = [255, 255, 255];
+  const black: [number, number, number] = [0, 0, 0];
+
+  return {
+    50: mixColor(base, white, 0.92),
+    100: mixColor(base, white, 0.82),
+    200: mixColor(base, white, 0.65),
+    300: mixColor(base, white, 0.45),
+    400: mixColor(base, white, 0.22),
+    500: baseHex,
+    600: mixColor(base, black, 0.12),
+    700: mixColor(base, black, 0.26),
+    800: mixColor(base, black, 0.45),
+    900: mixColor(base, black, 0.65),
+    950: mixColor(base, black, 0.80),
+  };
+}
+
 // Calculate a darker hover shade from hex color
 export function adjustColorBrightness(hex: string, percent: number): string {
   try {
-    let cleanHex = hex.replace('#', '');
-    if (cleanHex.length === 3) {
-      cleanHex = cleanHex.split('').map((c) => c + c).join('');
-    }
-    const num = parseInt(cleanHex, 16);
-    let r = (num >> 16) + Math.round((255 * percent) / 100);
-    let g = ((num >> 8) & 0x00ff) + Math.round((255 * percent) / 100);
-    let b = (num & 0x0000ff) + Math.round((255 * percent) / 100);
-    r = Math.min(255, Math.max(0, r));
-    g = Math.min(255, Math.max(0, g));
-    b = Math.min(255, Math.max(0, b));
-    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    const rgb = hexToRgb(hex);
+    let r = rgb[0] + Math.round((255 * percent) / 100);
+    let g = rgb[1] + Math.round((255 * percent) / 100);
+    let b = rgb[2] + Math.round((255 * percent) / 100);
+    return rgbToHex(r, g, b);
   } catch {
     return hex;
   }
@@ -133,14 +169,33 @@ export function applyThemeToDom(theme: ThemeSettings) {
   const fontSizeObj = FONT_SIZE_OPTIONS.find((s) => s.id === theme.theme_font_size) || FONT_SIZE_OPTIONS[0];
 
   const primaryHover = adjustColorBrightness(theme.theme_primary_color, -15);
+  const shades = generateColorShades(theme.theme_primary_color);
 
+  // Set primary color scale for Tailwind blue-* override
+  root.style.setProperty('--theme-p-50', shades[50]);
+  root.style.setProperty('--theme-p-100', shades[100]);
+  root.style.setProperty('--theme-p-200', shades[200]);
+  root.style.setProperty('--theme-p-300', shades[300]);
+  root.style.setProperty('--theme-p-400', shades[400]);
+  root.style.setProperty('--theme-p-500', shades[500]);
+  root.style.setProperty('--theme-p-600', shades[600]);
+  root.style.setProperty('--theme-p-700', shades[700]);
+  root.style.setProperty('--theme-p-800', shades[800]);
+  root.style.setProperty('--theme-p-900', shades[900]);
+  root.style.setProperty('--theme-p-950', shades[950]);
+
+  // Primary and Accent base
   root.style.setProperty('--color-primary', theme.theme_primary_color);
   root.style.setProperty('--color-primary-hover', primaryHover);
   root.style.setProperty('--color-accent', theme.theme_accent_color);
+
+  // Typography
   root.style.setProperty('--font-heading-family', headingFontObj.family);
   root.style.setProperty('--font-body-family', bodyFontObj.family);
   root.style.setProperty('--font-ui-family', headingFontObj.family);
   root.style.setProperty('--base-font-size', fontSizeObj.value);
+
+  // Component geometry
   root.style.setProperty('--app-radius', radiusObj.value);
 }
 

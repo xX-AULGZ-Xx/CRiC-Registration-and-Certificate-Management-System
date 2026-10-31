@@ -180,8 +180,8 @@ export default function HomePage() {
   return (
     <div className="space-y-12 pb-16">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-blue-900 via-indigo-900 to-slate-900 text-white pt-16 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(59,130,246,0.2),transparent_50%)]" />
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-950 via-blue-900 to-slate-900 text-white pt-16 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,var(--color-primary),transparent_60%)] opacity-30" />
         <div className="relative max-w-5xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-blue-200 text-xs sm:text-sm font-medium">
             <Sparkles className="w-4 h-4 text-amber-300" />
@@ -535,7 +535,7 @@ export default function HomePage() {
                   className={`h-36 p-5 flex flex-col justify-between text-white relative transition-colors ${
                     portalMode === 'evaluation'
                       ? 'bg-gradient-to-tr from-indigo-800 via-purple-700 to-slate-800'
-                      : 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500'
+                      : 'bg-gradient-to-tr from-blue-700 via-blue-600 to-teal-500'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1 flex-wrap">

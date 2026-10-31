@@ -2583,7 +2583,7 @@ export default function EventManagePage() {
             </div>
 
             {/* Hidden High-Resolution Canvas for 1024x1024 PNG download */}
-            <div style={{ display: 'none' }}>
+            <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
               <div ref={qrCanvasContainerRef}>
                 <QRCodeCanvas
                   value={currentPrUrl}

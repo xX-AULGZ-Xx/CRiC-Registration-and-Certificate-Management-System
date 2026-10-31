@@ -65,6 +65,19 @@
   --background-start-rgb: 248, 250, 252;
   --background-end-rgb: 241, 245, 249;
 
+  /* Global Theme Primary Color Scale */
+  --theme-p-50: #eff6ff;
+  --theme-p-100: #dbeafe;
+  --theme-p-200: #bfdbfe;
+  --theme-p-300: #93c5fd;
+  --theme-p-400: #60a5fa;
+  --theme-p-500: #3b82f6;
+  --theme-p-600: #2563eb;
+  --theme-p-700: #1d4ed8;
+  --theme-p-800: #1e40af;
+  --theme-p-900: #1e3a8a;
+  --theme-p-950: #172554;
+
   /* Global Theme CSS Variables */
   --color-primary: #1e3a8a;
   --color-primary-hover: #172554;
@@ -83,20 +96,12 @@ body {
   font-size: var(--base-font-size, 16px);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading-family, 'Prompt'), var(--font-prompt), sans-serif;
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading-family, 'Prompt'), var(--font-prompt), sans-serif !important;
 }
 
-.font-heading {
-  font-family: var(--font-heading-family, 'Prompt'), sans-serif !important;
-}
-
-.font-body {
-  font-family: var(--font-body-family, 'Sarabun'), sans-serif !important;
-}
-
-input, button, select, textarea, optgroup {
-  font-family: inherit;
+p, span, a, label, li, td, th, input, button, select, textarea, optgroup, .font-body {
+  font-family: var(--font-body-family, 'Sarabun'), var(--font-sarabun), sans-serif;
 }
 
 /* Dynamic Theme Helper Classes */
