@@ -63,6 +63,40 @@ export default function LoginPage() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('expired') === '1') {
         setErrorMsg('เซสชันการใช้งานของคุณหมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+      } else if (params.get('no_sso') !== '1') {
+        // Auto-detect Central SSO Session from panel.cric.ac.th
+        const existingToken = localStorage.getItem('token');
+        if (existingToken) {
+          window.location.href = '/dashboard';
+        } else {
+          const getCookie = (name: string) => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+            return null;
+          };
+
+          const ssoSessionToken = getCookie('cric_sso_session');
+          if (ssoSessionToken) {
+            setSsoLoading(true);
+            fetchApi('/api/v1/auth/sso/sync-session', {
+              method: 'POST',
+              body: JSON.stringify({ sessionToken: ssoSessionToken }),
+            })
+              .then((res) => {
+                if (res.success && res.data?.token) {
+                  localStorage.setItem('token', res.data.token);
+                  localStorage.setItem('user', JSON.stringify(res.data.user));
+                  window.location.href = '/dashboard';
+                } else {
+                  setSsoLoading(false);
+                }
+              })
+              .catch(() => {
+                setSsoLoading(false);
+              });
+          }
+        }
       }
     }
   }, [router]);

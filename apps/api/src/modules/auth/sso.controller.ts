@@ -227,6 +227,95 @@ ssoRouter.post('/callback', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/v1/auth/sso/sync-session
+ * Fast seamless auto-login when authenticated at Panel (cric.ac.th)
+ */
+ssoRouter.post('/sync-session', async (req: Request, res: Response) => {
+  try {
+    const rawToken = req.body?.sessionToken || req.cookies?.cric_sso_session;
+
+    if (!rawToken) {
+      return res.status(400).json({ success: false, message: 'ไม่พบเซสชันการเข้าสู่ระบบร่วม' });
+    }
+
+    let decoded: any = null;
+    try {
+      decoded = jwt.verify(rawToken, JWT_SECRET);
+    } catch (e: any) {
+      return res.status(401).json({ success: false, message: 'เซสชันไม่ถูกต้องหรือหมดอายุแล้ว' });
+    }
+
+    if (!decoded || (!decoded.email && !decoded.username)) {
+      return res.status(400).json({ success: false, message: 'ข้อมูลเซสชันไม่สมบูรณ์' });
+    }
+
+    const email = (decoded.email || `${decoded.username}@cric.ac.th`).toLowerCase().trim();
+    const username = (decoded.username || email.split('@')[0]).toLowerCase().trim();
+    const fullName = decoded.name || decoded.displayName || username;
+    const avatarUrl = decoded.picture || null;
+
+    // Check or provision user
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
+
+    if (user) {
+      if (!user.is_active) {
+        return res.status(403).json({ success: false, message: 'บัญชีผู้ใช้นี้ถูกระงับการใช้งานในระบบ RCMS' });
+      }
+    } else {
+      user = await prisma.user.create({
+        data: {
+          username,
+          email,
+          full_name: fullName,
+          password_hash: 'SSO_MANAGED_ACCOUNT',
+          role: Role.ORGANIZER,
+          is_active: true,
+          position: 'อาจารย์ / ผู้จัดกิจกรรม',
+          organization: 'วิทยาลัยอาชีวศึกษา CRIC',
+        },
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id.toString(),
+        username: user.username,
+        role: user.role,
+        full_name: user.full_name,
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'ซิงค์เซสชัน SSO สำเร็จ',
+      data: {
+        token,
+        user: serializeBigInt({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          full_name: user.full_name,
+          role: user.role,
+          position: user.position,
+          organization: user.organization,
+          signature_img: user.signature_img,
+          avatar_url: avatarUrl,
+        }),
+      },
+    });
+  } catch (error: any) {
+    console.error('Session sync error:', error);
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการซิงค์เซสชัน' });
+  }
+});
+
+/**
  * GET /api/v1/auth/sso/status
  * SSO Configuration Status
  */
