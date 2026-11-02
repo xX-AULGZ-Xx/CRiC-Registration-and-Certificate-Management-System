@@ -6,7 +6,7 @@ import { Role } from '@prisma/client';
 const ssoRouter = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'reg-cert-mgmt-system-secret-key-2026';
-const KEYCLOAK_BASE_URL = process.env.KEYCLOAK_BASE_URL || 'http://localhost:8085';
+const KEYCLOAK_BASE_URL = process.env.KEYCLOAK_BASE_URL || 'https://sso.cric.ac.th';
 const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM || 'cric-college';
 const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID || 'cric-rcms-app';
 const KEYCLOAK_CLIENT_SECRET = process.env.KEYCLOAK_CLIENT_SECRET || 'cric-rcms-secret-key-2026';
