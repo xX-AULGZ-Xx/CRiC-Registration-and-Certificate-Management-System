@@ -44,7 +44,7 @@ export default function SsoSessionGuard() {
         }
 
         // CASE 2: RCMS is NOT logged in, but user has an active Central SSO Session from Panel
-        if (!token && ssoSessionToken && pathname === '/login') {
+        if (!token && ssoSessionToken) {
           console.log('[SSO Guard] Central SSO session found, performing instant auto-login...');
           fetch('/api/v1/auth/sso/sync-session', {
             method: 'POST',
@@ -56,7 +56,11 @@ export default function SsoSessionGuard() {
               if (data.success && data.data?.token) {
                 localStorage.setItem('token', data.data.token);
                 localStorage.setItem('user', JSON.stringify(data.data.user));
-                window.location.href = '/dashboard';
+                // Notify Navbar and other components in the app
+                window.dispatchEvent(new CustomEvent('user-updated', { detail: data.data.user }));
+                if (pathname === '/login') {
+                  window.location.href = '/dashboard';
+                }
               }
             })
             .catch(() => {});
