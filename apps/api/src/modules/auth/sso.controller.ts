@@ -142,7 +142,15 @@ ssoRouter.post('/callback', async (req: Request, res: Response) => {
     const email = (userInfo.email || `${userInfo.preferred_username}@cric.ac.th`).toLowerCase().trim();
     const username = (userInfo.preferred_username || email.split('@')[0]).toLowerCase().trim();
     const fullName = userInfo.name || userInfo.full_name || username;
-    const avatarUrl = userInfo.picture || userInfo.avatar_url || userInfo.avatar || null;
+    
+    // Extract avatar URL (handle both string and array formats from Keycloak)
+    let rawAvatar = userInfo.picture || userInfo.avatar_url || userInfo.avatar || null;
+    if (Array.isArray(rawAvatar) && rawAvatar.length > 0) {
+      rawAvatar = rawAvatar[0];
+    }
+    const avatarUrl = typeof rawAvatar === 'string' && rawAvatar.startsWith('http') ? rawAvatar : null;
+    console.log(`[SSO Login] User: ${username}, Avatar found: ${avatarUrl ? 'YES' : 'NO'}`);
+
     const roles: string[] = userInfo.realm_access?.roles || [];
 
     // Check if user already exists in RCMS database (by email or username)
