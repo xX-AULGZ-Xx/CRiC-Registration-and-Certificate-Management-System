@@ -142,6 +142,7 @@ ssoRouter.post('/callback', async (req: Request, res: Response) => {
     const email = (userInfo.email || `${userInfo.preferred_username}@cric.ac.th`).toLowerCase().trim();
     const username = (userInfo.preferred_username || email.split('@')[0]).toLowerCase().trim();
     const fullName = userInfo.name || userInfo.full_name || username;
+    const avatarUrl = userInfo.picture || userInfo.avatar_url || userInfo.avatar || null;
     const roles: string[] = userInfo.realm_access?.roles || [];
 
     // Role Mapping:
@@ -212,6 +213,7 @@ ssoRouter.post('/callback', async (req: Request, res: Response) => {
           position: user.position,
           organization: user.organization,
           signature_img: user.signature_img,
+          avatar_url: avatarUrl,
         }),
       },
     });
