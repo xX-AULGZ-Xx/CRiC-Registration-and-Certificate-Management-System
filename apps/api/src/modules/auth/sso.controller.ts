@@ -145,13 +145,7 @@ ssoRouter.post('/callback', async (req: Request, res: Response) => {
     const avatarUrl = userInfo.picture || userInfo.avatar_url || userInfo.avatar || null;
     const roles: string[] = userInfo.realm_access?.roles || [];
 
-    // Role Mapping:
-    // admin -> ADMIN
-    // teacher / staff / others -> ORGANIZER
-    const isAdmin = roles.includes('admin') || username === 'admin' || email.startsWith('admin@');
-    const targetRole: Role = isAdmin ? Role.ADMIN : Role.ORGANIZER;
-
-    // Just-In-Time (JIT) Auto-Provisioning in MySQL
+    // Check if user already exists in RCMS database (by email or username)
     let user = await prisma.user.findFirst({
       where: {
         OR: [{ email }, { username }],
@@ -159,29 +153,26 @@ ssoRouter.post('/callback', async (req: Request, res: Response) => {
     });
 
     if (user) {
+      // 1. Existing User: PRESERVE original status, role, and profile details!
       if (!user.is_active) {
         return res.status(403).json({ success: false, message: 'บัญชีผู้ใช้งานนี้ถูกระงับการใช้งานในระบบ RCMS' });
       }
 
-      // Update user details & role
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          full_name: fullName || user.full_name,
-          role: targetRole,
-        },
-      });
+      // Do NOT overwrite user.role or any existing database status
+      console.log(`[SSO] Existing user found: ${user.username} (${user.email}), keeping original role: ${user.role}`);
     } else {
-      // Auto-create new user
+      // 2. New User: Always initialize with Role.ORGANIZER as default
+      // (Super Admin in RCMS can manually upgrade to ADMIN if needed)
+      console.log(`[SSO] New user detected: ${username} (${email}), initializing as ORGANIZER`);
       user = await prisma.user.create({
         data: {
           username,
           email,
           full_name: fullName,
           password_hash: 'SSO_MANAGED_ACCOUNT',
-          role: targetRole,
+          role: Role.ORGANIZER,
           is_active: true,
-          position: targetRole === Role.ADMIN ? 'ผู้ดูแลระบบกลาง' : 'อาจารย์ / ผู้จัดกิจกรรม',
+          position: 'อาจารย์ / ผู้จัดกิจกรรม',
           organization: 'วิทยาลัยอาชีวศึกษา CRIC',
         },
       });
