@@ -58,7 +58,7 @@ export default function RootLayout({
         </ThemeProvider>
         {/* CRIC Central Portal 9-Dots App Launcher Widget */}
         <Script
-          src={process.env.NEXT_PUBLIC_CRIC_LAUNCHER_URL || 'http://localhost:3004/widget/launcher.js'}
+          src={process.env.NEXT_PUBLIC_CRIC_LAUNCHER_URL || 'https://panel.cric.ac.th/widget/launcher.js'}
           strategy="lazyOnload"
         />
       </body>
