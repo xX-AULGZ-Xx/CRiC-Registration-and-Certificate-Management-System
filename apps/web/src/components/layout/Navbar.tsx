@@ -198,8 +198,8 @@ export default function Navbar() {
     document.cookie = 'cric_active_role' + expireStr;
     document.cookie = 'cric_user_profile' + expireStr;
 
-    // Single Sign-Out (SLO): Invalidate session on Keycloak Central SSO & return to Panel
-    const postLogoutRedirect = encodeURIComponent('https://panel.cric.ac.th/login');
+    // Single Sign-Out (SLO): Invalidate session on Keycloak Central SSO
+    const postLogoutRedirect = encodeURIComponent(window.location.origin + '/login');
     window.location.href = `https://sso.cric.ac.th/realms/cric-college/protocol/openid-connect/logout?client_id=cric-rcms-app&post_logout_redirect_uri=${postLogoutRedirect}`;
   };
 
