@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [infoModalOpen, setInfoModalOpen] = useState(false);
 
@@ -150,6 +151,25 @@ export default function LoginPage() {
     }
   };
 
+  // Handle CRIC Central SSO Login
+  const handleSsoLogin = async () => {
+    setSsoLoading(true);
+    setErrorMsg('');
+    try {
+      const redirectUri = window.location.origin + '/auth/callback';
+      const res = await fetchApi(`/api/v1/auth/sso/login-url?redirect_uri=${encodeURIComponent(redirectUri)}`);
+      if (res.success && res.data?.loginUrl) {
+        window.location.href = res.data.loginUrl;
+      } else {
+        setErrorMsg('ไม่สามารถเชื่อมต่อไปยัง CRIC Single Sign-On ได้');
+        setSsoLoading(false);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับ CRIC SSO');
+      setSsoLoading(false);
+    }
+  };
+
   // Standard Username / Password login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,6 +267,26 @@ export default function LoginPage() {
               <span className="font-medium">{errorMsg}</span>
             </div>
           )}
+
+          {/* CRIC Central Single Sign-On Primary Action */}
+          <div className="space-y-3">
+            <button
+              type="button"
+              disabled={ssoLoading}
+              onClick={handleSsoLogin}
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 hover:from-blue-800 hover:to-indigo-800 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-700/25 flex items-center justify-center gap-3 transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+            >
+              <ShieldCheck className="w-5 h-5 text-amber-300 shrink-0" />
+              <span>{ssoLoading ? 'กำลังเชื่อมต่อไปยัง CRIC SSO...' : 'เข้าสู่ระบบด้วย CRIC Single Sign-On'}</span>
+            </button>
+
+            <div className="relative flex items-center justify-center pt-2">
+              <div className="border-t border-slate-200 w-full" />
+              <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider absolute">
+                หรือใช้อีเมล / บัญชีในระบบ
+              </span>
+            </div>
+          </div>
 
           {/* Traditional Form */}
           <form onSubmit={handleLogin} className="space-y-4">

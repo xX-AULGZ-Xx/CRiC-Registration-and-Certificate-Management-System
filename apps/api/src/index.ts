@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import authRouter from './modules/auth/auth.controller';
+import ssoRouter from './modules/auth/sso.controller';
 import eventRouter from './modules/events/event.controller';
 import registrationRouter from './modules/registration/registration.controller';
 import evaluationRouter from './modules/evaluation/evaluation.controller';
@@ -117,6 +118,7 @@ app.get('/api/v1/system/favicon.ico', async (req, res) => {
 });
 
 // API Routes
+app.use('/api/v1/auth/sso', ssoRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/events', eventRouter);
 app.use('/api/v1/registration', registrationRouter);

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Prompt, Sarabun } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -55,6 +56,11 @@ export default function RootLayout({
             <Footer />
           </InstallGuard>
         </ThemeProvider>
+        {/* CRIC Central Portal 9-Dots App Launcher Widget */}
+        <Script
+          src={process.env.NEXT_PUBLIC_CRIC_LAUNCHER_URL || 'http://localhost:3004/widget/launcher.js'}
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
