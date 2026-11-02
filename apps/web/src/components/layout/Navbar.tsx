@@ -311,6 +311,9 @@ export default function Navbar() {
               </Link>
             )}
 
+            {/* CRIC 9-Dots App Launcher Mounted In Navbar */}
+            <div id="cric-launcher-container" className="flex items-center shrink-0 mx-0.5 sm:mx-1" />
+
             {currentUser ? (
               <div className="relative pl-1.5 sm:pl-2 border-l border-slate-200" ref={dropdownRef}>
                 {/* Profile Trigger Button */}
