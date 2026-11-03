@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [ssoLoading, setSsoLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   // System Branding & Google SSO State
@@ -61,8 +62,13 @@ export default function LoginPage() {
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('expired') === '1') {
-        setErrorMsg('เซสชันการใช้งานของคุณหมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+      const isLoggedOut = params.get('logout') === '1';
+      const isExpired = params.get('expired') === '1';
+
+      if (isLoggedOut) {
+        setSuccessMsg('ออกจากระบบเรียบร้อยแล้ว');
+      } else if (isExpired) {
+        setErrorMsg('เซสชันการเข้าสู่ระบบร่วมหมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
       } else if (params.get('no_sso') !== '1') {
         // Auto-detect Central SSO Session from panel.cric.ac.th
         const existingToken = localStorage.getItem('token');
@@ -299,6 +305,14 @@ export default function LoginPage() {
             <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-2.5 animate-in fade-in">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span className="font-medium">{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Success Notification */}
+          {successMsg && (
+            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm flex items-center gap-2.5 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <span className="font-medium">{successMsg}</span>
             </div>
           )}
 

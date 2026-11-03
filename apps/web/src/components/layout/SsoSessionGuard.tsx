@@ -39,12 +39,13 @@ export default function SsoSessionGuard() {
           console.warn('[SSO Guard] Central session has been logged out from Panel. Logging out RCMS...');
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          window.location.href = 'https://panel.cric.ac.th/login';
+          window.location.href = window.location.origin + '/login?expired=1';
           return;
         }
 
         // CASE 2: RCMS is NOT logged in, but user has an active Central SSO Session from Panel
-        if (!token && ssoSessionToken) {
+        const isLoggedOutUrl = window.location.search.includes('logout=1') || window.location.search.includes('expired=1');
+        if (!token && ssoSessionToken && !isLoggedOutUrl) {
           console.log('[SSO Guard] Central SSO session found, performing instant auto-login...');
           fetch('/api/v1/auth/sso/sync-session', {
             method: 'POST',
