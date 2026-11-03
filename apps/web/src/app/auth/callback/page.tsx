@@ -48,6 +48,17 @@ function CallbackContent() {
             const domainStr = isCric ? '; Domain=.cric.ac.th' : '';
             document.cookie = `cric_logged_in=true; Path=/${domainStr}; Max-Age=604800; SameSite=Lax`;
           }
+
+          // Notify Central Panel and sibling tabs about the new active session
+          try {
+            if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+              const channel = new BroadcastChannel('cric_sso_channel');
+              channel.postMessage({ type: 'LOGIN' });
+              channel.close();
+            }
+            localStorage.setItem('cric_sso_login_event', Date.now().toString());
+          } catch {}
+
           // Redirect to dashboard
           window.location.href = '/dashboard';
         } else {
