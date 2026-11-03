@@ -198,6 +198,16 @@ export default function Navbar() {
     document.cookie = 'cric_active_role' + expireStr;
     document.cookie = 'cric_user_profile' + expireStr;
 
+    // Cross-tab notification to immediately logout open Panel and sibling tabs
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('cric_sso_channel');
+        channel.postMessage({ type: 'LOGOUT' });
+        channel.close();
+      }
+      localStorage.setItem('cric_sso_logout_event', Date.now().toString());
+    } catch {}
+
     // Single Sign-Out (SLO): Invalidate session on Keycloak Central SSO
     const postLogoutRedirect = encodeURIComponent(window.location.origin + '/login?logout=1');
     window.location.href = `https://sso.cric.ac.th/realms/cric-college/protocol/openid-connect/logout?client_id=cric-rcms-app&post_logout_redirect_uri=${postLogoutRedirect}`;
