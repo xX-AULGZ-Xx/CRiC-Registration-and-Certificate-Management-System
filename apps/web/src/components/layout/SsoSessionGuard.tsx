@@ -28,7 +28,27 @@ export default function SsoSessionGuard() {
       return null;
     };
 
+    const isTokenValid = (token: string): boolean => {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return false;
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+          return false;
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    let isSyncing = false;
+
     const syncCentralSessionState = () => {
+      // Pause checks when tab is minimized or hidden in background
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (isSyncing) return;
+
       const token = localStorage.getItem('token');
       const hasCricCookie = document.cookie.split(';').some((c) => c.trim().startsWith('cric_logged_in=true'));
       const ssoSessionToken = getCookie('cric_sso_session');
@@ -45,7 +65,8 @@ export default function SsoSessionGuard() {
 
         // CASE 2: RCMS is NOT logged in, but user has an active Central SSO Session from Panel
         const isLoggedOutUrl = window.location.search.includes('logout=1') || window.location.search.includes('expired=1');
-        if (!token && ssoSessionToken && !isLoggedOutUrl) {
+        if (!token && ssoSessionToken && isTokenValid(ssoSessionToken) && !isLoggedOutUrl) {
+          isSyncing = true;
           console.log('[SSO Guard] Central SSO session found, performing instant auto-login...');
           fetch('/api/v1/auth/sso/sync-session', {
             method: 'POST',
@@ -64,7 +85,10 @@ export default function SsoSessionGuard() {
                 }
               }
             })
-            .catch(() => {});
+            .catch(() => {})
+            .finally(() => {
+              isSyncing = false;
+            });
         }
       }
     };
@@ -83,8 +107,12 @@ export default function SsoSessionGuard() {
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibilityChange);
 
-    // Periodic heartbeat check every 2.5 seconds
-    const interval = setInterval(syncCentralSessionState, 2500);
+    // Smart 4-second heartbeat (only active when tab is visible)
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        syncCentralSessionState();
+      }
+    }, 4000);
 
     return () => {
       window.removeEventListener('focus', onFocus);
