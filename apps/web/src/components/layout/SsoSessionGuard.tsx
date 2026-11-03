@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 
 export default function SsoSessionGuard() {
   const pathname = usePathname();
+  const wasCentralActiveRef = React.useRef<boolean>(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -53,10 +54,15 @@ export default function SsoSessionGuard() {
       const hasCricCookie = document.cookie.split(';').some((c) => c.trim().startsWith('cric_logged_in=true'));
       const ssoSessionToken = getCookie('cric_sso_session');
 
+      if (hasCricCookie || (ssoSessionToken && isTokenValid(ssoSessionToken))) {
+        wasCentralActiveRef.current = true;
+      }
+
       if (isCricDomain) {
-        // CASE 1: RCMS is currently logged in, but Central Session (cric_logged_in) was terminated/logged out
-        if (token && !hasCricCookie) {
+        // CASE 1: RCMS is currently logged in, but Central Session (cric_logged_in) was previously active and now TERMINATED
+        if (token && wasCentralActiveRef.current && !hasCricCookie && ssoSessionToken === null) {
           console.warn('[SSO Guard] Central session has been logged out from Panel. Logging out RCMS...');
+          wasCentralActiveRef.current = false;
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = window.location.origin + '/login?expired=1';

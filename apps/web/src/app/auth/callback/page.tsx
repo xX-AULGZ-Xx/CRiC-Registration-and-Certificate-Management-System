@@ -43,6 +43,11 @@ function CallbackContent() {
         if (res.success && res.data?.token) {
           localStorage.setItem('token', res.data.token);
           localStorage.setItem('user', JSON.stringify(res.data.user));
+          if (typeof document !== 'undefined') {
+            const isCric = window.location.hostname.includes('cric.ac.th');
+            const domainStr = isCric ? '; Domain=.cric.ac.th' : '';
+            document.cookie = `cric_logged_in=true; Path=/${domainStr}; Max-Age=604800; SameSite=Lax`;
+          }
           // Redirect to dashboard
           window.location.href = '/dashboard';
         } else {
