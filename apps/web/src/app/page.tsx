@@ -26,6 +26,7 @@ export default function HomePage() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showLogoutToast, setShowLogoutToast] = useState(false);
 
   // Portal Mode: 'register' | 'evaluation'
   const [portalMode, setPortalMode] = useState<'register' | 'evaluation'>('register');
@@ -73,6 +74,23 @@ export default function HomePage() {
     };
     window.addEventListener('portal-mode-changed', handleModeChange);
     return () => window.removeEventListener('portal-mode-changed', handleModeChange);
+  }, []);
+
+  // Detect ?logout=1 and show toast notification
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('logout') === '1') {
+        setShowLogoutToast(true);
+        params.delete('logout');
+        const remainingQuery = params.toString() ? `?${params.toString()}` : '';
+        window.history.replaceState(null, '', window.location.pathname + remainingQuery);
+        const timer = setTimeout(() => {
+          setShowLogoutToast(false);
+        }, 3500);
+        return () => clearTimeout(timer);
+      }
+    }
   }, []);
 
   // Debounced search suggestions
@@ -642,6 +660,14 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Logout Toast Notification */}
+      {showLogoutToast && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 bg-slate-900/95 text-white text-xs sm:text-sm font-semibold rounded-2xl shadow-2xl border border-slate-700/60 backdrop-blur-md animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>ออกจากระบบเรียบร้อยแล้ว</span>
+        </div>
+      )}
     </div>
   );
 }
