@@ -57,7 +57,21 @@ function CallbackContent() {
             setLoading(false);
           }
         })
-        .catch((err: any) => {
+        .catch(async (err: any) => {
+          const nativeToken = searchParams.get('token');
+          if (nativeToken) {
+            try {
+              const meRes = await fetchApi('/api/v1/auth/me', {
+                headers: { Authorization: `Bearer ${nativeToken}` },
+              });
+              if (meRes.success && meRes.data) {
+                localStorage.setItem('token', nativeToken);
+                localStorage.setItem('user', JSON.stringify(meRes.data));
+                window.location.href = '/dashboard';
+                return;
+              }
+            } catch {}
+          }
           setErrorMsg(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
           setLoading(false);
         });
