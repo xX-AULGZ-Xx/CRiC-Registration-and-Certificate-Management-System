@@ -61,11 +61,14 @@ export default function SsoSessionGuard() {
       if (isCricDomain) {
         // CASE 1: RCMS is currently logged in, but Central Session (cric_logged_in) was previously active and now TERMINATED
         if (token && wasCentralActiveRef.current && !hasCricCookie && ssoSessionToken === null) {
-          console.warn('[SSO Guard] Central session has been logged out from Panel. Logging out RCMS...');
+          console.warn('[SSO Guard] Central session has been logged out from Panel. Triggering session expired modal...');
           wasCentralActiveRef.current = false;
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          window.location.href = window.location.origin + '/login?expired=1';
+          localStorage.removeItem('auth_mode');
+          if (pathname !== '/login') {
+            window.dispatchEvent(new CustomEvent('cric:session-expired', { detail: { reason: 'central_logout' } }));
+          }
           return;
         }
 
@@ -99,6 +102,44 @@ export default function SsoSessionGuard() {
       }
     };
 
+    // Cross-tab broadcast channel for immediate synchronous SLO (Single Log Out)
+    let channel: BroadcastChannel | null = null;
+    try {
+      if ('BroadcastChannel' in window) {
+        channel = new BroadcastChannel('cric_sso_channel');
+        channel.onmessage = (event) => {
+          if (event.data && event.data.type === 'LOGOUT') {
+            console.log('[SSO Guard] Received cross-tab LOGOUT broadcast');
+            const isLocal = localStorage.getItem('auth_mode') === 'local';
+            if (!isLocal) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              localStorage.removeItem('auth_mode');
+              if (pathname !== '/login') {
+                window.dispatchEvent(new CustomEvent('cric:session-expired', { detail: { reason: 'central_logout' } }));
+              }
+            }
+          }
+        };
+      }
+    } catch {}
+
+    // Storage event listener for cross-tab sync fallback
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'cric_sso_logout_event') {
+        const isLocal = localStorage.getItem('auth_mode') === 'local';
+        if (!isLocal) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('auth_mode');
+          if (pathname !== '/login') {
+            window.dispatchEvent(new CustomEvent('cric:session-expired', { detail: { reason: 'central_logout' } }));
+          }
+        }
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
     // Run check immediately
     syncCentralSessionState();
 
@@ -123,6 +164,8 @@ export default function SsoSessionGuard() {
     return () => {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('storage', onStorage);
+      if (channel) channel.close();
       clearInterval(interval);
     };
   }, [pathname]);

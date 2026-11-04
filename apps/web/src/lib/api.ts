@@ -35,11 +35,12 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   
   if (!res.ok) {
     if (res.status === 401 && typeof window !== 'undefined') {
-      // If unauthorized on dashboard pages, clear credentials and redirect to login
+      // If unauthorized on dashboard pages, clear credentials and trigger modal
       if (window.location.pathname.startsWith('/dashboard')) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login?expired=1';
+        localStorage.removeItem('auth_mode');
+        window.dispatchEvent(new CustomEvent('cric:session-expired', { detail: { reason: 'api_unauthorized' } }));
         return { success: false, message: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' };
       }
     }

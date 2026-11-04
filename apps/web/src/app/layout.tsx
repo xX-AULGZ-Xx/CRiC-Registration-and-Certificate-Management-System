@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import InstallGuard from '@/components/layout/InstallGuard';
 import ThemeProvider from '@/components/theme/ThemeProvider';
 import SsoSessionGuard from '@/components/layout/SsoSessionGuard';
+import SessionExpiredModal from '@/components/layout/SessionExpiredModal';
 
 const prompt = Prompt({
   weight: ['300', '400', '500', '600', '700'],
@@ -53,6 +54,7 @@ export default function RootLayout({
         <ThemeProvider>
           <InstallGuard>
             <SsoSessionGuard />
+            <SessionExpiredModal />
             <Navbar />
             <main className="flex-1">{children}</main>
             <Footer />
