@@ -180,19 +180,19 @@ export default function HomePage() {
   return (
     <div className="space-y-12 pb-16">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-blue-950 via-blue-900 to-slate-900 text-white pt-16 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-950 via-blue-900 to-slate-900 text-white pt-8 pb-10 sm:pt-16 sm:pb-20 px-3 sm:px-6 lg:px-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,var(--color-primary),transparent_60%)] opacity-30" />
-        <div className="relative max-w-5xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-blue-200 text-xs sm:text-sm font-medium">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>
+        <div className="relative max-w-5xl mx-auto text-center space-y-4 sm:space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-blue-200 text-xs sm:text-sm font-medium">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />
+            <span className="truncate max-w-[280px] xs:max-w-none">
               {portalMode === 'evaluation'
                 ? 'ระบบแบบประเมินความพึงพอใจโครงการออนไลน์'
                 : 'ระบบลงทะเบียนเข้าร่วมกิจกรรมและรับเกียรติบัตรออนไลน์'}
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+          <h1 className="text-2xl xs:text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
             {portalMode === 'evaluation' ? (
               <>
                 แบบประเมินความพึงพอใจโครงการ & <br className="hidden sm:inline" />
@@ -210,23 +210,23 @@ export default function HomePage() {
             )}
           </h1>
 
-          <p className="max-w-2xl mx-auto text-slate-300 text-sm sm:text-base leading-relaxed">
+          <p className="max-w-2xl mx-auto text-slate-300 text-xs sm:text-base leading-relaxed px-2">
             {portalMode === 'evaluation'
               ? 'ตอบแบบประเมินความพึงพอใจโครงการและกิจกรรมออนไลน์ เพื่อนำข้อมูลและข้อเสนอแนะไปพัฒนาคุณภาพการจัดโครงการ'
-              : 'สะดวกรวดเร็ว เข้าร่วมกิจกรรม เช็คชื่อด้วย QR Code พร้อมค้นหาและดาวน์โหลดเกียรติบัตรฉบับดิจิทัลที่มีระบบตรวจสอบความถูกต้องตลอด 24 ชั่วโมง'}
+              : 'สะดวกรวดเร็ว เข้าร่วมกิจกรรม เช็คชื่อด้วย QR Code พร้อมค้นหาและดาวน์โหลดเกียรติบัตรฉบับดิจิทัลตลอด 24 ชั่วโมง'}
           </p>
 
           {/* Search Box with Autocomplete Suggestions */}
-          <div ref={searchContainerRef} className="relative max-w-xl mx-auto">
+          <div ref={searchContainerRef} className="relative max-w-xl mx-auto px-1 sm:px-0">
             <form
               onSubmit={handleSearchSubmit}
-              className="flex items-center bg-white rounded-2xl p-1.5 shadow-2xl border border-white/20 relative z-20"
+              className="flex items-center bg-white rounded-2xl p-1 sm:p-1.5 shadow-2xl border border-white/20 relative z-20"
             >
-              <div className="pl-3 text-slate-400">
+              <div className="pl-2.5 sm:pl-3 text-slate-400">
                 {loadingSuggestions ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-600" />
                 ) : (
-                  <Search className="w-5 h-5" />
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </div>
               <input
@@ -250,10 +250,10 @@ export default function HomePage() {
                 }}
                 placeholder={
                   portalMode === 'evaluation'
-                    ? 'ค้นหาแบบประเมินด้วยชื่อกิจกรรม หรือ รหัสกิจกรรม...'
-                    : 'ค้นหาเกียรติบัตรด้วย เบอร์โทร หรือ เลขบัตรประชาชน...'
+                    ? 'ค้นหาแบบประเมินด้วยชื่อ หรือรหัส...'
+                    : 'ค้นหาเกียรติบัตรด้วย เบอร์โทร หรือ เลขบัตร...'
                 }
-                className="w-full px-3 py-2.5 text-sm sm:text-base text-slate-800 placeholder-slate-400 focus:outline-none"
+                className="w-full px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-base text-slate-800 placeholder-slate-400 focus:outline-none min-w-0"
               />
               {searchQuery && (
                 <button
@@ -263,14 +263,14 @@ export default function HomePage() {
                     setSuggestions({ events: [], certificates: [] });
                     setShowSuggestions(false);
                   }}
-                  className="p-1 text-slate-400 hover:text-slate-600 mr-1"
+                  className="p-1 text-slate-400 hover:text-slate-600 mr-0.5 sm:mr-1 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl text-white font-bold text-sm shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer bg-blue-700 hover:bg-blue-800"
+                className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer bg-blue-700 hover:bg-blue-800 shrink-0"
               >
                 ค้นหา
               </button>
@@ -402,68 +402,68 @@ export default function HomePage() {
           </div>
 
           {/* Feature Highlights */}
-          <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
+          <div className="pt-4 sm:pt-6 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto text-left">
             {portalMode === 'evaluation' ? (
               <>
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-                  <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
-                    <ClipboardCheck className="w-5 h-5" />
+                <div className="flex items-center gap-3 p-3 sm:p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300 shrink-0">
+                    <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-white">ตอบแบบสอบถามง่าย</div>
-                    <div className="text-slate-300">รองรับทั้งมือถือและคอมพิวเตอร์</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">รองรับทั้งมือถือและคอมพิวเตอร์</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-                  <div className="p-2 rounded-lg bg-teal-500/20 text-teal-300">
-                    <Star className="w-5 h-5" />
+                <div className="flex items-center gap-3 p-3 sm:p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-teal-500/20 text-teal-300 shrink-0">
+                    <Star className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-white">วัดผลครอบคลุม</div>
-                    <div className="text-slate-300">ประเมินตามเกณฑ์มาตรฐานโครงการ</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">ประเมินตามเกณฑ์มาตรฐานโครงการ</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300">
-                    <ShieldCheck className="w-5 h-5" />
+                <div className="flex items-center gap-3 p-3 sm:p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300 shrink-0">
+                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-white">ประมวลผลแม่นยำ</div>
-                    <div className="text-slate-300">สรุปผลแบบทันใจและปลอดภัย</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">สรุปผลแบบทันใจและปลอดภัย</div>
                   </div>
                 </div>
               </>
             ) : (
               <>
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-                  <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
-                    <ClipboardCheck className="w-5 h-5" />
+                <div className="flex items-center gap-3 p-3 sm:p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300 shrink-0">
+                    <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-white">ลงทะเบียนง่าย</div>
-                    <div className="text-slate-300">กรอกข้อมูลรับ QR ทันที</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">กรอกข้อมูลรับ QR ทันที</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-                  <div className="p-2 rounded-lg bg-teal-500/20 text-teal-300">
-                    <Award className="w-5 h-5" />
+                <div className="flex items-center gap-3 p-3 sm:p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-teal-500/20 text-teal-300 shrink-0">
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-white">รับเกียรติบัตรทันใจ</div>
-                    <div className="text-slate-300">ดาวน์โหลด PDF คมชัดสูง</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">ดาวน์โหลด PDF คมชัดสูง</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
-                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300">
-                    <ShieldCheck className="w-5 h-5" />
+                <div className="flex items-center gap-3 p-3 sm:p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
+                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300 shrink-0">
+                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-white">ตรวจความถูกต้องได้</div>
-                    <div className="text-slate-300">สแกน QR ยืนยันเอกสารจริง</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">สแกน QR ยืนยันเอกสารจริง</div>
                   </div>
                 </div>
               </>
@@ -473,23 +473,23 @@ export default function HomePage() {
       </section>
 
       {/* Events List Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-5 sm:mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <h2 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 sm:gap-2.5">
               {portalMode === 'evaluation' ? (
                 <>
-                  <Star className="w-6 h-6 text-blue-600 fill-blue-600" />
+                  <Star className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 fill-blue-600" />
                   <span>แบบประเมินความพึงพอใจโครงการ</span>
                 </>
               ) : (
                 <>
-                  <Calendar className="w-6 h-6 text-blue-600" />
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                   <span>กิจกรรมและการอบรมที่เปิดรับลงทะเบียน</span>
                 </>
               )}
             </h2>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-500 text-xs sm:text-sm mt-0.5 sm:mt-1">
               {portalMode === 'evaluation'
                 ? 'เลือกโครงการที่คุณเข้าร่วมเพื่อตอบแบบประเมินความพึงพอใจ'
                 : 'เลือกกิจกรรมที่ต้องการเพื่อกรอกข้อมูลลงทะเบียนเข้าร่วมงาน'}
@@ -498,21 +498,21 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[1, 2, 3].map((n) => (
               <div key={n} className="h-64 rounded-2xl bg-slate-200 animate-pulse" />
             ))}
           </div>
         ) : displayedEvents.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 shadow-xs">
-            <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-slate-700">
+          <div className="text-center py-12 sm:py-16 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+            <Calendar className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-base sm:text-lg font-bold text-slate-700">
               {portalMode === 'evaluation' ? 'ยังไม่มีแบบประเมินที่เปิดรับในขณะนี้' : 'ยังไม่มีกิจกรรมที่เปิดรับในขณะนี้'}
             </h3>
-            <p className="text-slate-400 text-sm mt-1">กรุณากลับมาตรวจสอบใหม่อีกครั้งในภายหลัง</p>
+            <p className="text-slate-400 text-xs sm:text-sm mt-1">กรุณากลับมาตรวจสอบใหม่อีกครั้งในภายหลัง</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {displayedEvents.map((evt) => {
               const regCfg = evt.registration_config || {};
               const certCfg = evt.certificate_config || {};
@@ -524,28 +524,28 @@ export default function HomePage() {
               return (
               <div
                 key={evt.id}
-                className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col overflow-hidden group"
+                className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col overflow-hidden group"
               >
                 {/* Banner or Header */}
                 <div
-                  className={`h-36 p-5 flex flex-col justify-between text-white relative transition-colors ${
+                  className={`h-28 sm:h-36 p-4 sm:p-5 flex flex-col justify-between text-white relative transition-colors ${
                     portalMode === 'evaluation'
                       ? 'bg-gradient-to-tr from-blue-900 via-blue-800 to-slate-800'
                       : 'bg-gradient-to-tr from-blue-700 via-blue-600 to-teal-500'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1 flex-wrap">
-                    <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold">
+                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] sm:text-xs font-semibold">
                       {evt.event_code || 'EVENT'}
                     </span>
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
                       {hasBoth && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-white/25 text-white backdrop-blur-xs">
-                          มีทั้งลงทะเบียนและประเมิน
+                        <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-white/25 text-white backdrop-blur-xs">
+                          ลงทะเบียน & ประเมิน
                         </span>
                       )}
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold ${
                           portalMode === 'evaluation'
                             ? 'bg-blue-600/90 text-white'
                             : evt.status === 'OPEN'
@@ -562,16 +562,16 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-blue-100 font-medium line-clamp-1">
+                    <div className="text-[11px] sm:text-xs text-blue-100 font-medium line-clamp-1">
                       {evt.organizer?.organization || 'วิทยาลัยอาชีวศึกษาเชียงราย'}
                     </div>
                   </div>
                 </div>
 
                 {/* Body Content */}
-                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition line-clamp-2">
+                <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3 sm:space-y-4">
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-700 transition line-clamp-2">
                       {evt.title}
                     </h3>
 
@@ -581,7 +581,7 @@ export default function HomePage() {
                       </p>
                     )}
 
-                    <div className="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div className="space-y-1.5 sm:space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
                       {evt.start_date && (
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
@@ -620,7 +620,7 @@ export default function HomePage() {
                     {portalMode === 'evaluation' ? (
                       <Link
                         href={`/surveys/${evt.id}`}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-700 hover:bg-blue-800 text-white shadow-md transition active:scale-98"
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-blue-700 hover:bg-blue-800 text-white shadow-md transition active:scale-98"
                       >
                         <ClipboardCheck className="w-4 h-4" />
                         <span>ทำแบบประเมินความพึงพอใจ</span>
@@ -628,7 +628,7 @@ export default function HomePage() {
                     ) : (
                       <Link
                         href={`/events/${evt.id}`}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-50 text-blue-700 hover:bg-blue-700 hover:text-white transition group-hover:bg-blue-700 group-hover:text-white"
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-blue-700 text-white hover:bg-blue-800 shadow-md transition active:scale-98"
                       >
                         <span>รายละเอียด & ลงทะเบียน</span>
                         <ArrowRight className="w-4 h-4" />

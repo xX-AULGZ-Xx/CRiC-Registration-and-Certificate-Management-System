@@ -226,10 +226,10 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14 md:h-16">
           {/* Brand & Mode Switch */}
           <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5 min-w-0 shrink">
-            <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink min-w-0">
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink min-w-0">
               {brandLogo ? (
                 <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center group-hover:scale-105 transition shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -246,21 +246,21 @@ export default function Navbar() {
                 </div>
               )}
               <div className="min-w-0">
-                <div className="font-bold text-slate-900 text-sm sm:text-base lg:text-lg leading-tight tracking-tight truncate max-w-[130px] xs:max-w-[160px] sm:max-w-[220px] md:max-w-none">
+                <div className="font-bold text-slate-900 text-xs xs:text-sm sm:text-base lg:text-lg leading-tight tracking-tight truncate max-w-[150px] xs:max-w-[200px] sm:max-w-[260px] md:max-w-none">
                   {brandNameTh}
                 </div>
-                <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[130px] xs:max-w-[160px] sm:max-w-[220px] md:max-w-none hidden xs:block">
+                <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[150px] xs:max-w-[200px] sm:max-w-[260px] md:max-w-none hidden xs:block">
                   {brandNameEn}
                 </div>
               </div>
             </Link>
 
-            {/* Mode Switch: ลงทะเบียน vs ประเมินความพึงพอใจ */}
-            <div className="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl border border-slate-200/90 shadow-2xs shrink-0">
+            {/* Mode Switch: ลงทะเบียน vs ประเมินความพึงพอใจ (Desktop only, Mobile in Row 2) */}
+            <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/90 shadow-2xs shrink-0">
               <button
                 type="button"
                 onClick={() => handleSwitchMode('register')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   portalMode === 'register'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
@@ -274,7 +274,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => handleSwitchMode('evaluation')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   portalMode === 'evaluation'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
@@ -282,44 +282,46 @@ export default function Navbar() {
                 title="โหมดทำแบบประเมินความพึงพอใจ"
               >
                 <Star className="w-3.5 h-3.5 shrink-0 text-amber-300" />
-                <span className="hidden xs:inline">ประเมินความพึงพอใจ</span>
-                <span className="xs:hidden">ประเมิน</span>
+                <span>ประเมินความพึงพอใจ</span>
               </button>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {portalMode === 'register' ? (
-              <>
-                <Link
-                  href="/?mode=register"
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/70 transition"
-                  title="กิจกรรมลงทะเบียนทั้งหมด"
-                >
-                  <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span className="hidden md:inline">กิจกรรมทั้งหมด</span>
-                </Link>
+          {/* Navigation Links & Action Controls */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden md:flex items-center gap-1 sm:gap-2">
+              {portalMode === 'register' ? (
+                <>
+                  <Link
+                    href="/?mode=register"
+                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/70 transition"
+                    title="กิจกรรมลงทะเบียนทั้งหมด"
+                  >
+                    <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span>กิจกรรมทั้งหมด</span>
+                  </Link>
 
+                  <Link
+                    href="/certificates/search"
+                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-teal-700 hover:bg-teal-50/70 transition"
+                    title="ค้นหาเกียรติบัตร"
+                  >
+                    <Search className="w-4 h-4 text-teal-600 shrink-0" />
+                    <span>ค้นหาเกียรติบัตร</span>
+                  </Link>
+                </>
+              ) : (
                 <Link
-                  href="/certificates/search"
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-teal-700 hover:bg-teal-50/70 transition"
-                  title="ค้นหาเกียรติบัตร"
+                  href="/?mode=evaluation"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/70 transition"
+                  title="แบบประเมินทั้งหมด"
                 >
-                  <Search className="w-4 h-4 text-teal-600 shrink-0" />
-                  <span className="hidden sm:inline">ค้นหาเกียรติบัตร</span>
+                  <Star className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>แบบประเมินทั้งหมด</span>
                 </Link>
-              </>
-            ) : (
-              <Link
-                href="/?mode=evaluation"
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/70 transition"
-                title="แบบประเมินทั้งหมด"
-              >
-                <Star className="w-4 h-4 text-amber-500 shrink-0" />
-                <span className="hidden sm:inline">แบบประเมินทั้งหมด</span>
-              </Link>
-            )}
+              )}
+            </nav>
 
             {/* CRIC 9-Dots App Launcher Mounted In Navbar */}
             <div id="cric-launcher-container" data-cric-theme="light" className="flex items-center shrink-0 mx-0.5 sm:mx-1" />
@@ -475,7 +477,79 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
-          </nav>
+          </div>
+        </div>
+
+        {/* Row 2 on Mobile (< md): Mode Switcher + Quick Navigation Links */}
+        <div className="md:hidden py-1.5 border-t border-slate-100 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+          {/* Mode Switcher Segmented Control */}
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/90 shadow-2xs shrink-0">
+            <button
+              type="button"
+              onClick={() => handleSwitchMode('register')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                portalMode === 'register'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
+            >
+              <ClipboardList className="w-3.5 h-3.5 shrink-0" />
+              <span>ลงทะเบียน</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSwitchMode('evaluation')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                portalMode === 'evaluation'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
+            >
+              <Star className="w-3.5 h-3.5 shrink-0 text-amber-300" />
+              <span>ประเมิน</span>
+            </button>
+          </div>
+
+          {/* Mobile Nav Links */}
+          <div className="flex items-center gap-1 shrink-0">
+            {portalMode === 'register' ? (
+              <>
+                <Link
+                  href="/?mode=register"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50/70 hover:text-blue-700 transition"
+                >
+                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                  <span>กิจกรรม</span>
+                </Link>
+                <Link
+                  href="/certificates/search"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:bg-teal-50/70 hover:text-teal-700 transition"
+                >
+                  <Search className="w-3.5 h-3.5 text-teal-600" />
+                  <span>เกียรติบัตร</span>
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/?mode=evaluation"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50/70 hover:text-blue-700 transition"
+              >
+                <Star className="w-3.5 h-3.5 text-amber-500" />
+                <span>แบบประเมิน</span>
+              </Link>
+            )}
+
+            {currentUser && (
+              <Link
+                href={portalMode === 'evaluation' ? '/dashboard?mode=evaluation' : '/dashboard'}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50/60 hover:bg-blue-100 transition"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                <span>จัดการ</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </header>

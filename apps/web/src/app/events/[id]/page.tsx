@@ -128,13 +128,13 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/70 py-6 sm:py-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div className="min-h-screen bg-slate-50/70 py-4 sm:py-10">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
         {/* Standalone Header */}
-        <div className="flex items-center justify-between pb-2">
+        <div className="flex items-center justify-between pb-1 sm:pb-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-500 hover:text-blue-700 transition"
+            className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-500 hover:text-blue-700 transition"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>กลับสู่หน้ารวมกิจกรรม</span>
@@ -146,20 +146,20 @@ export default function EventDetailPage() {
         </div>
 
       {/* Event Header Banner Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-800 to-teal-700 p-6 sm:p-10 text-white relative">
-          <div className="space-y-4 max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-md">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-900 via-indigo-800 to-teal-700 p-4 sm:p-10 text-white relative">
+          <div className="space-y-3 sm:space-y-4 max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+              <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/20 text-[11px] sm:text-xs font-semibold backdrop-blur-md">
                 รหัสกิจกรรม: {eventData.event_code}
               </span>
               {eventData.project_ref_code && (
-                <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-md">
+                <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/20 text-[11px] sm:text-xs font-semibold backdrop-blur-md">
                   รหัสโครงการ: {eventData.project_ref_code}
                 </span>
               )}
               <span
-                className={`px-3 py-1 rounded-full text-xs font-bold ${
+                className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold ${
                   eventData.is_registration_open
                     ? 'bg-emerald-500 text-white'
                     : 'bg-rose-500 text-white'
@@ -169,12 +169,12 @@ export default function EventDetailPage() {
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold leading-snug">
+            <h1 className="text-xl sm:text-3xl font-extrabold leading-snug">
               {eventData.title}
             </h1>
 
             {eventData.description && (
-              <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
+              <p className="text-slate-200 text-xs sm:text-base leading-relaxed">
                 {eventData.description}
               </p>
             )}
@@ -182,26 +182,26 @@ export default function EventDetailPage() {
         </div>
 
         {/* Event Quick Info Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 p-6 bg-slate-50/50">
-          <div className="flex items-start gap-3 p-3">
-            <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700">
-              <Calendar className="w-5 h-5" />
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 p-3 sm:p-6 bg-slate-50/50">
+          <div className="flex items-start gap-2.5 sm:gap-3 p-2 sm:p-3">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-blue-100 text-blue-700 shrink-0">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <div className="text-xs text-slate-500 font-semibold">วันจัดกิจกรรม</div>
-              <div className="text-sm font-bold text-slate-800 mt-0.5">
+            <div className="min-w-0">
+              <div className="text-[10px] sm:text-xs text-slate-500 font-semibold">วันจัดกิจกรรม</div>
+              <div className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5 truncate">
                 {formatDate(eventData.start_date) || 'ตามกำหนดการ'}
               </div>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3">
-            <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700">
-              <Clock className="w-5 h-5" />
+          <div className="flex items-start gap-2.5 sm:gap-3 p-2 sm:p-3">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-amber-100 text-amber-700 shrink-0">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <div className="text-xs text-slate-500 font-semibold">เวลาจัดกิจกรรม</div>
-              <div className="text-sm font-bold text-slate-800 mt-0.5">
+            <div className="min-w-0">
+              <div className="text-[10px] sm:text-xs text-slate-500 font-semibold">เวลาจัดกิจกรรม</div>
+              <div className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5 truncate">
                 {eventData.start_time
                   ? `${eventData.start_time}${eventData.end_time ? ` - ${eventData.end_time}` : ''} น.`
                   : 'ตามกำหนดการ'}
@@ -209,25 +209,25 @@ export default function EventDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3">
-            <div className="p-2.5 rounded-xl bg-rose-100 text-rose-700">
-              <MapPin className="w-5 h-5" />
+          <div className="flex items-start gap-2.5 sm:gap-3 p-2 sm:p-3">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-rose-100 text-rose-700 shrink-0">
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <div className="text-xs text-slate-500 font-semibold">สถานที่จัดกิจกรรม</div>
-              <div className="text-sm font-bold text-slate-800 mt-0.5 line-clamp-1">
+            <div className="min-w-0">
+              <div className="text-[10px] sm:text-xs text-slate-500 font-semibold">สถานที่จัดกิจกรรม</div>
+              <div className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5 truncate">
                 {eventData.location || 'วิทยาลัยอาชีวศึกษาเชียงราย'}
               </div>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3">
-            <div className="p-2.5 rounded-xl bg-teal-100 text-teal-700">
-              <Users className="w-5 h-5" />
+          <div className="flex items-start gap-2.5 sm:gap-3 p-2 sm:p-3">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-teal-100 text-teal-700 shrink-0">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <div className="text-xs text-slate-500 font-semibold">จำนวนผู้ลงทะเบียน</div>
-              <div className="text-sm font-bold text-slate-800 mt-0.5">
+            <div className="min-w-0">
+              <div className="text-[10px] sm:text-xs text-slate-500 font-semibold">จำนวนผู้ลงทะเบียน</div>
+              <div className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5 truncate">
                 {eventData.current_attendees}
                 {eventData.max_attendees > 0 ? ` / ${eventData.max_attendees}` : ''} คน
               </div>
@@ -237,9 +237,9 @@ export default function EventDetailPage() {
       </div>
 
       {/* Main Grid: Registration Form & Evaluation / Certificate Link */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Registration Form (2 cols) */}
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-8 space-y-5 sm:space-y-6">
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-blue-600" />

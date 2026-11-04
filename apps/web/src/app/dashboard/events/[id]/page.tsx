@@ -904,28 +904,28 @@ export default function EventManagePage() {
       : 'คัดลอกลิงก์ตรวจสอบเกียรติบัตร';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4 sm:space-y-6">
       {/* Back and Title Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
           <Link
             href={portalMode === 'evaluation' ? '/dashboard?mode=evaluation' : '/dashboard'}
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-700 transition mb-2"
+            className="inline-flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-slate-500 hover:text-blue-700 transition mb-1.5 sm:mb-2"
           >
             <ArrowLeft className="w-4 h-4" /> กลับสู่แดชบอร์ด
           </Link>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full shrink-0 bg-blue-100 text-blue-800">
+            <span className="font-mono text-xs font-bold px-2.5 py-0.5 sm:py-1 rounded-full shrink-0 bg-blue-100 text-blue-800">
               {event.event_code}
             </span>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 truncate max-w-full">
+            <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 truncate max-w-full">
               {event.title}
             </h1>
           </div>
         </div>
 
         {/* Status Toggle & Public Link */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={() => openPrModal()}
@@ -958,7 +958,7 @@ export default function EventManagePage() {
       </div>
 
       {/* Tabs Bar */}
-      <div className="flex items-center gap-1 sm:gap-2 border-b border-slate-200 overflow-x-auto no-scrollbar scroll-smooth pb-px -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex items-center gap-1 sm:gap-2 border-b border-slate-200 overflow-x-auto no-scrollbar scroll-smooth pb-px -mx-3 px-3 sm:mx-0 sm:px-0">
         {portalMode !== 'evaluation' && (
           <>
             <button

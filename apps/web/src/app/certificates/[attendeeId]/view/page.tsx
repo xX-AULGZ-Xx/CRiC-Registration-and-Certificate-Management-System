@@ -62,28 +62,28 @@ export default function CertificateViewPage() {
   const certConfig = attendee.event?.certificate_config || {};
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-4 sm:space-y-6">
       {/* Back button */}
       <div className="flex items-center justify-between">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-700 transition"
+          className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-500 hover:text-blue-700 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>กลับสู่หน้าหลัก</span>
         </Link>
 
         {attendee.certificate_no && (
-          <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+          <span className="font-mono text-[11px] sm:text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
             เลขที่: {attendee.certificate_no}
           </span>
         )}
       </div>
 
       {/* Certificate Display Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 sm:p-10 space-y-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md p-3.5 sm:p-10 space-y-4 sm:space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-black text-slate-900">เกียรติบัตรออนไลน์ของคุณ</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900">เกียรติบัตรออนไลน์ของคุณ</h1>
           <p className="text-slate-500 text-xs sm:text-sm">
             สามารถคลิกปุ่มด้านล่างเพื่อบันทึกเป็นเอกสาร PDF ความคมชัดสูง หรือรูปภาพ PNG
           </p>

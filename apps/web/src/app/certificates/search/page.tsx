@@ -119,16 +119,16 @@ function SearchContent() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6 sm:space-y-8">
       {/* Title & Search Header */}
-      <div className="text-center space-y-3">
-        <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center mx-auto shadow-xs">
-          <Search className="w-6 h-6" />
+      <div className="text-center space-y-2.5 sm:space-y-3">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center mx-auto shadow-xs">
+          <Search className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+        <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900">
           ค้นหาและดาวน์โหลดเกียรติบัตรออนไลน์
         </h1>
-        <p className="text-slate-500 text-sm max-w-lg mx-auto">
+        <p className="text-slate-500 text-xs sm:text-sm max-w-lg mx-auto">
           ค้นหาเกียรติบัตรของคุณด้วย เบอร์โทรศัพท์ หรือชื่อ-นามสกุล
         </p>
 
@@ -319,7 +319,7 @@ function SearchContent() {
           {results.map((att) => (
             <div
               key={att.id}
-              className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
+              className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6"
             >
               <div className="space-y-2 flex-1">
                 <div className="flex items-center gap-2">
