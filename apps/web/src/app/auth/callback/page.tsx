@@ -13,6 +13,7 @@ function CallbackContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const ssoToken = searchParams.get('sso_token');
     const code = searchParams.get('code');
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
@@ -23,8 +24,48 @@ function CallbackContent() {
       return;
     }
 
+    if (ssoToken) {
+      // Direct SSO Token from Central Gateway
+      fetchApi('/api/v1/auth/sso/sync-session', {
+        method: 'POST',
+        body: JSON.stringify({ sessionToken: ssoToken }),
+      })
+        .then((res) => {
+          if (res.success && res.data?.token) {
+            localStorage.setItem('token', res.data.token);
+            localStorage.setItem('user', JSON.stringify(res.data.user));
+            if (typeof document !== 'undefined') {
+              const isCric = window.location.hostname.includes('cric.ac.th');
+              const domainStr = isCric ? '; Domain=.cric.ac.th' : '';
+              document.cookie = `cric_logged_in=true; Path=/${domainStr}; Max-Age=604800; SameSite=Lax`;
+              document.cookie = `cric_sso_session=${encodeURIComponent(ssoToken)}; Path=/${domainStr}; Max-Age=604800; SameSite=Lax`;
+            }
+
+            // Notify Central Panel and sibling tabs about the new active session
+            try {
+              if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+                const channel = new BroadcastChannel('cric_sso_channel');
+                channel.postMessage({ type: 'LOGIN' });
+                channel.close();
+              }
+              localStorage.setItem('cric_sso_login_event', Date.now().toString());
+            } catch {}
+
+            window.location.href = '/dashboard';
+          } else {
+            setErrorMsg(res.message || 'ไม่สามารถยืนยันเซสชันร่วมกับ Central SSO ได้');
+            setLoading(false);
+          }
+        })
+        .catch((err: any) => {
+          setErrorMsg(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
+          setLoading(false);
+        });
+      return;
+    }
+
     if (!code) {
-      setErrorMsg('ไม่พบ Authorization Code จากระบบยืนยันตัวตนกลาง (Keycloak SSO)');
+      setErrorMsg('ไม่พบ Authorization Code หรือ SSO Token จากระบบยืนยันตัวตนกลาง (Central SSO)');
       setLoading(false);
       return;
     }

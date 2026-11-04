@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [isLocalMode, setIsLocalMode] = useState(false);
 
   // System Branding & Google SSO State
   const [googleClientId, setGoogleClientId] = useState('');
@@ -64,45 +65,28 @@ export default function LoginPage() {
       const params = new URLSearchParams(window.location.search);
       const isLoggedOut = params.get('logout') === '1';
       const isExpired = params.get('expired') === '1';
+      const isLocal = params.get('local') === '1';
+
+      if (isLocal) {
+        setIsLocalMode(true);
+      }
 
       if (isLoggedOut) {
         setSuccessMsg('ออกจากระบบเรียบร้อยแล้ว');
       } else if (isExpired) {
         setErrorMsg('เซสชันการเข้าสู่ระบบร่วมหมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
-      } else if (params.get('no_sso') !== '1') {
-        // Auto-detect Central SSO Session from panel.cric.ac.th
+      } else if (!isLocal) {
         const existingToken = localStorage.getItem('token');
         if (existingToken) {
           window.location.href = '/dashboard';
-        } else {
-          const getCookie = (name: string) => {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-            return null;
-          };
-
-          const ssoSessionToken = getCookie('cric_sso_session');
-          if (ssoSessionToken) {
-            setSsoLoading(true);
-            fetchApi('/api/v1/auth/sso/sync-session', {
-              method: 'POST',
-              body: JSON.stringify({ sessionToken: ssoSessionToken }),
-            })
-              .then((res) => {
-                if (res.success && res.data?.token) {
-                  localStorage.setItem('token', res.data.token);
-                  localStorage.setItem('user', JSON.stringify(res.data.user));
-                  window.location.href = '/dashboard';
-                } else {
-                  setSsoLoading(false);
-                }
-              })
-              .catch(() => {
-                setSsoLoading(false);
-              });
-          }
+          return;
         }
+
+        // Auto-redirect to Central SSO Gateway
+        const portalUrl = process.env.NEXT_PUBLIC_CRIC_PORTAL_URL || 'https://panel.cric.ac.th';
+        const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback`);
+        window.location.replace(`${portalUrl}/login?redirect_uri=${redirectUri}&app=rcms`);
+        return;
       }
     }
   }, [router]);
@@ -196,14 +180,9 @@ export default function LoginPage() {
     setSsoLoading(true);
     setErrorMsg('');
     try {
-      const redirectUri = window.location.origin + '/auth/callback';
-      const res = await fetchApi(`/api/v1/auth/sso/login-url?redirect_uri=${encodeURIComponent(redirectUri)}`);
-      if (res.success && res.data?.loginUrl) {
-        window.location.href = res.data.loginUrl;
-      } else {
-        setErrorMsg('ไม่สามารถเชื่อมต่อไปยัง CRIC Single Sign-On ได้');
-        setSsoLoading(false);
-      }
+      const portalUrl = process.env.NEXT_PUBLIC_CRIC_PORTAL_URL || 'https://panel.cric.ac.th';
+      const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback`);
+      window.location.href = `${portalUrl}/login?redirect_uri=${redirectUri}&app=rcms`;
     } catch (err: any) {
       setErrorMsg(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับ CRIC SSO');
       setSsoLoading(false);
@@ -445,6 +424,27 @@ export default function LoginPage() {
               </div>
             </div>
           )}
+
+          {/* Mode Switcher */}
+          <div className="pt-1 text-center">
+            {isLocalMode ? (
+              <button
+                type="button"
+                onClick={handleSsoLogin}
+                className="text-xs text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1.5 transition"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>เข้าสู่ระบบผ่าน CRIC Central SSO</span>
+              </button>
+            ) : (
+              <a
+                href="/login?local=1"
+                className="text-[11px] text-slate-400 hover:text-slate-600 transition"
+              >
+                เข้าสู่ระบบด้วยบัญชีภายในเครื่อง (Local Login)
+              </a>
+            )}
+          </div>
 
           {/* Return to Home link */}
           <div className="pt-2 text-center">
