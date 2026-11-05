@@ -150,6 +150,13 @@ router.get('/settings', async (req: AuthRequest, res: Response) => {
       default_signatory_title: 'ผู้อำนวยการวิทยาลัยอาชีวศึกษาเชียงราย',
       default_signature_img: '',
       default_font_family: 'sarabun',
+      sso_portal_url: process.env.CENTRAL_PORTAL_URL || 'https://panel.cric.ac.th',
+      sso_keycloak_url: process.env.KEYCLOAK_BASE_URL || 'https://sso.cric.ac.th',
+      sso_realm: process.env.KEYCLOAK_REALM || 'cric-college',
+      sso_client_id: process.env.KEYCLOAK_CLIENT_ID || 'cric-rcms-app',
+      sso_enabled: 'true',
+      sso_slo_enabled: 'true',
+
       google_client_id: '',
       google_login_enabled: 'true',
       google_auto_register: 'true',

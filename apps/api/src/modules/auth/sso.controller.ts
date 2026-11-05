@@ -12,6 +12,32 @@ const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID || 'cric-rcms-app';
 const KEYCLOAK_CLIENT_SECRET = process.env.KEYCLOAK_CLIENT_SECRET || 'cric-rcms-secret-key-2026';
 const KEYCLOAK_REDIRECT_URI = process.env.KEYCLOAK_REDIRECT_URI || 'http://localhost:3006/auth/callback';
 
+// Dynamic Helper to fetch active SSO configuration from DB with .env fallback
+async function getEffectiveSsoConfig() {
+  let dbUrl: string | undefined;
+  let dbRealm: string | undefined;
+  let dbClientId: string | undefined;
+  let dbPortalUrl: string | undefined;
+
+  try {
+    const ssoSettings = await prisma.systemSetting.findMany({
+      where: { key: { in: ['sso_keycloak_url', 'sso_realm', 'sso_client_id', 'sso_portal_url'] } },
+    });
+    const map = new Map<string, string>(ssoSettings.map((s: any) => [s.key, s.value]));
+    dbUrl = map.get('sso_keycloak_url');
+    dbRealm = map.get('sso_realm');
+    dbClientId = map.get('sso_client_id');
+    dbPortalUrl = map.get('sso_portal_url');
+  } catch (e) {}
+
+  return {
+    baseUrl: (dbUrl || KEYCLOAK_BASE_URL || 'https://sso.cric.ac.th').replace(/\/+$/, ''),
+    realm: dbRealm || KEYCLOAK_REALM || 'cric-college',
+    clientId: dbClientId || KEYCLOAK_CLIENT_ID || 'cric-rcms-app',
+    portalUrl: dbPortalUrl || process.env.CENTRAL_PORTAL_URL || 'https://panel.cric.ac.th',
+  };
+}
+
 // Helper to decode JWT payload without verification (for extracting claims)
 function decodeJwtPayload(tokenStr: string): any {
   try {
@@ -30,13 +56,14 @@ function decodeJwtPayload(tokenStr: string): any {
  * GET /api/v1/auth/sso/login-url
  * Returns Keycloak OIDC authorization URL for redirection
  */
-ssoRouter.get('/login-url', (req: Request, res: Response) => {
+ssoRouter.get('/login-url', async (req: Request, res: Response) => {
+    const ssoConfig = await getEffectiveSsoConfig();
   try {
     const customRedirectUri = (req.query.redirect_uri as string) || KEYCLOAK_REDIRECT_URI;
-    const authEndpoint = `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth`;
+    const authEndpoint = `${ssoConfig.baseUrl}/realms/${ssoConfig.realm}/protocol/openid-connect/auth`;
 
     const url = new URL(authEndpoint);
-    url.searchParams.set('client_id', KEYCLOAK_CLIENT_ID);
+    url.searchParams.set('client_id', ssoConfig.clientId);
     url.searchParams.set('redirect_uri', customRedirectUri);
     url.searchParams.set('response_type', 'code');
     url.searchParams.set('scope', 'openid email profile');
@@ -85,7 +112,8 @@ ssoRouter.post('/callback', async (req: Request, res: Response) => {
       };
     } else {
       // Live Keycloak OIDC Token Exchange
-      const tokenEndpoint = `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`;
+      const ssoConfig = await getEffectiveSsoConfig();
+      const tokenEndpoint = `${ssoConfig.baseUrl}/realms/${ssoConfig.realm}/protocol/openid-connect/token`;
 
       const tokenRes = await fetch(tokenEndpoint, {
         method: 'POST',
@@ -112,7 +140,7 @@ ssoRouter.post('/callback', async (req: Request, res: Response) => {
       }
 
       // Fetch UserInfo from Keycloak
-      const userinfoEndpoint = `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo`;
+      const userinfoEndpoint = `${ssoConfig.baseUrl}/realms/${ssoConfig.realm}/protocol/openid-connect/userinfo`;
       const userinfoRes = await fetch(userinfoEndpoint, {
         headers: {
           Authorization: `Bearer ${tokenData.access_token}`,
@@ -359,9 +387,10 @@ ssoRouter.get('/status', (req: Request, res: Response) => {
 ssoRouter.post('/test-connection', async (req: Request, res: Response) => {
   const startTime = Date.now();
   try {
+    const ssoConfig = await getEffectiveSsoConfig();
     const { keycloakUrl, realm, portalUrl } = req.body;
-    const targetUrl = (keycloakUrl || KEYCLOAK_BASE_URL || 'https://auth.cric.ac.th').replace(/\/+$/, '');
-    const targetRealm = realm || KEYCLOAK_REALM || 'cric';
+    const targetUrl = (keycloakUrl || ssoConfig.baseUrl).replace(/\/+$/, '');
+    const targetRealm = realm || ssoConfig.realm;
     const discoveryUrl = `${targetUrl}/realms/${targetRealm}/.well-known/openid-configuration`;
 
     const controller = new AbortController();

@@ -70,6 +70,12 @@ export default function AdminSettingsPage() {
     org_logo_url: '',
     default_cert_prefix: 'วอศ.ชร-2569',
     default_signatory_name: '',
+    sso_portal_url: 'https://panel.cric.ac.th',
+    sso_keycloak_url: 'https://sso.cric.ac.th',
+    sso_realm: 'cric-college',
+    sso_client_id: 'cric-rcms-app',
+    sso_enabled: 'true',
+    sso_slo_enabled: 'true',
     default_signatory_title: '',
     default_signature_img: '',
     default_font_family: 'sarabun',
@@ -246,8 +252,8 @@ export default function AdminSettingsPage() {
       const res = await fetchApi('/api/v1/auth/sso/test-connection', {
         method: 'POST',
         body: JSON.stringify({
-          keycloakUrl: settings.sso_keycloak_url || 'https://auth.cric.ac.th',
-          realm: settings.sso_realm || 'cric',
+          keycloakUrl: settings.sso_keycloak_url || 'https://sso.cric.ac.th',
+          realm: settings.sso_realm || 'cric-college',
           portalUrl: settings.sso_portal_url || 'https://panel.cric.ac.th',
         }),
       });
@@ -2213,9 +2219,9 @@ export default function AdminSettingsPage() {
                 </label>
                 <input
                   type="url"
-                  value={settings.sso_keycloak_url ?? 'https://auth.cric.ac.th'}
+                  value={settings.sso_keycloak_url ?? 'https://sso.cric.ac.th'}
                   onChange={(e) => setSettings({ ...settings, sso_keycloak_url: e.target.value })}
-                  placeholder="https://auth.cric.ac.th"
+                  placeholder="https://sso.cric.ac.th"
                   className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-lg outline-none focus:border-blue-700 focus:ring-1 focus:ring-blue-700 transition bg-slate-50/50 focus:bg-white font-mono"
                 />
                 <p className="text-[11px] text-slate-500 mt-1">
@@ -2230,9 +2236,9 @@ export default function AdminSettingsPage() {
                 </label>
                 <input
                   type="text"
-                  value={settings.sso_realm ?? 'cric'}
+                  value={settings.sso_realm ?? 'cric-college'}
                   onChange={(e) => setSettings({ ...settings, sso_realm: e.target.value })}
-                  placeholder="cric"
+                  placeholder="cric-college"
                   className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-lg outline-none focus:border-blue-700 focus:ring-1 focus:ring-blue-700 transition bg-slate-50/50 focus:bg-white font-mono"
                 />
               </div>
