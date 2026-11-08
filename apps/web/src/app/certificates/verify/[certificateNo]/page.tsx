@@ -78,10 +78,10 @@ export default function CertificateVerifyPage() {
             </div>
             <div>
               <span className="inline-block px-3 py-1 rounded-full bg-emerald-800/60 text-emerald-100 text-xs font-bold mb-1">
-                ระบบตรวจสอบเกียรติบัตรออนไลน์ (Verified Certificate)
+                ระบบตรวจสอบความถูกต้องของเกียรติบัตรอิเล็กทรอนิกส์
               </span>
               <h1 className="text-xl sm:text-2xl font-black">
-                เอกสารนี้ได้รับการรับรองความถูกต้อง
+                เอกสารได้รับการรับรองความถูกต้องโดยสถานศึกษา
               </h1>
             </div>
             <p className="text-emerald-100 text-xs sm:text-sm">

@@ -155,7 +155,7 @@ function SearchContent() {
                     setShowSuggestions(false);
                   }
                 }}
-                placeholder="กรอกเบอร์โทรศัพท์ หรือชื่อ-นามสกุล..."
+                placeholder="ระบุหมายเลขโทรศัพท์ หรือชื่อ-นามสกุล เพื่อสืบค้น..."
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none shadow-xs pr-9"
               />
               {loadingSuggestions && (
@@ -182,7 +182,7 @@ function SearchContent() {
               disabled={loading}
               className="px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-md transition active:scale-95 disabled:opacity-50 cursor-pointer whitespace-nowrap"
             >
-              {loading ? 'กำลังค้นหา...' : 'ค้นหา'}
+              {loading ? 'กำลังสืบค้น...' : 'สืบค้นข้อมูล'}
             </button>
           </form>
 

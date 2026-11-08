@@ -30,7 +30,7 @@ export default function Footer() {
           <span>ระบบประเมินความพึงพอใจและออกเกียรติบัตรออนไลน์</span>
           <span>•</span>
           <span className="flex items-center gap-1 text-emerald-600 font-medium">
-            <ShieldCheck className="w-3.5 h-3.5" /> ตรวจสอบความถูกต้องได้ 100%
+            <ShieldCheck className="w-3.5 h-3.5" /> ระบบตรวจสอบเอกสารอิเล็กทรอนิกส์
           </span>
         </div>
       </div>

@@ -246,7 +246,7 @@ export default function EventDetailPage() {
               <span>แบบฟอร์มลงทะเบียนเข้าร่วมกิจกรรม</span>
             </h2>
             <p className="text-slate-500 text-xs sm:text-sm mt-1">
-              กรุณากรอกข้อมูลเพื่อใช้ในการเช็คชื่อและออกเกียรติบัตรที่ถูกต้อง
+              กรุณาระบุข้อมูลสำหรับการบันทึกเวลาเข้าร่วมและจัดทำเกียรติบัตร
             </p>
           </div>
 
@@ -260,9 +260,9 @@ export default function EventDetailPage() {
           {!eventData.is_registration_open ? (
             <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
               <Clock className="w-8 h-8 text-amber-500 mx-auto" />
-              <h3 className="font-bold text-slate-700">กิจกรรมนี้ปิดรับลงทะเบียนแล้ว</h3>
+              <h3 className="font-bold text-slate-700">ปิดรับลงทะเบียนเข้าร่วมกิจกรรม</h3>
               <p className="text-slate-500 text-xs">
-                หากท่านเคยลงทะเบียนไว้แล้ว สามารถค้นหาเกียรติบัตรหรือทำแบบประเมินได้จากเมนูด้านล่าง
+                ผู้ที่ลงทะเบียนแล้วสามารถทำแบบประเมินหรือค้นหาเกียรติบัตรได้จากรายการด้านล่าง
               </p>
             </div>
           ) : (
@@ -325,7 +325,7 @@ export default function EventDetailPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">เบอร์โทรศัพท์ (ใช้ค้นหาเกียรติบัตร) *</label>
+                <label className="text-xs font-bold text-slate-700">หมายเลขโทรศัพท์ (ใช้สำหรับสืบค้นเกียรติบัตร) *</label>
                 <input
                   type="tel"
                   required

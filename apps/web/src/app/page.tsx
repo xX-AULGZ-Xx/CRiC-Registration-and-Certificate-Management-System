@@ -220,9 +220,9 @@ export default function HomePage() {
               </>
             ) : (
               <>
-                ลงทะเบียนร่วมกิจกรรม & <br className="hidden sm:inline" />
+                ลงทะเบียนเข้าร่วมกิจกรรม & <br className="hidden sm:inline" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400">
-                  รับเกียรติบัตรออนไลน์ทันที
+                  รับเกียรติบัตรอิเล็กทรอนิกส์
                 </span>
               </>
             )}
@@ -230,8 +230,8 @@ export default function HomePage() {
 
           <p className="max-w-2xl mx-auto text-slate-300 text-xs sm:text-base leading-relaxed px-2">
             {portalMode === 'evaluation'
-              ? 'ตอบแบบประเมินความพึงพอใจโครงการและกิจกรรมออนไลน์ เพื่อนำข้อมูลและข้อเสนอแนะไปพัฒนาคุณภาพการจัดโครงการ'
-              : 'สะดวกรวดเร็ว เข้าร่วมกิจกรรม เช็คชื่อด้วย QR Code พร้อมค้นหาและดาวน์โหลดเกียรติบัตรฉบับดิจิทัลตลอด 24 ชั่วโมง'}
+              ? 'ทำแบบประเมินความพึงพอใจโครงการ เพื่อนำข้อมูลและข้อเสนอแนะไปพัฒนาการดำเนินงาน'
+              : 'ระบบลงทะเบียนกิจกรรม ตรวจสอบการเข้าร่วมด้วยรหัส QR และบริการดาวน์โหลดเกียรติบัตรอิเล็กทรอนิกส์'}
           </p>
 
           {/* Search Box with Autocomplete Suggestions */}
@@ -428,8 +428,8 @@ export default function HomePage() {
                     <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
-                    <div className="font-bold text-white">ตอบแบบสอบถามง่าย</div>
-                    <div className="text-slate-300 text-[11px] sm:text-xs">รองรับทั้งมือถือและคอมพิวเตอร์</div>
+                    <div className="font-bold text-white">ทำแบบประเมินออนไลน์</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">รองรับการใช้งานผ่านคอมพิวเตอร์และสมาร์ตโฟน</div>
                   </div>
                 </div>
 
@@ -438,8 +438,8 @@ export default function HomePage() {
                     <Star className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
-                    <div className="font-bold text-white">วัดผลครอบคลุม</div>
-                    <div className="text-slate-300 text-[11px] sm:text-xs">ประเมินตามเกณฑ์มาตรฐานโครงการ</div>
+                    <div className="font-bold text-white">ประเมินผลตามเกณฑ์</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">ครอบคลุมตามมาตรฐานตัวชี้วัดโครงการ</div>
                   </div>
                 </div>
 
@@ -448,8 +448,8 @@ export default function HomePage() {
                     <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
-                    <div className="font-bold text-white">ประมวลผลแม่นยำ</div>
-                    <div className="text-slate-300 text-[11px] sm:text-xs">สรุปผลแบบทันใจและปลอดภัย</div>
+                    <div className="font-bold text-white">วิเคราะห์ข้อมูลสถิติ</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">สรุปผลการประเมินและจัดเก็บข้อมูลอย่างปลอดภัย</div>
                   </div>
                 </div>
               </>
@@ -460,8 +460,8 @@ export default function HomePage() {
                     <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
-                    <div className="font-bold text-white">ลงทะเบียนง่าย</div>
-                    <div className="text-slate-300 text-[11px] sm:text-xs">กรอกข้อมูลรับ QR ทันที</div>
+                    <div className="font-bold text-white">บันทึกข้อมูลลงทะเบียน</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">รับรหัส QR สำหรับเช็คชื่อหน้างาน</div>
                   </div>
                 </div>
 
@@ -470,8 +470,8 @@ export default function HomePage() {
                     <Award className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
-                    <div className="font-bold text-white">รับเกียรติบัตรทันใจ</div>
-                    <div className="text-slate-300 text-[11px] sm:text-xs">ดาวน์โหลด PDF คมชัดสูง</div>
+                    <div className="font-bold text-white">ดาวน์โหลดเกียรติบัตร</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">เอกสารรับรองรูปแบบ PDF ความละเอียดมาตรฐาน</div>
                   </div>
                 </div>
 
@@ -480,8 +480,8 @@ export default function HomePage() {
                     <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-xs">
-                    <div className="font-bold text-white">ตรวจความถูกต้องได้</div>
-                    <div className="text-slate-300 text-[11px] sm:text-xs">สแกน QR ยืนยันเอกสารจริง</div>
+                    <div className="font-bold text-white">ตรวจสอบความถูกต้อง</div>
+                    <div className="text-slate-300 text-[11px] sm:text-xs">ตรวจสอบความถูกต้องของเอกสารผ่านรหัส QR</div>
                   </div>
                 </div>
               </>

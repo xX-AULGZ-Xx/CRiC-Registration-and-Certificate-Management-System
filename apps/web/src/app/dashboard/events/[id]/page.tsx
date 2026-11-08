@@ -1680,9 +1680,9 @@ export default function EventManagePage() {
                 <Sliders className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-900">ยังไม่ได้สร้างแบบประเมินสำหรับกิจกรรมนี้</h3>
+                <h3 className="text-lg font-bold text-slate-900">ยังไม่มีแบบประเมินสำหรับกิจกรรมนี้</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  กิจกรรมนี้ยังไม่มีแบบสอบถามความพึงพอใจ คุณสามารถเริ่มต้นสร้างแบบประเมิน ออกแบบคำถาม หรือเลือกใช้แม่แบบมาตรฐานได้ทันที
+                  กิจกรรมนี้ยังไม่มีแบบประเมินความพึงพอใจ สามารถสร้างแบบประเมินใหม่ หรือนำเข้าจากแม่แบบมาตรฐานเพื่อเริ่มเปิดรับการประเมิน
                 </p>
               </div>
               <div className="pt-2">
@@ -1801,7 +1801,7 @@ export default function EventManagePage() {
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-900 text-lg">
-                        รายชื่อผู้ส่งคำตอบแบบประเมิน (Respondent Roster)
+                        รายนามผู้ส่งแบบประเมินความพึงพอใจ
                       </h3>
                       <p className="text-xs text-slate-500">
                         ผู้ตอบแบบประเมินทั้งหมด {evalSummary.responses?.length || 0} คน

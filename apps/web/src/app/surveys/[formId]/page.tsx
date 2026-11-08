@@ -171,7 +171,7 @@ function SurveyContent() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4">
         <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-slate-600 font-bold text-sm tracking-wide">กำลังโหลดแบบประเมินความพึงพอใจ...</p>
+        <p className="text-slate-600 font-bold text-sm tracking-wide">กำลังเรียกดูข้อมูลแบบประเมิน...</p>
       </div>
     );
   }
@@ -229,17 +229,17 @@ function SurveyContent() {
 
           <div className="space-y-2">
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-              บันทึกแบบประเมินเรียบร้อยแล้ว
+              บันทึกผลการประเมินเรียบร้อย
             </h1>
             <p className="text-slate-500 text-xs sm:text-sm">
-              ขอขอบคุณสำหรับความคิดเห็นและข้อเสนอแนะในการพัฒนาโครงการต่อไป
+              ขอบคุณที่ร่วมแสดงความคิดเห็นและให้ข้อเสนอแนะในการพัฒนาโครงการ
             </p>
           </div>
 
           {submitResult.can_download_certificate && submitResult.certificate_no ? (
             <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50/60 to-emerald-50 border border-blue-200/80 space-y-4 text-center">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5" /> เกียรติบัตรพร้อมดาวน์โหลด
+                <Sparkles className="w-3.5 h-3.5" /> ผ่านเกณฑ์การประเมิน พร้อมดาวน์โหลดเกียรติบัตร
               </div>
 
               <div className="space-y-1">
@@ -255,7 +255,7 @@ function SurveyContent() {
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-lg shadow-blue-600/30 hover:shadow-xl transition active:scale-95 cursor-pointer"
                 >
                   <Award className="w-5 h-5 text-amber-300" />
-                  <span>ดูและดาวน์โหลดเกียรติบัตรทันที</span>
+                  <span>แสดงและดาวน์โหลดเกียรติบัตร</span>
                 </Link>
               </div>
             </div>
