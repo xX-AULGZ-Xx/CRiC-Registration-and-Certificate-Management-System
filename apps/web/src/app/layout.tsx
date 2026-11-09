@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Prompt, Sarabun } from 'next/font/google';
 import Script from 'next/script';
+import 'sweetalert2/dist/sweetalert2.min.css';
 import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';

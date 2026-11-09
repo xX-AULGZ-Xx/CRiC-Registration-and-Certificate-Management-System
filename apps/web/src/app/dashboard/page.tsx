@@ -23,6 +23,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
+import { showToast, showErrorAlert, showConfirmDialog } from '@/lib/sweetalert';
 
 export default function DashboardPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -165,9 +166,10 @@ export default function DashboardPage() {
         setRegStart('');
         setRegEnd('');
         loadEvents();
+        showToast('สร้างกิจกรรมใหม่เรียบร้อยแล้ว');
       }
     } catch (err: any) {
-      alert(err.message || 'ไม่สามารถสร้างกิจกรรมได้');
+      showErrorAlert('ไม่สามารถสร้างกิจกรรมได้', err.message);
     } finally {
       setCreating(false);
     }
@@ -306,7 +308,7 @@ export default function DashboardPage() {
         window.location.href = `/dashboard/events/${createdEventId}?tab=evaluation`;
       }
     } catch (err: any) {
-      alert(err.message || 'ไม่สามารถสร้างแบบสอบถามได้');
+      showErrorAlert('ไม่สามารถสร้างแบบสอบถามได้', err.message);
     } finally {
       setCreating(false);
     }
@@ -314,13 +316,21 @@ export default function DashboardPage() {
 
   const handleDeleteEvent = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? ข้อมูลทั้งหมดที่เกี่ยวข้องจะถูกลบไปด้วย')) return;
+    const confirmed = await showConfirmDialog({
+      title: 'ยืนยันการลบรายการ',
+      text: 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? ข้อมูลทั้งหมดที่เกี่ยวข้องจะถูกลบไปด้วย',
+      confirmButtonText: 'ลบรายการ',
+      cancelButtonText: 'ยกเลิก',
+      isDestructive: true,
+    });
+    if (!confirmed) return;
 
     try {
       await fetchApi(`/api/v1/events/${id}`, { method: 'DELETE' });
+      showToast('ลบรายการเรียบร้อยแล้ว');
       loadEvents();
     } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการลบ');
+      showErrorAlert('เกิดข้อผิดพลาดในการลบ', err.message);
     }
   };
 

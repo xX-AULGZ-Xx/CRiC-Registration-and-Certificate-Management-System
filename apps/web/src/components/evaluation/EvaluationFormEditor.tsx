@@ -27,6 +27,7 @@ import {
   THEME_PRESETS,
 } from '@/lib/survey-themes';
 import { fetchApi } from '@/lib/api';
+import { showToast, showErrorAlert, showWarningAlert, showConfirmDialog } from '@/lib/sweetalert';
 
 interface Question {
   id?: string;
@@ -274,7 +275,7 @@ export default function EvaluationFormEditor({
 
   const handleDeleteSection = (index: number) => {
     if (sections.length <= 1) {
-      alert('แบบประเมินต้องมีอย่างน้อย 1 ตอน');
+      showWarningAlert('แบบประเมินต้องมีอย่างน้อย 1 ตอน');
       return;
     }
     setSections((prev) => prev.filter((_, idx) => idx !== index));
@@ -313,25 +314,32 @@ export default function EvaluationFormEditor({
   };
 
   const handleApplyTemplate = async (tmpl: any) => {
-    if (!confirm(`ต้องการนำเข้าแม่แบบ "${tmpl.title}" ใช่หรือไม่? ข้อมูลคำถามเดิมจะถูกแทนที่ด้วยแม่แบบนี้`)) return;
+    const confirmed = await showConfirmDialog({
+      title: 'ยืนยันการนำเข้าแม่แบบ',
+      text: `ต้องการนำเข้าแม่แบบ "${tmpl.title}" ใช่หรือไม่? ข้อมูลคำถามเดิมจะถูกแทนที่ด้วยแม่แบบนี้`,
+      confirmButtonText: 'นำเข้าแม่แบบ',
+      cancelButtonText: 'ยกเลิก',
+      isDestructive: true,
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetchApi(`/api/v1/evaluation/events/${eventId}/apply-template/${tmpl.id}`, {
         method: 'POST',
       });
       if (res.success) {
-        alert('นำเข้าแม่แบบเรียบร้อยแล้ว');
+        showToast('นำเข้าแม่แบบเรียบร้อยแล้ว');
         onSaved?.();
         onClose();
       }
     } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการนำเข้าแม่แบบ');
+      showErrorAlert('เกิดข้อผิดพลาดในการนำเข้าแม่แบบ', err.message);
     }
   };
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert('กรุณาระบุชื่อแบบประเมิน');
+      showWarningAlert('กรุณาระบุชื่อแบบประเมิน');
       return;
     }
 
@@ -360,12 +368,12 @@ export default function EvaluationFormEditor({
       });
 
       if (res.success) {
-        alert('บันทึกแบบประเมินเรียบร้อยแล้ว');
+        showToast('บันทึกแบบประเมินเรียบร้อยแล้ว');
         onSaved?.();
         onClose();
       }
     } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการบันทึกแบบประเมิน');
+      showErrorAlert('เกิดข้อผิดพลาดในการบันทึกแบบประเมิน', err.message);
     } finally {
       setSaving(false);
     }

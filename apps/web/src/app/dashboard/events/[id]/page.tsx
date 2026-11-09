@@ -42,6 +42,7 @@ import CertificateRenderer, {
 } from '@/components/certificate/CertificateRenderer';
 import EvaluationFormEditor from '@/components/evaluation/EvaluationFormEditor';
 import { fetchApi } from '@/lib/api';
+import { showToast, showSuccessAlert, showErrorAlert, showWarningAlert, showConfirmDialog } from '@/lib/sweetalert';
 
 export default function EventManagePage() {
   const params = useParams();
@@ -171,7 +172,7 @@ export default function EventManagePage() {
     if (!editTitle.trim()) return;
 
     if (!editHasRegistration && !editHasEvaluation) {
-      alert('กรุณาเลือกเปิดใช้งานอย่างน้อย 1 ระบบ (ระบบลงทะเบียน หรือ ระบบแบบประเมินความพึงพอใจ)');
+      showWarningAlert('กรุณาเลือกเปิดใช้งานอย่างน้อย 1 ระบบ (ระบบลงทะเบียน หรือ ระบบแบบประเมินความพึงพอใจ)');
       return;
     }
 
@@ -231,12 +232,12 @@ export default function EventManagePage() {
         }));
         setCertConfig(updatedCertConfig);
         setShowEditModal(false);
-        alert('บันทึกการแก้ไขข้อมูลและการตั้งค่าระบบสำเร็จ');
+        showToast('บันทึกการแก้ไขข้อมูลและการตั้งค่าระบบสำเร็จ');
       } else {
-        alert(res.message || 'ไม่สามารถบันทึกข้อมูลได้');
+        showErrorAlert('ไม่สามารถบันทึกข้อมูลได้', res.message);
       }
     } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      showErrorAlert('เกิดข้อผิดพลาดในการบันทึกข้อมูล', err.message);
     } finally {
       setSavingEdit(false);
     }
@@ -374,10 +375,11 @@ export default function EventManagePage() {
         body: JSON.stringify({ attendee_id: attendeeId }),
       });
       if (res.success) {
+        showToast('บันทึกเวลาเข้าร่วมสำเร็จ');
         loadAttendees();
       }
     } catch (err: any) {
-      alert(err.message);
+      showErrorAlert('เกิดข้อผิดพลาดในการบันทึกเวลา', err.message);
     }
   };
 
@@ -387,26 +389,34 @@ export default function EventManagePage() {
         method: 'POST',
       });
       if (res.success) {
+        showToast('ออกเกียรติบัตรสำเร็จ');
         loadAttendees();
       }
     } catch (err: any) {
-      alert(err.message);
+      showErrorAlert('เกิดข้อผิดพลาดในการออกเกียรติบัตร', err.message);
     }
   };
 
   const handleIssueAll = async () => {
-    if (!confirm('ยืนยันการออกเกียรติบัตรให้แก่ผู้เข้าร่วมที่เช็คชื่อแล้วทุกคน?')) return;
+    const confirmed = await showConfirmDialog({
+      title: 'ยืนยันการออกเกียรติบัตร',
+      text: 'ยืนยันการออกเกียรติบัตรให้แก่ผู้เข้าร่วมที่เช็คชื่อแล้วทุกคนหรือไม่?',
+      confirmButtonText: 'อนุมัติออกเกียรติบัตร',
+      cancelButtonText: 'ยกเลิก',
+    });
+    if (!confirmed) return;
+
     try {
       const res = await fetchApi(`/api/v1/certificates/events/${eventId}/issue-all`, {
         method: 'POST',
         body: JSON.stringify({ only_checked_in: true }),
       });
       if (res.success) {
-        alert(res.message);
+        showSuccessAlert('ดำเนินการสำเร็จ', res.message);
         loadAttendees();
       }
     } catch (err: any) {
-      alert(err.message);
+      showErrorAlert('เกิดข้อผิดพลาดในการออกเกียรติบัตร', err.message);
     }
   };
 
@@ -426,10 +436,10 @@ export default function EventManagePage() {
         body: JSON.stringify({ certificate_config: certConfig }),
       });
       if (res.success) {
-        alert('บันทึกรูปแบบเกียรติบัตรเรียบร้อยแล้ว');
+        showToast('บันทึกรูปแบบเกียรติบัตรเรียบร้อยแล้ว');
       }
     } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+      showErrorAlert('เกิดข้อผิดพลาดในการบันทึก', err.message);
     } finally {
       setSavingCert(false);
     }
@@ -654,7 +664,7 @@ export default function EventManagePage() {
       }
 
       if (targets.length === 0) {
-        alert('ไม่พบผู้เข้าร่วมที่ตรงตามเงื่อนไขที่เลือก (ยังไม่มีผู้เข้าร่วมที่มีเลขที่เกียรติบัตร)');
+        showWarningAlert('ไม่พบผู้เข้าร่วมที่ตรงตามเงื่อนไขที่เลือก (ยังไม่มีผู้เข้าร่วมที่มีเลขที่เกียรติบัตร)');
         setIsExporting(false);
         return;
       }
@@ -768,7 +778,7 @@ export default function EventManagePage() {
       }, 1200);
     } catch (err: any) {
       console.error('Batch export error:', err);
-      alert('เกิดข้อผิดพลาดในการสร้างไฟล์เกียรติบัตร: ' + (err.message || ''));
+      showErrorAlert('เกิดข้อผิดพลาดในการสร้างไฟล์เกียรติบัตร', err.message);
       setIsExporting(false);
       setExportProgress(null);
       setCurrentExportAttendee(null);
@@ -794,12 +804,12 @@ export default function EventManagePage() {
       const data = await res.json();
       if (data.success) {
         setCertConfig((prev) => ({ ...prev, bg_image_url: data.data.bg_image_url }));
-        alert('อัปโหลดภาพพื้นหลังเกียรติบัตรสำเร็จ');
+        showToast('อัปโหลดภาพพื้นหลังเกียรติบัตรสำเร็จ');
       } else {
-        alert(data.message || 'ไม่สามารถอัปโหลดภาพได้');
+        showErrorAlert('ไม่สามารถอัปโหลดภาพได้', data.message);
       }
     } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาด');
+      showErrorAlert('เกิดข้อผิดพลาดในการอัปโหลด', err.message);
     } finally {
       setUploadingBg(false);
     }
@@ -807,7 +817,7 @@ export default function EventManagePage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('คัดลอกลิงก์เรียบร้อยแล้ว');
+    showToast('คัดลอกลิงก์เรียบร้อยแล้ว');
   };
 
   const openPrModal = (initialTab?: 'registration' | 'survey' | 'certificate') => {

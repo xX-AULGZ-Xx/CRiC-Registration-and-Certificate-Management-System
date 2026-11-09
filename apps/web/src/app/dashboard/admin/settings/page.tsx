@@ -45,6 +45,7 @@ import {
   applyThemeToDom,
 } from '@/components/theme/ThemeProvider';
 import { fetchApi } from '@/lib/api';
+import { showToast as sweetalertShowToast, showWarningAlert, showConfirmDialog } from '@/lib/sweetalert';
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -196,7 +197,7 @@ export default function AdminSettingsPage() {
       const user = JSON.parse(userStr);
       setCurrentUser(user);
       if (user.role !== 'ADMIN') {
-        alert('เฉพาะผู้ดูแลระบบ (ADMIN) เท่านั้นที่สามารถเข้าถึงหน้านี้ได้');
+        showWarningAlert('เฉพาะผู้ดูแลระบบ (ADMIN) เท่านั้นที่สามารถเข้าถึงหน้านี้ได้');
         router.push('/dashboard');
         return;
       }
@@ -209,6 +210,7 @@ export default function AdminSettingsPage() {
   }, [router]);
 
   const showToast = (type: 'success' | 'error', text: string) => {
+    sweetalertShowToast(text, type);
     setToastMessage({ type, text });
     setTimeout(() => {
       setToastMessage(null);
@@ -398,7 +400,13 @@ export default function AdminSettingsPage() {
       return;
     }
 
-    if (!confirm(`ต้องการซิงค์ชื่อสังกัด '${orgName}' ให้กับผู้ใช้งานทั้งหมดในระบบหรือไม่?`)) {
+    const confirmed = await showConfirmDialog({
+      title: 'ยืนยันการซิงค์ชื่อสังกัด',
+      text: `ต้องการซิงค์ชื่อสังกัด '${orgName}' ให้กับผู้ใช้งานทั้งหมดในระบบหรือไม่?`,
+      confirmButtonText: 'ซิงค์ข้อมูล',
+      cancelButtonText: 'ยกเลิก',
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -511,7 +519,14 @@ export default function AdminSettingsPage() {
   };
 
   const handleDeleteUser = async (user: any) => {
-    if (!confirm(`ยืนยันการลบผู้ใช้ "${user.full_name}" (@${user.username}) หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้`)) {
+    const confirmed = await showConfirmDialog({
+      title: 'ยืนยันการลบผู้ใช้งาน',
+      text: `ยืนยันการลบผู้ใช้ "${user.full_name}" (@${user.username}) หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้`,
+      confirmButtonText: 'ลบผู้ใช้',
+      cancelButtonText: 'ยกเลิก',
+      isDestructive: true,
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -648,7 +663,14 @@ export default function AdminSettingsPage() {
   };
 
   const handleDeleteTemplate = async (tpl: any) => {
-    if (!confirm(`ยืนยันการลบแม่แบบ "${tpl.title}" หรือไม่?`)) return;
+    const confirmed = await showConfirmDialog({
+      title: 'ยืนยันการลบแม่แบบ',
+      text: `ยืนยันการลบแม่แบบ "${tpl.title}" หรือไม่?`,
+      confirmButtonText: 'ลบแม่แบบ',
+      cancelButtonText: 'ยกเลิก',
+      isDestructive: true,
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetchApi(`/api/v1/admin/evaluation-templates/${tpl.id}`, {
