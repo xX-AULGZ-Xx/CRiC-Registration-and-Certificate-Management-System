@@ -1,9 +1,40 @@
 import { Router, Request, Response } from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { prisma, serializeBigInt } from '../../lib/prisma';
 import { authenticate, optionalAuthenticate, AuthRequest } from '../../middlewares/auth';
 import { EventStatus } from '@prisma/client';
 
 const router = Router();
+const STORAGE_DIR = path.resolve(process.env.STORAGE_DIR || '../../storage');
+const BANNER_DIR = path.join(STORAGE_DIR, 'banners');
+
+if (!fs.existsSync(BANNER_DIR)) {
+  fs.mkdirSync(BANNER_DIR, { recursive: true });
+}
+
+const bannerStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, BANNER_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.png';
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `event-banner-${uniqueSuffix}${ext}`);
+  },
+});
+
+const uploadEventBanner = multer({
+  storage: bannerStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP, SVG) เท่านั้น'));
+    }
+  },
+});
 
 // Helper to generate running event code
 async function generateNextEventCode(): Promise<string> {
@@ -365,6 +396,37 @@ router.get('/:id/stats', authenticate, async (req: AuthRequest, res: Response) =
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาด', error: error.message });
+  }
+});
+
+// 9. AUTH: POST /api/v1/events/:id/upload-banner - Upload event registration banner
+router.post('/:id/upload-banner', authenticate, uploadEventBanner.single('banner'), async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = BigInt(req.params.id);
+    const existing = await prisma.event.findUnique({ where: { id: eventId } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'ไม่พบกิจกรรม' });
+    }
+    if (req.user!.role !== 'ADMIN' && existing.organizer_id !== req.user!.id) {
+      return res.status(403).json({ success: false, message: 'คุณไม่มีสิทธิ์แก้ไขกิจกรรมนี้' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'ไม่พบไฟล์รูปภาพแบนเนอร์' });
+    }
+
+    const bannerUrl = `/storage/banners/${req.file.filename}`;
+    await prisma.event.update({
+      where: { id: eventId },
+      data: { banner_url: bannerUrl },
+    });
+
+    return res.json({
+      success: true,
+      message: 'อัปโหลดแบนเนอร์เรียบร้อย',
+      data: { banner_url: bannerUrl },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปโหลดแบนเนอร์', error: error.message });
   }
 });
 

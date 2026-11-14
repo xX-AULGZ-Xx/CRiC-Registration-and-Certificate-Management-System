@@ -98,6 +98,45 @@ router.post('/events/:eventId/register', async (req: Request, res: Response) => 
       return res.status(400).json({ success: false, message: 'กรุณากรอกชื่อ-นามสกุล' });
     }
 
+    // Dynamic validation from registration_config
+    const regConfig = (event.registration_config as any) || {};
+    const stdFields = regConfig.standardFields || {};
+    const stdLabels: Record<string, string> = {
+      title_name: 'คำนำหน้า',
+      position: 'ตำแหน่ง',
+      organization: 'สังกัด/หน่วยงาน',
+      phone: 'เบอร์โทรศัพท์',
+      email: 'อีเมล',
+      citizen_id: 'เลขประจำตัวประชาชน',
+    };
+    const stdValues: Record<string, any> = { title_name, position, organization, phone, email, citizen_id };
+
+    for (const [key, label] of Object.entries(stdLabels)) {
+      const cfg = stdFields[key];
+      if (cfg && cfg.enabled && cfg.required) {
+        const val = stdValues[key];
+        if (!val || (typeof val === 'string' && !val.trim())) {
+          return res.status(400).json({ success: false, message: `กรุณากรอก${cfg.label || label}` });
+        }
+      }
+    }
+
+    const customFields = Array.isArray(regConfig.customFields) ? regConfig.customFields : [];
+    const safeCustomData = (custom_data && typeof custom_data === 'object') ? custom_data : {};
+    for (const field of customFields) {
+      if (field.required) {
+        const answer = safeCustomData[field.id];
+        const isEmpty =
+          answer === undefined ||
+          answer === null ||
+          (typeof answer === 'string' && !answer.trim()) ||
+          (Array.isArray(answer) && answer.length === 0);
+        if (isEmpty) {
+          return res.status(400).json({ success: false, message: `กรุณากรอกหรือเลือก "${field.label}"` });
+        }
+      }
+    }
+
     // Check duplicate registration
     const trimmedPhone = phone ? phone.trim().replace(/-/g, '') : null;
     const trimmedCitizen = citizen_id ? citizen_id.trim().replace(/-/g, '') : null;
@@ -421,6 +460,98 @@ router.post('/events/:eventId/import-csv', authenticate, async (req: AuthRequest
   } catch (error: any) {
     console.error('Import CSV error:', error);
     return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล CSV', error: error.message });
+  }
+});
+
+// 9. AUTH: GET /api/v1/registration/events/:eventId/export-csv - Export attendees with custom_data
+router.get('/events/:eventId/export-csv', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = BigInt(req.params.eventId);
+    const access = await checkEventAccess(eventId, req.user!);
+    if (!access) return res.status(404).json({ success: false, message: 'ไม่พบกิจกรรม' });
+    if (access === 'FORBIDDEN') return res.status(403).json({ success: false, message: 'ไม่มีสิทธิ์' });
+
+    const attendees = await prisma.attendee.findMany({
+      where: { event_id: eventId },
+      orderBy: { created_at: 'asc' },
+    });
+
+    const regConfig = (access.registration_config as any) || {};
+    const customFields: Array<{ id: string; label: string }> = Array.isArray(regConfig.customFields)
+      ? regConfig.customFields
+      : [];
+
+    // Collect any extra custom_data keys not in current customFields config
+    const configuredIds = new Set(customFields.map((f) => f.id));
+    const extraKeys: string[] = [];
+    for (const a of attendees) {
+      const cd = (a.custom_data as Record<string, any>) || {};
+      for (const k of Object.keys(cd)) {
+        if (!configuredIds.has(k) && !extraKeys.includes(k)) {
+          extraKeys.push(k);
+        }
+      }
+    }
+
+    const escapeCsv = (val: any): string => {
+      if (val === undefined || val === null) return '""';
+      const str = Array.isArray(val) ? val.join(', ') : String(val);
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      'ลำดับ',
+      'คำนำหน้า',
+      'ชื่อ-นามสกุล',
+      'ตำแหน่ง',
+      'สังกัด/หน่วยงาน',
+      'เบอร์โทรศัพท์',
+      'อีเมล',
+      'เลขประจำตัวประชาชน',
+      'สถานะเช็คชื่อ',
+      'เวลาเช็คชื่อ',
+      'เลขที่เกียรติบัตร',
+      'วันที่ลงทะเบียน',
+      ...customFields.map((f) => f.label || f.id),
+      ...extraKeys,
+    ];
+
+    const rows = attendees.map((a, idx) => {
+      const cd = (a.custom_data as Record<string, any>) || {};
+      const statusText = a.status === 'checked_in' ? 'เช็คชื่อแล้ว' : 'ลงทะเบียนแล้ว';
+      const checkedInAt = a.checked_in_at ? new Date(a.checked_in_at).toLocaleString('th-TH') : '';
+      const registeredAt = a.created_at ? new Date(a.created_at).toLocaleString('th-TH') : '';
+
+      const baseCols = [
+        idx + 1,
+        a.title_name || '',
+        a.full_name,
+        a.position || '',
+        a.organization || '',
+        a.phone || '',
+        a.email || '',
+        a.citizen_id || '',
+        statusText,
+        checkedInAt,
+        a.certificate_no || '',
+        registeredAt,
+      ];
+      const customCols = [
+        ...customFields.map((f) => cd[f.id] ?? ''),
+        ...extraKeys.map((k) => cd[k] ?? ''),
+      ];
+      return [...baseCols, ...customCols].map(escapeCsv).join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
+    const safeCode = (access.event_code || `event-${eventId}`).replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="attendees-${safeCode}.csv"`);
+    return res.send(csvContent);
+  } catch (error: any) {
+    console.error('Export attendees CSV error:', error);
+    return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการส่งออก CSV', error: error.message });
   }
 });
 

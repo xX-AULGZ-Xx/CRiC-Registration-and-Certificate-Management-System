@@ -17,6 +17,10 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
+import {
+  normalizeRegistrationConfig,
+  getRegistrationTheme,
+} from '@/lib/registration-config';
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -36,6 +40,7 @@ export default function EventDetailPage() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [citizenId, setCitizenId] = useState('');
+  const [customData, setCustomData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (eventId) {
@@ -57,17 +62,61 @@ export default function EventDetailPage() {
     }
   };
 
+  const handleCheckboxToggle = (fieldId: string, option: string) => {
+    setCustomData((prev) => {
+      const current = Array.isArray(prev[fieldId]) ? prev[fieldId] : [];
+      const exists = current.includes(option);
+      return {
+        ...prev,
+        [fieldId]: exists
+          ? current.filter((item: string) => item !== option)
+          : [...current, option],
+      };
+    });
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    const regConfig = normalizeRegistrationConfig(eventData?.registration_config);
+    const std = regConfig.standardFields;
 
     if (!fullName.trim()) {
       setErrorMsg('กรุณากรอกชื่อ-นามสกุล');
       return;
     }
-    if (!phone.trim()) {
-      setErrorMsg('กรุณากรอกเบอร์โทรศัพท์');
-      return;
+
+    const stdChecks: Array<{ key: keyof typeof std; val: string; fallbackLabel: string }> = [
+      { key: 'title_name', val: titleName, fallbackLabel: 'คำนำหน้า' },
+      { key: 'position', val: position, fallbackLabel: 'ตำแหน่ง' },
+      { key: 'organization', val: organization, fallbackLabel: 'สังกัด / หน่วยงาน' },
+      { key: 'phone', val: phone, fallbackLabel: 'เบอร์โทรศัพท์' },
+      { key: 'email', val: email, fallbackLabel: 'อีเมล' },
+      { key: 'citizen_id', val: citizenId, fallbackLabel: 'เลขประจำตัวประชาชน' },
+    ];
+
+    for (const item of stdChecks) {
+      const cfg = std[item.key];
+      if (cfg.enabled && cfg.required && !item.val.trim()) {
+        setErrorMsg(`กรุณากรอก${cfg.label || item.fallbackLabel}`);
+        return;
+      }
+    }
+
+    for (const cf of regConfig.customFields) {
+      if (cf.required) {
+        const ans = customData[cf.id];
+        const isEmpty =
+          ans === undefined ||
+          ans === null ||
+          (typeof ans === 'string' && !ans.trim()) ||
+          (Array.isArray(ans) && ans.length === 0);
+        if (isEmpty) {
+          setErrorMsg(`กรุณากรอกหรือเลือก "${cf.label}"`);
+          return;
+        }
+      }
     }
 
     setSubmitting(true);
@@ -75,13 +124,14 @@ export default function EventDetailPage() {
       const res = await fetchApi(`/api/v1/registration/events/${eventId}/register`, {
         method: 'POST',
         body: JSON.stringify({
-          title_name: titleName,
+          title_name: std.title_name.enabled ? titleName : null,
           full_name: fullName.trim(),
-          position: position.trim(),
-          organization: organization.trim(),
-          phone: phone.trim(),
-          email: email.trim(),
-          citizen_id: citizenId.trim(),
+          position: std.position.enabled ? position.trim() : null,
+          organization: std.organization.enabled ? organization.trim() : null,
+          phone: std.phone.enabled ? phone.trim() : null,
+          email: std.email.enabled ? email.trim() : null,
+          citizen_id: std.citizen_id.enabled ? citizenId.trim() : null,
+          custom_data: customData,
         }),
       });
 
@@ -127,6 +177,10 @@ export default function EventDetailPage() {
     );
   }
 
+  const regConfig = normalizeRegistrationConfig(eventData?.registration_config);
+  const theme = getRegistrationTheme(regConfig.themeColorId);
+  const std = regConfig.standardFields;
+
   return (
     <div className="min-h-screen bg-slate-50/70 py-4 sm:py-10">
       <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
@@ -140,14 +194,23 @@ export default function EventDetailPage() {
             <span>กลับสู่หน้ารวมกิจกรรม</span>
           </Link>
           <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <Award className="w-4 h-4 text-blue-600" />
+            <Award className={`w-4 h-4 ${theme.accentTextClass}`} />
             <span className="hidden sm:inline">ระบบลงทะเบียนและออกเกียรติบัตรออนไลน์</span>
           </div>
         </div>
 
       {/* Event Header Banner Card */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-800 to-teal-700 p-4 sm:p-10 text-white relative">
+        {eventData.banner_url && (
+          <div className="w-full max-h-72 bg-slate-100 overflow-hidden">
+            <img
+              src={eventData.banner_url}
+              alt={eventData.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+        <div className={`bg-gradient-to-r ${theme.headerGradient} p-4 sm:p-10 text-white relative`}>
           <div className="space-y-3 sm:space-y-4 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
               <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/20 text-[11px] sm:text-xs font-semibold backdrop-blur-md">
@@ -242,11 +305,12 @@ export default function EventDetailPage() {
         <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-8 space-y-5 sm:space-y-6">
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-blue-600" />
-              <span>แบบฟอร์มลงทะเบียนเข้าร่วมกิจกรรม</span>
+              <ClipboardList className={`w-5 h-5 ${theme.accentTextClass}`} />
+              <span>{regConfig.headerTitle?.trim() || 'แบบฟอร์มลงทะเบียนเข้าร่วมกิจกรรม'}</span>
             </h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-1">
-              กรุณาระบุข้อมูลสำหรับการบันทึกเวลาเข้าร่วมและจัดทำเกียรติบัตร
+            <p className="text-slate-500 text-xs sm:text-sm mt-1 whitespace-pre-line">
+              {regConfig.instructions?.trim() ||
+                'กรุณาระบุข้อมูลสำหรับการบันทึกเวลาเข้าร่วมและจัดทำเกียรติบัตร'}
             </p>
           </div>
 
@@ -268,26 +332,33 @@ export default function EventDetailPage() {
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="sm:col-span-1 space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">คำนำหน้า *</label>
-                  <select
-                    value={titleName}
-                    onChange={(e) => setTitleName(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="นาย">นาย</option>
-                    <option value="นาง">นาง</option>
-                    <option value="นางสาว">นางสาว</option>
-                    <option value="ดร.">ดร.</option>
-                    <option value="ผศ.">ผศ.</option>
-                    <option value="รศ.">รศ.</option>
-                    <option value="">(ไม่ระบุ)</option>
-                  </select>
-                </div>
+                {std.title_name.enabled && (
+                  <div className="sm:col-span-1 space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700">
+                      {std.title_name.label || 'คำนำหน้า'}{' '}
+                      {std.title_name.required && <span className="text-rose-500">*</span>}
+                    </label>
+                    <select
+                      value={titleName}
+                      required={std.title_name.required}
+                      onChange={(e) => setTitleName(e.target.value)}
+                      className={`w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 ${theme.ringClass} focus:outline-none`}
+                    >
+                      <option value="นาย">นาย</option>
+                      <option value="นาง">นาง</option>
+                      <option value="นางสาว">นางสาว</option>
+                      <option value="ดร.">ดร.</option>
+                      <option value="ผศ.">ผศ.</option>
+                      <option value="รศ.">รศ.</option>
+                      <option value="">(ไม่ระบุ)</option>
+                    </select>
+                  </div>
+                )}
 
-                <div className="sm:col-span-3 space-y-1.5">
+                <div className={`${std.title_name.enabled ? 'sm:col-span-3' : 'sm:col-span-4'} space-y-1.5`}>
                   <label className="text-xs font-bold text-slate-700">
-                    ชื่อ - นามสกุล (สำหรับพิมพ์บนเกียรติบัตร) *
+                    {std.full_name.label || 'ชื่อ - นามสกุล (สำหรับพิมพ์บนเกียรติบัตร)'}{' '}
+                    <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -295,63 +366,210 @@ export default function EventDetailPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="เช่น สมชาย ใจดี"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${theme.ringClass} focus:outline-none`}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {(std.position.enabled || std.organization.enabled) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {std.position.enabled && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">
+                        {std.position.label || 'ตำแหน่ง / บทบาท'}{' '}
+                        {std.position.required && <span className="text-rose-500">*</span>}
+                      </label>
+                      <input
+                        type="text"
+                        required={std.position.required}
+                        value={position}
+                        onChange={(e) => setPosition(e.target.value)}
+                        placeholder="เช่น ครู, นักเรียน, บุคลากร"
+                        className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${theme.ringClass} focus:outline-none`}
+                      />
+                    </div>
+                  )}
+
+                  {std.organization.enabled && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">
+                        {std.organization.label || 'สังกัด / หน่วยงาน'}{' '}
+                        {std.organization.required && <span className="text-rose-500">*</span>}
+                      </label>
+                      <input
+                        type="text"
+                        required={std.organization.required}
+                        value={organization}
+                        onChange={(e) => setOrganization(e.target.value)}
+                        placeholder="เช่น แผนกวิชาคอมพิวเตอร์ธุรกิจ"
+                        className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${theme.ringClass} focus:outline-none`}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {std.phone.enabled && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">ตำแหน่ง / บทบาท</label>
+                  <label className="text-xs font-bold text-slate-700">
+                    {std.phone.label || 'หมายเลขโทรศัพท์ (ใช้สำหรับสืบค้นเกียรติบัตร)'}{' '}
+                    {std.phone.required && <span className="text-rose-500">*</span>}
+                  </label>
+                  <input
+                    type="tel"
+                    required={std.phone.required}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="เช่น 0812345678"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${theme.ringClass} focus:outline-none`}
+                  />
+                </div>
+              )}
+
+              {std.email.enabled && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">
+                    {std.email.label || 'อีเมล'}{' '}
+                    {std.email.required && <span className="text-rose-500">*</span>}
+                  </label>
+                  <input
+                    type="email"
+                    required={std.email.required}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="example@crvc.ac.th"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${theme.ringClass} focus:outline-none`}
+                  />
+                </div>
+              )}
+
+              {std.citizen_id.enabled && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">
+                    {std.citizen_id.label || 'เลขประจำตัวประชาชน 13 หลัก'}{' '}
+                    {std.citizen_id.required && <span className="text-rose-500">*</span>}
+                  </label>
                   <input
                     type="text"
-                    value={position}
-                    onChange={(e) => setPosition(e.target.value)}
-                    placeholder="เช่น ครู, นักเรียน, บุคลากร"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required={std.citizen_id.required}
+                    maxLength={13}
+                    value={citizenId}
+                    onChange={(e) => setCitizenId(e.target.value)}
+                    placeholder="กรอกเลขประจำตัวประชาชน 13 หลัก"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${theme.ringClass} focus:outline-none`}
                   />
                 </div>
+              )}
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">สังกัด / หน่วยงาน</label>
-                  <input
-                    type="text"
-                    value={organization}
-                    onChange={(e) => setOrganization(e.target.value)}
-                    placeholder="เช่น แผนกวิชาคอมพิวเตอร์ธุรกิจ"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
+              {/* Dynamic Custom Questions */}
+              {regConfig.customFields.length > 0 && (
+                <div className="pt-2 border-t border-slate-100 space-y-4">
+                  {regConfig.customFields.map((cf) => (
+                    <div key={cf.id} className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">
+                        {cf.label} {cf.required && <span className="text-rose-500">*</span>}
+                      </label>
+
+                      {cf.type === 'text' && (
+                        <input
+                          type="text"
+                          required={cf.required}
+                          value={customData[cf.id] || ''}
+                          onChange={(e) =>
+                            setCustomData((prev) => ({ ...prev, [cf.id]: e.target.value }))
+                          }
+                          placeholder={cf.placeholder || ''}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${theme.ringClass} focus:outline-none`}
+                        />
+                      )}
+
+                      {cf.type === 'textarea' && (
+                        <textarea
+                          rows={3}
+                          required={cf.required}
+                          value={customData[cf.id] || ''}
+                          onChange={(e) =>
+                            setCustomData((prev) => ({ ...prev, [cf.id]: e.target.value }))
+                          }
+                          placeholder={cf.placeholder || ''}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 ${theme.ringClass} focus:outline-none`}
+                        />
+                      )}
+
+                      {cf.type === 'select' && (
+                        <select
+                          required={cf.required}
+                          value={customData[cf.id] || ''}
+                          onChange={(e) =>
+                            setCustomData((prev) => ({ ...prev, [cf.id]: e.target.value }))
+                          }
+                          className={`w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 ${theme.ringClass} focus:outline-none`}
+                        >
+                          <option value="">-- กรุณาเลือก --</option>
+                          {(cf.options || []).map((opt, idx) => (
+                            <option key={idx} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      {cf.type === 'radio' && (
+                        <div className="space-y-2 pt-1">
+                          {(cf.options || []).map((opt, idx) => (
+                            <label
+                              key={idx}
+                              className="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer"
+                            >
+                              <input
+                                type="radio"
+                                name={`cf_${cf.id}`}
+                                value={opt}
+                                checked={customData[cf.id] === opt}
+                                onChange={() =>
+                                  setCustomData((prev) => ({ ...prev, [cf.id]: opt }))
+                                }
+                                className="text-blue-600 focus:ring-blue-500"
+                              />
+                              <span>{opt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {cf.type === 'checkbox' && (
+                        <div className="space-y-2 pt-1">
+                          {(cf.options || []).map((opt, idx) => {
+                            const selectedList = Array.isArray(customData[cf.id])
+                              ? customData[cf.id]
+                              : [];
+                            return (
+                              <label
+                                key={idx}
+                                className="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedList.includes(opt)}
+                                  onChange={() => handleCheckboxToggle(cf.id, opt)}
+                                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span>{opt}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">หมายเลขโทรศัพท์ (ใช้สำหรับสืบค้นเกียรติบัตร) *</label>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="เช่น 0812345678"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">อีเมล (ถ้ามี)</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@crvc.ac.th"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
+              )}
 
               <div className="pt-4">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-base shadow-md hover:shadow-lg transition active:scale-98 disabled:opacity-50 cursor-pointer"
+                  className={`w-full py-3.5 rounded-xl text-white font-bold text-base shadow-md hover:shadow-lg transition active:scale-98 disabled:opacity-50 cursor-pointer ${theme.buttonClass}`}
                 >
                   {submitting ? 'กำลังส่งข้อมูล...' : 'ยืนยันการลงทะเบียน'}
                 </button>

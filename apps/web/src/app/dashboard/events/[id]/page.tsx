@@ -41,6 +41,8 @@ import CertificateRenderer, {
   FONT_FAMILIES,
 } from '@/components/certificate/CertificateRenderer';
 import EvaluationFormEditor from '@/components/evaluation/EvaluationFormEditor';
+import RegistrationFormEditor from '@/components/registration/RegistrationFormEditor';
+import { normalizeRegistrationConfig } from '@/lib/registration-config';
 import { fetchApi } from '@/lib/api';
 import { showToast, showSuccessAlert, showErrorAlert, showWarningAlert, showConfirmDialog } from '@/lib/sweetalert';
 
@@ -59,6 +61,9 @@ export default function EventManagePage() {
   const [attendeeSearch, setAttendeeSearch] = useState('');
   const [checkInInput, setCheckInInput] = useState('');
   const [checkInFeedback, setCheckInFeedback] = useState<string | null>(null);
+  const [showRegFormEditor, setShowRegFormEditor] = useState(false);
+  const [viewingCustomDataAttendee, setViewingCustomDataAttendee] = useState<any | null>(null);
+  const [exportingAttendeesCsv, setExportingAttendeesCsv] = useState(false);
 
   // Certificate Designer state
   const [certConfig, setCertConfig] = useState<CertificateConfig>({});
@@ -1271,8 +1276,18 @@ export default function EventManagePage() {
                 </p>
               </div>
 
-              {/* Action Buttons: Import CSV and Batch Issue */}
+              {/* Action Buttons: Customize Form, Import/Export CSV, and Batch Issue */}
               <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowRegFormEditor(true)}
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer shrink-0"
+                  title="ปรับแต่งฟิลด์ คำถามเพิ่มเติม แบนเนอร์ และธีมสีของฟอร์มลงทะเบียน"
+                >
+                  <Sliders className="w-4 h-4 text-indigo-600" />
+                  <span>ปรับแต่งฟอร์มลงทะเบียน</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -1288,6 +1303,45 @@ export default function EventManagePage() {
                 >
                   <Upload className="w-4 h-4 text-blue-600" />
                   <span>นำเข้ารายชื่อ CSV</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={exportingAttendeesCsv}
+                  onClick={async () => {
+                    setExportingAttendeesCsv(true);
+                    try {
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+                      const res = await fetch(`/api/v1/registration/events/${eventId}/export-csv`, {
+                        headers: token ? { Authorization: `Bearer ${token}` } : {},
+                      });
+                      if (!res.ok) {
+                        const errJson = await res.json().catch(() => ({}));
+                        showErrorAlert('ส่งออกไม่สำเร็จ', errJson.message || 'ไม่สามารถส่งออกรายชื่อ CSV ได้');
+                        return;
+                      }
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      const safeCode = (event?.event_code || eventId).replace(/[^a-zA-Z0-9_-]/g, '_');
+                      link.setAttribute('download', `attendees-${safeCode}.csv`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                      showToast('ส่งออกรายชื่อ CSV เรียบร้อยแล้ว', 'success');
+                    } catch (err: any) {
+                      showErrorAlert('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+                    } finally {
+                      setExportingAttendeesCsv(false);
+                    }
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer shrink-0 disabled:opacity-50"
+                  title="ส่งออกรายชื่อผู้ลงทะเบียนและคำตอบเพิ่มเติมเป็นไฟล์ CSV"
+                >
+                  <Download className="w-4 h-4 text-emerald-600" />
+                  <span>{exportingAttendeesCsv ? 'กำลังส่งออก...' : 'ส่งออกรายชื่อ CSV'}</span>
                 </button>
 
                 <button
@@ -1399,6 +1453,15 @@ export default function EventManagePage() {
                           )}
                         </td>
                         <td className="py-3 px-4 text-right space-x-2">
+                          {a.custom_data && Object.keys(a.custom_data).length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setViewingCustomDataAttendee(a)}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer"
+                            >
+                              ข้อมูลเพิ่มเติม
+                            </button>
+                          )}
                           {!a.certificate_no ? (
                             <button
                               type="button"
@@ -1424,6 +1487,79 @@ export default function EventManagePage() {
               </table>
             </div>
           </div>
+
+          {showRegFormEditor && event && (
+            <RegistrationFormEditor
+              eventId={eventId}
+              eventTitle={event.title}
+              initialConfig={event.registration_config}
+              initialBannerUrl={event.banner_url}
+              onClose={() => setShowRegFormEditor(false)}
+              onSaved={() => {
+                setShowRegFormEditor(false);
+                loadEventData();
+              }}
+            />
+          )}
+
+          {viewingCustomDataAttendee && (
+            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">
+                      ข้อมูลเพิ่มเติมของผู้ลงทะเบียน
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {viewingCustomDataAttendee.title_name || ''}
+                      {viewingCustomDataAttendee.full_name}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setViewingCustomDataAttendee(null)}
+                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="p-6 space-y-3 max-h-[70vh] overflow-y-auto">
+                  {(() => {
+                    const regCfg = normalizeRegistrationConfig(event?.registration_config);
+                    const cd = (viewingCustomDataAttendee.custom_data || {}) as Record<string, any>;
+                    const fieldMap = new Map(regCfg.customFields.map((f) => [f.id, f.label]));
+                    const entries = Object.entries(cd);
+                    if (entries.length === 0) {
+                      return (
+                        <p className="text-xs text-slate-400 text-center py-4">
+                          ไม่มีข้อมูลเพิ่มเติม
+                        </p>
+                      );
+                    }
+                    return entries.map(([key, val]) => (
+                      <div key={key} className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="text-[11px] font-bold text-slate-500">
+                          {fieldMap.get(key) || key}
+                        </div>
+                        <div className="text-xs font-semibold text-slate-900 mt-1 whitespace-pre-wrap">
+                          {Array.isArray(val) ? val.join(', ') : String(val || '-')}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+                <div className="px-6 py-3 border-t border-slate-100 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setViewingCustomDataAttendee(null)}
+                    className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold cursor-pointer"
+                  >
+                    ปิดหน้าต่าง
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
