@@ -54,6 +54,7 @@ router.get('/events/:eventId/public-info', async (req: Request, res: Response) =
           status: event.status,
           banner_url: event.banner_url,
           registration_config: event.registration_config,
+          certificate_config: event.certificate_config,
           organizer: event.organizer,
           is_registration_open: isOpen,
         },

@@ -622,11 +622,11 @@ export default function RegistrationFormEditor({
                     />
                     {bannerUrl ? (
                       <div className="space-y-2">
-                        <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 aspect-[3/1]">
+                        <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
                           <img
                             src={bannerUrl}
                             alt="Event Banner"
-                            className="w-full h-full object-cover"
+                            className="w-full h-auto block"
                           />
                         </div>
                         <div className="flex items-center gap-2">
@@ -728,6 +728,30 @@ export default function RegistrationFormEditor({
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
                       />
                     </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                      <label className="flex items-start gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.showCertificateSidebar !== false}
+                          onChange={(e) =>
+                            setConfig((prev) => ({
+                              ...prev,
+                              showCertificateSidebar: e.target.checked,
+                            }))
+                          }
+                          className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div>
+                          <div className="text-xs font-bold text-slate-800">
+                            แสดงแถบขั้นตอนและค้นหาเกียรติบัตรด้านขวาในหน้าลงทะเบียน
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            หากปิดตัวเลือกนี้ (หรือปิดระบบเกียรติบัตรในตั้งค่ากิจกรรม) แถบด้านขวาจะถูกซ่อนและฟอร์มลงทะเบียนจะขยายเต็มความกว้าง
+                          </div>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                 </div>
               )}
@@ -749,8 +773,8 @@ export default function RegistrationFormEditor({
 
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
               {bannerUrl && (
-                <div className="w-full aspect-[3/1] bg-slate-100 overflow-hidden">
-                  <img src={bannerUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                <div className="w-full bg-slate-100 overflow-hidden">
+                  <img src={bannerUrl} alt="Banner Preview" className="w-full h-auto block" />
                 </div>
               )}
               <div className={`bg-gradient-to-r ${activeTheme.headerGradient} text-white p-5 space-y-1.5`}>

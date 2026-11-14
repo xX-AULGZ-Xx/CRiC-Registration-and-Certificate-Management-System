@@ -180,6 +180,9 @@ export default function EventDetailPage() {
   const regConfig = normalizeRegistrationConfig(eventData?.registration_config);
   const theme = getRegistrationTheme(regConfig.themeColorId);
   const std = regConfig.standardFields;
+  const showCertSidebar =
+    eventData?.certificate_config?.has_certificate !== false &&
+    regConfig.showCertificateSidebar !== false;
 
   return (
     <div className="min-h-screen bg-slate-50/70 py-4 sm:py-10">
@@ -202,11 +205,11 @@ export default function EventDetailPage() {
       {/* Event Header Banner Card */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md overflow-hidden">
         {eventData.banner_url && (
-          <div className="w-full max-h-72 bg-slate-100 overflow-hidden">
+          <div className="w-full bg-slate-100 overflow-hidden">
             <img
               src={eventData.banner_url}
               alt={eventData.title}
-              className="w-full h-full object-cover"
+              className="w-full h-auto block"
             />
           </div>
         )}
@@ -301,8 +304,12 @@ export default function EventDetailPage() {
 
       {/* Main Grid: Registration Form & Evaluation / Certificate Link */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        {/* Registration Form (2 cols) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-8 space-y-5 sm:space-y-6">
+        {/* Registration Form */}
+        <div
+          className={`${
+            showCertSidebar ? 'lg:col-span-2' : 'lg:col-span-3'
+          } bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-8 space-y-5 sm:space-y-6`}
+        >
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <ClipboardList className={`w-5 h-5 ${theme.accentTextClass}`} />
@@ -579,6 +586,7 @@ export default function EventDetailPage() {
         </div>
 
         {/* Sidebar: Registration & Certificate Guide */}
+        {showCertSidebar && (
         <div className="space-y-6">
           {/* Workflow Guide Card */}
           <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 space-y-4">
@@ -638,6 +646,7 @@ export default function EventDetailPage() {
             </Link>
           </div>
         </div>
+        )}
       </div>
 
       {/* Standalone Simple Footer */}

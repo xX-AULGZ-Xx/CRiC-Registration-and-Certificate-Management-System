@@ -48,6 +48,7 @@ export default function DashboardPage() {
   const [maxAttendees, setMaxAttendees] = useState('100');
   const [certPrefix, setCertPrefix] = useState('วอศ.ชร-2569');
   const [enableEvaluationInEvent, setEnableEvaluationInEvent] = useState(true);
+  const [enableCertificateInEvent, setEnableCertificateInEvent] = useState(true);
 
   // New Survey Form (Evaluation Mode only)
   const [surveyTitle, setSurveyTitle] = useState('');
@@ -149,6 +150,7 @@ export default function DashboardPage() {
             certificate_no_prefix: certPrefix.trim() || 'CERT-2569',
             require_check_in: true,
             require_evaluation: enableEvaluationInEvent,
+            has_certificate: enableCertificateInEvent,
           },
         }),
       });
@@ -999,8 +1001,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Evaluation System Toggle */}
-                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100/80 space-y-2">
+                {/* Evaluation & Certificate System Toggles */}
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100/80 space-y-3">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1014,6 +1016,23 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
                         หากเปิดใช้งาน รายการนี้จะมีทั้งระบบลงทะเบียนและแบบประเมิน และจะแสดงทั้งในแท็บลงทะเบียนและแท็บประเมิน
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer pt-2 border-t border-blue-100/80">
+                    <input
+                      type="checkbox"
+                      checked={enableCertificateInEvent}
+                      onChange={(e) => setEnableCertificateInEvent(e.target.checked)}
+                      className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">
+                        เปิดใช้งานระบบออกเกียรติบัตร (แสดงส่วนรับเกียรติบัตร)
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        หากปิดใช้งาน ระบบจะซ่อนแถบขั้นตอนและช่องค้นหาเกียรติบัตรในหน้าลงทะเบียนสาธารณะ
                       </div>
                     </div>
                   </label>

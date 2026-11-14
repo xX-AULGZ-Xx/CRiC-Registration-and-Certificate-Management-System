@@ -21,6 +21,7 @@ import {
   Star,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
+import { getRegistrationTheme } from '@/lib/registration-config';
 
 export default function HomePage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -545,46 +546,90 @@ export default function HomePage() {
                 className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col overflow-hidden group"
               >
                 {/* Banner or Header */}
-                <div
-                  className={`h-28 sm:h-36 p-4 sm:p-5 flex flex-col justify-between text-white relative transition-colors ${
-                    portalMode === 'evaluation'
-                      ? 'bg-gradient-to-tr from-blue-900 via-blue-800 to-slate-800'
-                      : 'bg-gradient-to-tr from-blue-700 via-blue-600 to-teal-500'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1 flex-wrap">
-                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] sm:text-xs font-semibold">
-                      {evt.event_code || 'EVENT'}
-                    </span>
-                    <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-                      {hasBoth && (
-                        <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-white/25 text-white backdrop-blur-xs">
-                          ลงทะเบียน & ประเมิน
+                {evt.banner_url ? (
+                  <div className="relative w-full bg-slate-100 overflow-hidden">
+                    <img
+                      src={evt.banner_url}
+                      alt={evt.title}
+                      className="w-full h-auto block"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/55 p-3.5 sm:p-4 flex flex-col justify-between text-white pointer-events-none">
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                        <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-black/40 backdrop-blur-md text-[11px] sm:text-xs font-semibold">
+                          {evt.event_code || 'EVENT'}
                         </span>
-                      )}
-                      <span
-                        className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold ${
-                          portalMode === 'evaluation'
-                            ? 'bg-blue-600/90 text-white'
-                            : evt.status === 'OPEN'
-                            ? 'bg-emerald-500/90 text-white'
-                            : 'bg-slate-700/80 text-slate-200'
-                        }`}
-                      >
-                        {portalMode === 'evaluation'
-                          ? 'เปิดรับแบบประเมิน'
-                          : evt.status === 'OPEN'
-                          ? 'เปิดรับลงทะเบียน'
-                          : 'ปิดรับสมัคร'}
+                        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                          {hasBoth && (
+                            <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-black/45 text-white backdrop-blur-xs">
+                              ลงทะเบียน & ประเมิน
+                            </span>
+                          )}
+                          <span
+                            className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold shadow-sm ${
+                              portalMode === 'evaluation'
+                                ? 'bg-blue-600/95 text-white'
+                                : evt.status === 'OPEN'
+                                ? 'bg-emerald-500/95 text-white'
+                                : 'bg-slate-700/90 text-slate-200'
+                            }`}
+                          >
+                            {portalMode === 'evaluation'
+                              ? 'เปิดรับแบบประเมิน'
+                              : evt.status === 'OPEN'
+                              ? 'เปิดรับลงทะเบียน'
+                              : 'ปิดรับสมัคร'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-white/95 font-medium line-clamp-1 drop-shadow-sm">
+                        {evt.organizer?.organization || 'วิทยาลัยอาชีวศึกษาเชียงราย'}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={`h-28 sm:h-36 p-4 sm:p-5 flex flex-col justify-between text-white relative transition-colors ${
+                      portalMode === 'evaluation'
+                        ? 'bg-gradient-to-tr from-blue-900 via-blue-800 to-slate-800'
+                        : regCfg.themeColorId
+                        ? `bg-gradient-to-r ${getRegistrationTheme(regCfg.themeColorId).headerGradient}`
+                        : 'bg-gradient-to-tr from-blue-700 via-blue-600 to-teal-500'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 flex-wrap">
+                      <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] sm:text-xs font-semibold">
+                        {evt.event_code || 'EVENT'}
                       </span>
+                      <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                        {hasBoth && (
+                          <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-white/25 text-white backdrop-blur-xs">
+                            ลงทะเบียน & ประเมิน
+                          </span>
+                        )}
+                        <span
+                          className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold ${
+                            portalMode === 'evaluation'
+                              ? 'bg-blue-600/90 text-white'
+                              : evt.status === 'OPEN'
+                              ? 'bg-emerald-500/90 text-white'
+                              : 'bg-slate-700/80 text-slate-200'
+                          }`}
+                        >
+                          {portalMode === 'evaluation'
+                            ? 'เปิดรับแบบประเมิน'
+                            : evt.status === 'OPEN'
+                            ? 'เปิดรับลงทะเบียน'
+                            : 'ปิดรับสมัคร'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] sm:text-xs text-blue-100 font-medium line-clamp-1">
+                        {evt.organizer?.organization || 'วิทยาลัยอาชีวศึกษาเชียงราย'}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div className="text-[11px] sm:text-xs text-blue-100 font-medium line-clamp-1">
-                      {evt.organizer?.organization || 'วิทยาลัยอาชีวศึกษาเชียงราย'}
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {/* Body Content */}
                 <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3 sm:space-y-4">

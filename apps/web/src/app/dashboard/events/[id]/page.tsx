@@ -96,6 +96,7 @@ export default function EventManagePage() {
   const [editCertPrefix, setEditCertPrefix] = useState('');
   const [editHasRegistration, setEditHasRegistration] = useState(true);
   const [editHasEvaluation, setEditHasEvaluation] = useState(true);
+  const [editHasCertificate, setEditHasCertificate] = useState(true);
 
   // CSV Import State
   const [showCsvModal, setShowCsvModal] = useState(false);
@@ -168,6 +169,7 @@ export default function EventManagePage() {
     const certCfg = event.certificate_config || {};
     const hasEval = certCfg.require_evaluation === true || !!event.evaluation_form || regCfg.has_evaluation === true;
     setEditHasEvaluation(hasEval);
+    setEditHasCertificate(certCfg.has_certificate !== false);
 
     setShowEditModal(true);
   };
@@ -195,6 +197,7 @@ export default function EventManagePage() {
         ...certConfig,
         certificate_no_prefix: editCertPrefix.trim() || 'วอศ.ชร-2569',
         require_evaluation: editHasEvaluation,
+        has_certificate: editHasCertificate,
       };
 
       const res = await fetchApi(`/api/v1/events/${eventId}`, {
@@ -2289,6 +2292,23 @@ export default function EventManagePage() {
                       </div>
                       <div className="text-[11px] text-slate-500">
                         แสดงในแท็บประเมิน และเปิดให้ผู้เข้าร่วมตอบแบบสอบถามได้
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editHasCertificate}
+                      onChange={(e) => setEditHasCertificate(e.target.checked)}
+                      className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">
+                        เปิดใช้งานระบบออกเกียรติบัตร (แสดงส่วนรับเกียรติบัตร)
+                      </div>
+                      <div className="text-[11px] text-slate-500">
+                        หากปิดใช้งาน แถบขั้นตอนและช่องค้นหาเกียรติบัตรในหน้าลงทะเบียนสาธารณะจะถูกซ่อน
                       </div>
                     </div>
                   </label>

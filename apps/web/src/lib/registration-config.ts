@@ -30,6 +30,7 @@ export interface RegistrationFormConfig {
   themeColorId: string;
   headerTitle?: string;
   instructions?: string;
+  showCertificateSidebar: boolean;
   standardFields: Record<StandardFieldKey, StandardFieldSetting>;
   customFields: CustomRegistrationField[];
 }
@@ -86,6 +87,7 @@ export const DEFAULT_REGISTRATION_CONFIG: RegistrationFormConfig = {
   themeColorId: 'indigo',
   headerTitle: '',
   instructions: '',
+  showCertificateSidebar: true,
   standardFields: {
     title_name: { enabled: true, required: false },
     full_name: { enabled: true, required: true },
@@ -134,6 +136,7 @@ export function normalizeRegistrationConfig(raw: any): RegistrationFormConfig {
     themeColorId: typeof src.themeColorId === 'string' && src.themeColorId ? src.themeColorId : DEFAULT_REGISTRATION_CONFIG.themeColorId,
     headerTitle: typeof src.headerTitle === 'string' ? src.headerTitle : '',
     instructions: typeof src.instructions === 'string' ? src.instructions : '',
+    showCertificateSidebar: src.showCertificateSidebar !== false,
     standardFields,
     customFields,
   };
